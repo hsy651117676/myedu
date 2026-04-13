@@ -43,21 +43,28 @@ def login_view(request):
         session_captcha = request.session.get('captcha', '').upper()
         if captcha != session_captcha:
             messages.error(request, '验证码错误')
-            return render(request, 'auth/login.html')
+            response = render(request, 'auth/login.html')
+            return response
+
         key = f'login_err:{username}'
         err_count = cache.get(key, 0)
         if err_count >= 5:
             messages.error(request, '错误次数过多，请10分钟后再试')
-            return render(request, 'auth/login.html')
+            response = render(request, 'auth/login.html')
+            return response
+
         user = authenticate(request, username=username, password=password)
         if user:
             cache.delete(key)
             login(request, user)
             return redirect('home')
+
         cache.set(key, err_count + 1, 600)
         messages.error(request, f'用户名或密码错误，已失败 {err_count + 1}/5 次')
-        return render(request, 'auth/login.html')
-    return render(request, 'auth/login.html')
+        response = render(request, 'auth/login.html')
+        return response
+    response = render(request, 'auth/login.html')
+    return response
 
 def register_view(request):
     if request.method == 'POST':
