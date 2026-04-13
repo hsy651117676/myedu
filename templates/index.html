@@ -1,0 +1,169 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+<div id="app" style="display:flex;height:calc(100vh - 60px);">
+  <div class="sidebar" style="width:200px;background:#2f4050;">
+    <el-menu 
+      default-active="/" 
+      background-color="#2f4050" 
+      text-color="#fff" 
+      active-text-color="#ffd04b"
+      :collapse="isCollapse"
+    >
+       <el-sub-menu index="1">
+        <template #title>人口信息</template>
+         <el-menu-item index="/person-query/" @click="openTab('/person-query/')">人员查询</el-menu-item>
+  <el-menu-item index="/person-manage/" @click="openTab('/person-manage/')">人员维护</el-menu-item>
+  <el-menu-item index="/data-change/" @click="openTab('/data-change/')">关键数据变更</el-menu-item>
+      </el-sub-menu>
+      <el-sub-menu index="2">
+        <template #title>常用工具</template>
+        <el-menu-item index="/linux/" @click="openTab('/linux/')">linux命令</el-menu-item>
+        <el-menu-item index="/encrypt/" @click="openTab('/encrypt/')">算法加密</el-menu-item>
+        <el-menu-item index="/decrypt/" @click="openTab('/decrypt/')">算法解密</el-menu-item>
+        <el-menu-item index="/piano/" @click="openTab('/static/HTML5piano.html')">键盘电子琴</el-menu-item>
+      </el-sub-menu>
+
+      <el-sub-menu index="3">
+        <template #title>系统管理</template>
+        <el-menu-item index="/base-info/" @click="openTab('/base-info/')">基本信息维护</el-menu-item>
+        <el-menu-item index="/change-pwd/" @click="openTab('/change-pwd/')">密码修改</el-menu-item>
+      </el-sub-menu>
+
+      <el-menu-item index="/logout/" @click="logout">退出登录</el-menu-item>
+    </el-menu>
+  </div>
+
+  <div class="main" style="flex:1;padding:10px;">
+    <el-tabs 
+      v-model="activeTab" 
+      type="card" 
+      closable 
+      @tab-remove="removeTab"
+      @contextmenu.prevent="showContextMenu"
+    >
+      <el-tab-pane v-for="item in tabs" :key="item.name" :label="item.title" :name="item.name">
+        <iframe 
+          :src="item.url" 
+          style="width:100%;height:calc(100vh - 120px);border:none;"
+          sandbox="allow-same-origin allow-forms allow-scripts"
+        ></iframe>
+      </el-tab-pane>
+    </el-tabs>
+
+    <!-- 右键菜单 -->
+    <div 
+      class="context-menu" 
+      v-show="showMenu" 
+      :style="{left:menuX+'px',top:menuY+'px'}"
+      style="position:fixed;background:#fff;border:1px solid #eee;padding:5px;z-index:9999;"
+    >
+      <div @click="closeAll" style="padding:5px 10px;cursor:pointer;">关闭全部</div>
+      <div @click="closeLeft" style="padding:5px 10px;cursor:pointer;">关闭左侧</div>
+      <div @click="closeRight" style="padding:5px 10px;cursor:pointer;">关闭右侧</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref } = Vue
+createApp({
+  setup(){
+    const isCollapse = ref(false)
+    const tabs = ref([{title:'欢迎',name:'/static/welcome.html',url:'/static/welcome.html'}])
+    const activeTab = ref('/static/welcome.html')
+    const showMenu = ref(false)
+    const menuX = ref(0)
+    const menuY = ref(0)
+
+    const titleMap = {
+      '/':'首页',
+      '/person-query/':'人员查询',
+      '/person-manage/':'人员维护',
+      '/data-change/':'关键数据变更',
+      '/linux/':'Linux命令',
+      '/encrypt/':'算法加密',
+      '/decrypt/':'算法解密',
+      '/base-info/':'基本信息维护',
+      '/static/HTML5piano.html':'键盘电子琴',
+      '/change-pwd/':'密码修改'
+    }
+
+    // 打开标签
+    const openTab = (index)=>{
+      if(index==='/logout/'){
+        window.location.href = '/logout/'
+        return
+      }
+      const title = titleMap[index]||index
+      if(!tabs.value.some(t=>t.name===index)){
+        tabs.value.push({title,name:index,url:index})
+      }
+      activeTab.value = index
+      showMenu.value = false
+    }
+
+    // 关闭单个标签
+    const removeTab = (name)=>{
+      tabs.value = tabs.value.filter(t=>t.name!==name)
+      if(activeTab.value === name && tabs.value.length>0){
+        activeTab.value = tabs.value[0].name
+      }
+      showMenu.value = false
+    }
+
+    // 右键菜单
+    const showContextMenu = (e)=>{
+      e.preventDefault()
+      menuX.value = e.clientX
+      menuY.value = e.clientY
+      showMenu.value = true
+      document.onclick = ()=> showMenu.value = false
+    }
+
+    // 关闭全部
+    const closeAll = ()=>{
+      tabs.value = [tabs.value[0]]
+      activeTab.value = '/'
+      showMenu.value = false
+    }
+
+    // 关闭左侧
+    const closeLeft = ()=>{
+      const i = tabs.value.findIndex(t=>t.name===activeTab.value)
+      tabs.value = tabs.value.slice(i)
+      showMenu.value = false
+    }
+
+    // 关闭右侧
+    const closeRight = ()=>{
+      const i = tabs.value.findIndex(t=>t.name===activeTab.value)
+      tabs.value = tabs.value.slice(0,i+1)
+      showMenu.value = false
+    }
+
+    // 退出登录
+    const logout = ()=>{
+      window.location.href = '/logout/'
+    }
+
+    return {
+      isCollapse,
+      tabs,
+      activeTab,
+      showMenu,
+      menuX,
+      menuY,
+      openTab,
+      removeTab,
+      showContextMenu,
+      closeAll,
+      closeLeft,
+      closeRight,
+      logout
+    }
+  }
+}).use(ElementPlus).mount('#app')
+</script>
+
+{% endblock %}

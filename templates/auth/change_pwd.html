@@ -1,0 +1,86 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}修改密码{% endblock %}
+
+{% block content %}
+<style>
+.change-box {
+    max-width: 450px;
+    margin: 80px auto;
+    padding: 30px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+}
+</style>
+
+<div class="change-box" id="app">
+  <h3 style="text-align:center; margin-bottom:30px">修改密码</h3>
+
+  <el-form @submit.prevent="submit">
+    {% csrf_token %}
+
+    <el-form-item label="旧密码">
+      <el-input v-model="old_pwd" type="password" show-password></el-input>
+    </el-form-item>
+
+    <el-form-item label="新密码">
+      <el-input v-model="new1" type="password" show-password></el-input>
+    </el-form-item>
+
+    <el-form-item label="确认新密码">
+      <el-input v-model="new2" type="password" show-password></el-input>
+    </el-form-item>
+
+    <el-form-item>
+      <el-button type="primary" native-type="submit" style="width:100%">确认修改</el-button>
+    </el-form-item>
+  </el-form>
+</div>
+
+<script>
+const { createApp, reactive } = Vue
+const { ElMessage } = ElementPlus
+
+createApp({
+  setup() {
+    const form = reactive({
+      old_pwd: '',
+      new1: '',
+      new2: ''
+    })
+
+    async function submit() {
+      // ✅ 关键：用 location.pathname 自动适配 HTTP/HTTPS，绝对不拒绝
+      const res = await fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: new URLSearchParams({
+          old_pwd: form.old_pwd,
+          new_pwd1: form.new1,
+          new_pwd2: form.new2
+        })
+      })
+
+      const data = await res.json()
+      if (data.code === 200) {
+        ElMessage.success(data.msg)
+        setTimeout(() => {
+          location.href = '/'
+        }, 1000)
+      } else {
+        ElMessage.error(data.msg)
+      }
+    }
+
+    return {
+      old_pwd: '',
+      new1: '',
+      new2: '',
+      submit
+    }
+  }
+}).use(ElementPlus).mount('#app')
+</script>
+{% endblock %}

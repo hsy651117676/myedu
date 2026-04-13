@@ -1,0 +1,91 @@
+{% extends 'layout/base.html' %}
+{% block title %}登录{% endblock %}
+{% block content %}
+
+<!-- 🔥 最关键：页面一加载就强制跳出 iframe，比 Vue 更早执行 -->
+<script>
+try {
+  if (window.self !== window.top) {
+    window.top.location.replace(window.location.href);
+  }
+} catch(e) {
+  window.top.location.href = window.location.href;
+}
+</script>
+
+<style>
+.login-box {
+  max-width: 400px;
+  margin: 80px auto;
+  padding: 30px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fff;
+}
+.captcha-img {
+  height: 38px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #dcdfe6;
+}
+</style>
+
+<div class="login-box" id="app">
+  <h3 style="text-align:center; margin-bottom:25px">用户登录</h3>
+  <el-form method="post" @submit.prevent="submit">
+    {% csrf_token %}
+    <el-form-item label="用户名">
+      <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
+    </el-form-item>
+    <el-form-item label="密码">
+      <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password></el-input>
+    </el-form-item>
+    <el-form-item label="验证码">
+      <div style="display: flex; gap:10px; align-items:center">
+        <el-input v-model="form.captcha" placeholder="请输入验证码"></el-input>
+        <img class="captcha-img" :src="captchaUrl" @click="refreshCaptcha">
+      </div>
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" native-type="submit" style="width:100%">登录</el-button>
+    </el-form-item>
+  </el-form>
+</div>
+
+<script>
+const { createApp, reactive, ref } = Vue
+const { ElMessage } = ElementPlus
+
+createApp({
+  setup() {
+    const form = reactive({ username: '', password: '', captcha: '' })
+    const captchaUrl = ref('/captcha/')
+
+    function refreshCaptcha() {
+      captchaUrl.value = '/captcha?' + Math.random()
+    }
+
+    async function submit() {
+      const fd = new FormData()
+      fd.append('username', form.username)
+      fd.append('password', form.password)
+      fd.append('captcha', form.captcha)
+      fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
+
+      const res = await fetch('/login/', { method: 'POST', body: fd })
+      const data = await res.json()
+
+      if (res.ok && !data.error) {
+        // 🔥 登录成功强制顶层跳转
+        window.top.location.href = '/'
+      } else {
+        ElMessage.error('用户名、密码或验证码错误')
+        refreshCaptcha()
+      }
+    }
+
+    return { form, captchaUrl, refreshCaptcha, submit }
+  }
+}).use(ElementPlus).mount('#app')
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "layout/base.html" %}
+{% block content %}
+
+<div id="app" style="padding:10px;">
+  <el-card>
+    <el-form :model="queryForm" label-width="80px" inline>
+      <el-form-item label="姓名"><el-input v-model="queryForm.name"></el-input></el-form-item>
+      <el-form-item label="身份证"><el-input v-model="queryForm.idCard"></el-input></el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="doQuery">查询</el-button>
+      </el-form-item>
+    </el-form>
+  </el-card>
+  <el-card style="margin-top:10px;">
+    <el-table :data="list" border @row-click="selectPerson" style="width:100%">
+      <el-table-column label="姓名" prop="Name"></el-table-column>
+      <el-table-column label="身份证" prop="IDCard"></el-table-column>
+      <el-table-column label="性别" prop="Gender"></el-table-column>
+    </el-table>
+  </el-card>
+  <el-card style="margin-top:10px;">
+    <div style="padding:10px;">
+      <div><b>当前姓名：</b> {{ form.Name }}</div>
+      <div><b>当前身份证：</b> {{ form.IDCard }}</div>
+    </div>
+    <el-divider>关键数据修改</el-divider>
+    <el-form :model="form" label-width="120px" style="padding:10px;">
+      <el-form-item label="新姓名">
+        <el-input v-model="form.Name"></el-input>
+      </el-form-item>
+      <el-form-item label="新身份证号">
+        <el-input v-model="form.IDCard"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="saveKeyData">保存关键数据</el-button>
+      </el-form-item>
+    </el-form>
+  </el-card>
+</div>
+<script>
+const { createApp, ref } = Vue;
+const ElMessage = ElementPlus.ElMessage;
+createApp({
+  setup() {
+    const queryForm = ref({ name: '', idCard: '' });
+    const list = ref([]);
+    const form = ref({ RSID: '', Name: '', IDCard: '' });
+    const selectedRow = ref(null);
+    const doQuery = () => {
+      axios.get('/api/person-query/', { params: queryForm.value })
+        .then(res => {
+          if (res.data.code === 0) {
+            list.value = res.data.data;
+          } else {
+            ElMessage.error(res.data.msg);
+          }
+        })
+        .catch(() => ElMessage.error("查询失败"));
+    };
+    const selectPerson = (row) => {
+      selectedRow.value = row;
+      form.value = { ...row };
+    };
+    const saveKeyData = () => {
+      if (!selectedRow.value?.RSID) {
+        ElMessage.warning("请先选择人员");
+        return;
+      }
+      axios.post('/api/key-data-update/', {
+        RSID: selectedRow.value.RSID,
+        Name: form.value.Name,
+        IDCard: form.value.IDCard
+      }).then(res => {
+        const data = res.data;
+        if (data.code === 0) {
+          ElMessage.success(data.msg);
+          doQuery();
+        } else {
+          ElMessage.error(data.msg);
+        }
+      }).catch(() => {
+        ElMessage.error("保存失败，请检查网络");
+      });
+    };
+    return {
+      queryForm, list, form,
+      doQuery, selectPerson, saveKeyData
+    };
+  }
+}).use(ElementPlus).mount('#app');
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}系统页面{% endblock %}</title>
+  <!-- 所有页面只在这里引一次，全部通用 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/index.full.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/1.6.0/axios.min.js"></script>
+</head>
+<body>
+  {% block content %}{% endblock %}
+</body>
+</html>

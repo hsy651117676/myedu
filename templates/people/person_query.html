@@ -1,0 +1,175 @@
+{% extends "layout/base.html" %}
+{% block content %}
+
+<div id="app" style="padding:0; font-size:14px; height:100vh; display:flex; flex-direction:column;">
+  <!-- 顶部查询栏 -->
+  <el-card style="margin-bottom:10px;">
+    <el-form :inline="true" :model="queryForm" label-width="80px">
+      <el-form-item label="人员姓名">
+        <el-input v-model="queryForm.name" style="width:200px"></el-input>
+      </el-form-item>
+      <el-form-item label="身份证号">
+        <el-input v-model="queryForm.idCard" style="width:220px"></el-input>
+      </el-form-item>
+      <el-form-item label="家庭住址">
+        <el-input v-model="queryForm.address" style="width:280px"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="doQuery">查询</el-button>
+        <el-button @click="resetQuery">重置</el-button>
+      </el-form-item>
+    </el-form>
+  </el-card>
+
+  <el-splitter style="flex:1; height:0;" v-model="splitPos" :min="20" :max="80">
+    <!-- 左侧 -->
+    <el-splitter-panel :collapsible="true" collapse-direction="start" size="30%">
+      <div style="height:100%; display:flex; flex-direction:column;">
+        <div style="margin-bottom:10px; font-weight:bold;">人员列表</div>
+          <el-table :data="list" border style="flex:1;min-width:100%;" :scrollbar-always-on="true" @row-click="selectPerson">
+          <el-table-column label="姓名" prop="Name" width="100"></el-table-column>
+          <el-table-column label="性别" prop="Gender" width="70"></el-table-column>
+          <el-table-column label="年龄" prop="Age" width="70"></el-table-column>
+          <el-table-column label="身份证号" prop="IDCard" width="180"></el-table-column>
+          <el-table-column label="家庭住址" prop="HomeAddress"></el-table-column>
+        </el-table>
+
+        <div style="text-align:right; padding-top:10px;">
+          <el-pagination
+            v-model:current-page="page"
+            v-model:page-size="pageSize"
+            :page-sizes="[30,50,100]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="doQuery"
+            @current-change="doQuery"
+          ></el-pagination>
+        </div>
+      </div>
+    </el-splitter-panel>
+
+    <!-- 右侧 -->
+    <el-splitter-panel :collapsible="true" collapse-direction="end">
+      <div style="height:100%; display:flex; flex-direction:column;">
+        <div style="margin-bottom:10px; font-weight:bold;">家庭成员信息(双击跳转到该人员视角)</div>
+        <div style="flex:1; overflow:auto;">
+          <el-table :data="familyList" border style="width:100%;" :scrollbar-always-on="true"
+            @row-dblclick="selectFamilyMember" :loading="familyLoading" >
+            <el-table-column label="关系" prop="关系" width="80"></el-table-column>
+            <el-table-column label="姓名" prop="姓名" width="90"></el-table-column>
+            <el-table-column label="性别" prop="性别" width="50"></el-table-column>
+            <el-table-column label="民族" prop="民族" width="90"></el-table-column>
+            <el-table-column label="出生时间" prop="出生时间" width="120"></el-table-column>
+            <el-table-column label="死亡时间" prop="死亡时间" width="120"></el-table-column>
+            <el-table-column label="身份证号" prop="身份证号" width="180"></el-table-column>
+            <el-table-column label="工作单位" prop="工作单位" min-width="150"></el-table-column>
+            <el-table-column label="联系电话" prop="联系电话" width="130"></el-table-column>
+            <el-table-column label="家庭住址" prop="家庭住址" min-width="200"></el-table-column>
+            <el-table-column label="父亲身份证号" prop="父亲身份证号" width="180"></el-table-column>
+            <el-table-column label="母亲身份证号" prop="母亲身份证号" width="180"></el-table-column>
+            <el-table-column label="配偶身份证号" prop="配偶身份证号" width="180"></el-table-column>
+          </el-table>
+        </div>
+      </div>
+    </el-splitter-panel>
+  </el-splitter>
+</div>
+
+<script>
+const { createApp, ref } = Vue;
+createApp({
+  setup() {
+    // 分割面板位置
+    const splitPos = ref(30);
+
+    const queryForm = ref({ name:'', idCard:'', address:'' });
+    const list = ref([]);
+    const total = ref(0);
+    const page = ref(1);
+    const pageSize = ref(30);
+    const familyList = ref([]);
+    const familyLoading = ref(false);
+
+    // 年龄计算
+    const computeAge = (birth, death) => {
+      if(!birth) return '';
+      try{
+        let base = death ? new Date(death) : new Date();
+        let birthDt = new Date(birth);
+        let age = base.getFullYear() - birthDt.getFullYear();
+        if (base < new Date(base.getFullYear(), birthDt.getMonth(), birthDt.getDate())) age--;
+        return age.toString();
+      }catch(e){
+        return '';
+      }
+    };
+
+    // 查询人员
+    const doQuery = () => {
+      axios.get('/api/person-query/', {
+        params: { ...queryForm.value, page: page.value, pageSize: pageSize.value }
+      }).then(res => {
+        if(res.data.code === 0){
+          list.value = res.data.data.map(item => ({
+            ...item,
+            Age: computeAge(item.BirthDate, item.DeathDate)
+          }));
+          total.value = res.data.total;
+          familyList.value = [];
+        }
+      });
+    };
+
+    // 重置
+    const resetQuery = () => {
+      queryForm.value = { name:'', idCard:'', address:'' };
+      doQuery();
+    };
+    // 点击左侧人员
+    const selectPerson = (row) => {
+      familyList.value = [];
+      axios.get('/api/family-query/', { params: { rsid: row.RSID } }).then(res => {
+        if(res.data.code === 0){
+          familyList.value = res.data.data;
+        }
+      });
+    };
+
+    // 点击右侧成员
+    const selectFamilyMember = async (row) => {
+      if (!row.RSID) {
+        ElMessage.warning('该行无RSID，无法查询');
+        return;
+      }
+      familyLoading.value = true;
+      familyList.value = [];
+      try {
+        const res = await axios.get('/api/family-query/', { params: { rsid: row.RSID } });
+        familyList.value = res.data?.code === 0 ? res.data.data : [];
+      } catch (err) {
+        ElMessage.error('查询失败');
+      } finally {
+        familyLoading.value = false;
+      }
+    };
+
+    return {
+      splitPos,
+      queryForm, list, total, page, pageSize, familyList, familyLoading,
+      doQuery, resetQuery, selectPerson, selectFamilyMember
+    };
+  }
+}).use(ElementPlus,{locale:ElementPlusLocaleZhCn}).mount('#app');
+</script>
+
+<style>
+.el-splitter__trigger {
+  background: #f5f7fa !important;
+  width: 8px !important;
+}
+.el-splitter__collapse-icon {
+  font-size: 16px !important;
+  color: #909399 !important;
+}
+</style>
+{% endblock %}

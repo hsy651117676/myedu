@@ -1,0 +1,124 @@
+{% extends "layout/base.html" %}
+{% block content %}
+
+<div id="app" style="padding:10px;">
+  <el-card>
+    <el-form :model="queryForm" inline label-width="80px">
+      <el-form-item label="姓名"><el-input v-model="queryForm.name" style="width:200px"></el-input></el-form-item>
+      <el-form-item label="身份证"><el-input v-model="queryForm.idCard" style="width:220px"></el-input></el-form-item>
+      <el-form-item label="地址"><el-input v-model="queryForm.address" style="width:280px"></el-input></el-form-item>
+      <el-button type="primary" @click="doQuery">查询</el-button>
+      <el-button @click="resetQuery">重置</el-button>
+    </el-form>
+  </el-card>
+
+  <div style="display:flex;gap:10px;margin-top:10px;">
+    <div style="width:45%;">
+      <el-table :data="list" border @row-click="selectPerson" height="500">
+        <el-table-column label="姓名" prop="Name"></el-table-column>
+        <el-table-column label="性别" prop="Gender"></el-table-column>
+        <el-table-column label="年龄" prop="Age"></el-table-column>
+        <el-table-column label="身份证" prop="IDCard"></el-table-column>
+      </el-table>
+
+      <el-pagination
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          :total="total"
+          layout="total,prev,pager,next,jumper"
+          @current-change="doQuery"
+          style="margin-top:10px;text-align:right"
+          ></el-pagination>
+    </div>
+
+    <div style="width:55%;">
+      <el-button type="primary" @click="saveData">保存</el-button>
+      <el-button @click="clearEdit">清空</el-button>
+      <el-form :model="form" label-width="120px" style="margin-top:10px;">
+        <el-form-item label="姓名"><el-input v-model="form.Name" disabled></el-input></el-form-item>
+        <el-form-item label="身份证"><el-input v-model="form.IDCard" disabled></el-input></el-form-item>
+        <el-form-item label="曾用名"><el-input v-model="form.FormerName"></el-input></el-form-item>
+        <el-form-item label="性别"><el-select v-model="form.Gender"><el-option label="男" value="男"></el-option><el-option label="女" value="女"></el-option></el-select></el-form-item>
+        <el-form-item label="民族"><el-input v-model="form.Nation"></el-input></el-form-item>
+        <el-form-item label="生日"><el-date-picker type="date" v-model="form.BirthDate" format="YYYY-MM-DD" value-format="YYYY-MM-DD"></el-date-picker></el-form-item>
+        <el-form-item label="死亡"><el-date-picker type="date" v-model="form.DeathDate" format="YYYY-MM-DD" value-format="YYYY-MM-DD"></el-date-picker></el-form-item>
+        <el-form-item label="住址"><el-input v-model="form.HomeAddress"></el-input></el-form-item>
+        <el-form-item label="单位"><el-input v-model="form.WorkUnit"></el-input></el-form-item>
+        <el-form-item label="电话"><el-input v-model="form.Telephone"></el-input></el-form-item>
+        <el-form-item label="父亲"><el-input v-model="form.fatherID"></el-input></el-form-item>
+        <el-form-item label="母亲"><el-input v-model="form.motherID"></el-input></el-form-item>
+        <el-form-item label="配偶"><el-input v-model="form.SpouseID"></el-input></el-form-item>
+      </el-form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { createApp, ref } = Vue
+  const ElMessage = ElementPlus.ElMessage
+
+  createApp({
+    setup() {
+      const queryForm = ref({ name:'', idCard:'', address:'' })
+      const list = ref([])
+      const total = ref(0)
+      const page = ref(1)
+      const pageSize = ref(30)
+      const form = ref({ RSID:'', Name:'', IDCard:'' })
+      const selectedRow = ref(null)
+
+      const getAge = (b,d)=>{
+        if(!b)return ''
+        let now = d ? new Date(d) : new Date()
+        let bd = new Date(b)
+        let age = now.getFullYear()-bd.getFullYear()
+        if(now < new Date(now.getFullYear(),bd.getMonth(),bd.getDate()))age--
+        return age
+      }
+
+      const doQuery = ()=>{
+        axios.get('/api/person-query/',{
+          params:{...queryForm.value, page:page.value, pageSize:pageSize.value}
+        }).then(res=>{
+          if(res.data.code===0){
+            list.value = res.data.data.map(i=>({...i, Age:getAge(i.BirthDate,i.DeathDate)}))
+            total.value = res.data.total
+          }
+        })
+      }
+
+      const resetQuery = ()=>{
+        queryForm.value = {name:'',idCard:'',address:''}
+        doQuery()
+      }
+
+      const selectPerson = (row)=>{
+        selectedRow.value = row
+        form.value = {...row}
+      }
+
+      const saveData = ()=>{
+        if(!selectedRow.value?.RSID) return ElMessage.warning("请选择人员")
+        axios.post('/api/person-save/', {
+          RSID: selectedRow.value.RSID, ...form.value
+        }).then(res=>{
+          if(res.data.code===0){
+            ElMessage.success(res.data.msg)
+            doQuery()
+          }else{
+            ElMessage.error(res.data.msg)
+          }
+        }).catch(()=>ElMessage.error("请求失败"))
+      }
+
+      const clearEdit = ()=>{
+        selectedRow.value = null
+        form.value = {RSID:'',Name:'',IDCard:''}
+      }
+
+      return { queryForm,list,total,page,pageSize,form,doQuery,resetQuery,selectPerson,saveData,clearEdit }
+    }
+  }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app')
+</script>
+
+{% endblock %}
