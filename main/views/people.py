@@ -69,17 +69,12 @@ def person_query_api(request):
                 "motherID": row_dict["motherID"],
                 "SpouseID": row_dict["SpouseID"],
             })
-
-        # 获取总数
         cursor.nextset()
         total_row = cursor.fetchone()
         total = total_row[0] if total_row else 0
-
         cursor.close()
         conn.close()
-
         return JsonResponse({"code": 0, "data": data, "total": total})
-
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
 

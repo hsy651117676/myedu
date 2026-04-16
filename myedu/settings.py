@@ -92,23 +92,7 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '3306',
     },
-    # 'rsdb': {
-    #     'ENGINE': 'sql_server.pyodbc',
-    #     'NAME': 'rs_new',
-    #     'USER': 'sa',
-    #     'PASSWORD': 'Rs_new',
-    #     'HOST': '192.168.1.100',
-    #     'PORT': 1433,
-    #     'OPTIONS': {
-    #         'driver': 'ODBC Driver 17 for SQL Server',
-    #         'Encrypt': 'No',
-    #         'TrustServerCertificate': 'Yes',
-    #     },
-    # }
 }
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {

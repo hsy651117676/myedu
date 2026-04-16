@@ -26,23 +26,25 @@
     <el-splitter-panel :collapsible="true" collapse-direction="start" size="30%">
       <div style="height:100%; display:flex; flex-direction:column;">
         <div style="margin-bottom:10px; font-weight:bold;">人员列表</div>
-          <el-table :data="list" border style="flex:1;min-width:100%;" :scrollbar-always-on="true" @row-click="selectPerson">
-          <el-table-column label="姓名" prop="Name" width="100"></el-table-column>
-          <el-table-column label="性别" prop="Gender" width="70"></el-table-column>
-          <el-table-column label="年龄" prop="Age" width="70"></el-table-column>
-          <el-table-column label="身份证号" prop="IDCard" width="180"></el-table-column>
-          <el-table-column label="家庭住址" prop="HomeAddress"></el-table-column>
+          <el-table :data="list" border style="flex:1;min-width:100%;" height="100%" :scrollbar-always-on="true" @row-click="selectPerson">
+          <el-table-column label="姓名" prop="Name" width="80"></el-table-column>
+          <el-table-column label="性别" prop="Gender" width="40"></el-table-column>
+          <el-table-column label="年龄" prop="Age" width="50"></el-table-column>
+          <el-table-column label="身份证号" prop="IDCard" width="170"></el-table-column>
+          <el-table-column label="家庭住址" prop="HomeAddress" width="500"></el-table-column>
         </el-table>
 
-        <div style="text-align:right; padding-top:10px;">
+        <div style="text-align:right; padding-top:10px;font-size:8px;">
           <el-pagination
             v-model:current-page="page"
             v-model:page-size="pageSize"
             :page-sizes="[30,50,100]"
             :total="total"
+            :pager-count="5"
             layout="total, sizes, prev, pager, next, jumper"
             @size-change="doQuery"
             @current-change="doQuery"
+             style="--el-pagination-button-offset: 2px; --el-pagination-gap: 2px;"
           ></el-pagination>
         </div>
       </div>
@@ -50,28 +52,38 @@
 
     <!-- 右侧 -->
     <el-splitter-panel :collapsible="true" collapse-direction="end">
-      <div style="height:100%; display:flex; flex-direction:column;">
-        <div style="margin-bottom:10px; font-weight:bold;">家庭成员信息(双击跳转到该人员视角)</div>
-        <div style="flex:1; overflow:auto;">
-          <el-table :data="familyList" border style="width:100%;" :scrollbar-always-on="true"
-            @row-dblclick="selectFamilyMember" :loading="familyLoading" >
-            <el-table-column label="关系" prop="关系" width="80"></el-table-column>
-            <el-table-column label="姓名" prop="姓名" width="90"></el-table-column>
-            <el-table-column label="性别" prop="性别" width="50"></el-table-column>
-            <el-table-column label="民族" prop="民族" width="90"></el-table-column>
-            <el-table-column label="出生时间" prop="出生时间" width="120"></el-table-column>
-            <el-table-column label="死亡时间" prop="死亡时间" width="120"></el-table-column>
-            <el-table-column label="身份证号" prop="身份证号" width="180"></el-table-column>
-            <el-table-column label="工作单位" prop="工作单位" min-width="150"></el-table-column>
-            <el-table-column label="联系电话" prop="联系电话" width="130"></el-table-column>
-            <el-table-column label="家庭住址" prop="家庭住址" min-width="200"></el-table-column>
-            <el-table-column label="父亲身份证号" prop="父亲身份证号" width="180"></el-table-column>
-            <el-table-column label="母亲身份证号" prop="母亲身份证号" width="180"></el-table-column>
-            <el-table-column label="配偶身份证号" prop="配偶身份证号" width="180"></el-table-column>
-          </el-table>
-        </div>
-      </div>
-    </el-splitter-panel>
+  <div style="height:100%; display:flex; flex-direction:column;">
+    <div style="margin-bottom:10px; font-weight:bold;">家庭成员信息(双击跳转到该人员视角)</div>
+
+    <!-- 核心修改：给表格加 height="100%"，父容器 flex:1 高度穿透 -->
+    <div style="flex:1; overflow:hidden;">
+      <el-table
+        :data="familyList"
+        border
+        style="width:100%;"
+        height="100%"
+        :scrollbar-always-on="true"
+         @row-dblclick="selectFamilyMember"
+        @row-click="handleMobileClick"
+        :loading="familyLoading"
+      >
+        <el-table-column label="关系" prop="关系" width="80"></el-table-column>
+        <el-table-column label="姓名" prop="姓名" width="90"></el-table-column>
+        <el-table-column label="性别" prop="性别" width="50"></el-table-column>
+        <el-table-column label="民族" prop="民族" width="90"></el-table-column>
+        <el-table-column label="出生时间" prop="出生时间" width="120"></el-table-column>
+        <el-table-column label="死亡时间" prop="死亡时间" width="120"></el-table-column>
+        <el-table-column label="身份证号" prop="身份证号" width="180"></el-table-column>
+        <el-table-column label="工作单位" prop="工作单位" min-width="150"></el-table-column>
+        <el-table-column label="联系电话" prop="联系电话" width="130"></el-table-column>
+        <el-table-column label="家庭住址" prop="家庭住址" min-width="200"></el-table-column>
+        <el-table-column label="父亲身份证号" prop="父亲身份证号" width="180"></el-table-column>
+        <el-table-column label="母亲身份证号" prop="母亲身份证号" width="180"></el-table-column>
+        <el-table-column label="配偶身份证号" prop="配偶身份证号" width="180"></el-table-column>
+      </el-table>
+    </div>
+  </div>
+</el-splitter-panel>
   </el-splitter>
 </div>
 
@@ -152,11 +164,20 @@ createApp({
         familyLoading.value = false;
       }
     };
-
+const lastClickTime = ref(0);
+const handleMobileClick = (row) => {
+  const now = Date.now();
+  if (now - lastClickTime.value < 350) {
+    selectFamilyMember(row);
+    lastClickTime.value = 0;
+  } else {
+    lastClickTime.value = now;
+  }
+};
     return {
       splitPos,
       queryForm, list, total, page, pageSize, familyList, familyLoading,
-      doQuery, resetQuery, selectPerson, selectFamilyMember
+      doQuery, resetQuery, selectPerson, selectFamilyMember,lastClickTime, handleMobileClick
     };
   }
 }).use(ElementPlus,{locale:ElementPlusLocaleZhCn}).mount('#app');
