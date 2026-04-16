@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}系统页面{% endblock %}</title>
   <!-- 所有页面只在这里引一次，全部通用 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
@@ -9,6 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/index.full.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/locale/zh-cn.min.js"></script>
   <script src="https://cdn.bootcdn.net/ajax/libs/axios/1.6.0/axios.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #f5f7fa; min-height: 100vh; }
+  </style>
 </head>
 <body>
   {% block content %}{% endblock %}

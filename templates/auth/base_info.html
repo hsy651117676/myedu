@@ -1,0 +1,72 @@
+{% extends "layout/base.html" %}
+{% block title %}基本信息维护{% endblock %}
+
+{% block content %}
+<div id="app" style="max-width:550px; margin:50px auto;">
+  <h2 style="text-align:center; margin-bottom:20px;">基本信息维护</h2>
+
+  <el-form>
+    {% csrf_token %}
+
+    <el-form-item label="真实姓名">
+      <el-input v-model="form.real_name" placeholder="请输入真实姓名"></el-input>
+    </el-form-item>
+
+    <el-form-item label="联系电话">
+      <el-input v-model="form.phone" placeholder="请输入手机号"></el-input>
+    </el-form-item>
+
+    <el-form-item label="身份证号">
+      <el-input v-model="form.id_card" placeholder="请输入身份证号"></el-input>
+    </el-form-item>
+
+    <el-form-item label="居住地址">
+      <el-input v-model="form.address" type="textarea" :rows="3" placeholder="居住地址"></el-input>
+    </el-form-item>
+
+    <el-form-item>
+      <el-button type="primary" @click="submit" style="width:100%">
+        保存基本信息
+      </el-button>
+    </el-form-item>
+  </el-form>
+</div>
+
+<script>
+const { createApp, reactive } = Vue;
+const { ElMessage } = ElementPlus;
+
+createApp({
+  setup() {
+    // ✅ 自动从后端获取数据并回填
+    const form = reactive({
+      real_name: "{{ profile.real_name }}",
+      phone: "{{ profile.phone }}",
+      id_card: "{{ profile.id_card }}",
+      address: "{{ profile.address }}"
+    });
+
+    // 提交
+    const submit = async () => {
+      try {
+        const res = await axios.post("/base-info/", form, {
+          headers: {
+            "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+          }
+        });
+
+        if (res.data.code === 200) {
+          ElMessage.success("保存成功");
+        } else {
+          ElMessage.error(res.data.msg);
+        }
+      } catch (e) {
+        ElMessage.error("保存失败");
+      }
+    };
+
+    return { form, submit };
+  }
+}).use(ElementPlus).mount("#app");
+</script>
+{% endblock %}

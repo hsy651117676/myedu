@@ -1,8 +1,5 @@
 from django.urls import path
-from .views.auth import (
-    login_view, register_view, forgot_pwd_view,send_reset_code,
-    logout_view, change_pwd, send_email_code, generate_captcha
-)
+from .views.auth import *
 from .views.people import family_query_api, person_manage, data_change, person_query_api, person_save_api,person_query,key_data_update_api
 from .views.home import home
 from .views.tools import linux, encrypt, decrypt, piano
@@ -18,6 +15,7 @@ urlpatterns = [
     path('send-reset-code/', send_reset_code, name='send_reset_code'),
     path('logout/', logout_view, name='logout'),
     path('change-pwd/', change_pwd, name='change_pwd'),
+    path('base-info/', base_info_view, name='base_info'),
 
     path('captcha/', generate_captcha, name='captcha'),
     path('send-email-code/', send_email_code, name='send_email_code'),

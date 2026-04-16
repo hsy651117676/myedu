@@ -1,128 +1,93 @@
 {% extends "layout/base.html" %}
-
 {% block title %}忘记密码{% endblock %}
 
 {% block content %}
-<div id="app" style="max-width:450px; margin:0 auto;">
-  <h2 style="text-align:center;">忘记密码</h2>
+<div id="app" style="max-width:450px; margin:50px auto;">
+  <h2 style="text-align:center; margin-bottom:20px;">忘记密码</h2>
 
-  <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="submit" label-width="80px">
-    <el-form-item label="用户名" prop="username">
+  <el-form @submit.prevent="submit">
+    {% csrf_token %}
+
+    <el-form-item label="用户名">
       <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
     </el-form-item>
-
-    <el-form-item label="邮箱" prop="email">
+    <el-form-item label="邮箱">
       <el-input v-model="form.email" placeholder="请输入邮箱"></el-input>
     </el-form-item>
-
-    <el-form-item label="验证码" prop="code">
+    <el-form-item label="验证码">
       <div style="display:flex;gap:10px;">
-        <el-input v-model="form.code" placeholder="验证码"></el-input>
+        <el-input v-model="form.code" placeholder="6位验证码"></el-input>
         <el-button @click="sendCode" :disabled="sending">
-          <span v-if="sending">{% verbatim %}{{ time }}{% endverbatim %}秒后重发</span>
+          <span v-if="sending">60秒后重发</span>
           <span v-else>发送验证码</span>
         </el-button>
       </div>
     </el-form-item>
-
-    <el-form-item label="新密码" prop="password1">
-      <el-input type="password" v-model="form.password1" placeholder="新密码≥6位"></el-input>
+    <el-form-item label="新密码">
+      <el-input v-model="form.password1" type="password" show-password></el-input>
     </el-form-item>
-
-    <el-form-item label="确认密码" prop="password2">
-      <el-input type="password" v-model="form.password2" placeholder="确认新密码"></el-input>
+    <el-form-item label="确认密码">
+      <el-input v-model="form.password2" type="password" show-password></el-input>
     </el-form-item>
-
     <el-form-item>
-      <el-button type="primary" style="width:100%" native-type="submit">重置密码</el-button>
+      <el-button type="primary" style="width:100%">重置密码</el-button>
     </el-form-item>
   </el-form>
 </div>
 
 <script>
-const { createApp } = Vue;
+const { createApp, reactive, ref } = Vue;
 const { ElMessage } = ElementPlus;
 
 createApp({
-  data() {
-    return {
-      form: { username:'', email:'', code:'', password1:'', password2:'' },
-      rules: {
-        username: [{ required:true, message:'请输入用户名', trigger:'blur' }],
-        email: [
-          { required:true, message:'请输入邮箱', trigger:'blur' },
-          { type:'email', message:'邮箱格式不正确', trigger:'blur' }
-        ],
-        code: [{ required:true, message:'请输入验证码', trigger:'blur' }],
-        password1: [
-          { required:true, message:'请输入新密码', trigger:'blur' },
-          { min:6, message:'密码至少6位', trigger:'blur' }
-        ],
-        password2: [
-          { required:true, message:'请确认密码', trigger:'blur' },
-          { validator: (r, v) => v === this.form.password1, message:'两次密码不一致', trigger:'blur' }
-        ]
-      },
-      sending: false,
-      time: 60,
-      timer: null
-    }
-  },
-  methods: {
-    async sendCode() {
-      if (this.sending) return;
-      try { await this.$refs.formRef.validateField(['username','email']); }
-      catch(e) { return; }
+  setup() {
+    const form = reactive({ username: '', email: '', code: '', password1: '', password2: '' });
+    const sending = ref(false);
+    let time = 60, timer = null;
 
-      this.sending = true;
-      this.time = 60;
+    const sendCode = async () => {
+      const fd = new FormData();
+      fd.append('username', form.username);
+      fd.append('email', form.email);
+      fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
 
-      const res = await fetch('/send-reset-code/', {
-        method: 'POST',
-        headers: {
-          'Content-Type':'application/x-www-form-urlencoded',
-          'X-CSRFToken':'{{ csrf_token }}'
-        },
-        body: new URLSearchParams(this.form)
-      });
+      const res = await fetch('/send-reset-code/', { method: 'POST', body: fd });
       const data = await res.json();
+      ElMessage[data.code === 200 ? 'success' : 'error'](data.msg);
 
       if (data.code === 200) {
-        ElMessage.success(data.msg);
-        this.timer = setInterval(() => {
-          this.time--;
-          if (this.time <= 0) {
-            clearInterval(this.timer);
-            this.sending = false;
-            this.time = 60;
+        sending.value = true;
+        timer = setInterval(() => {
+          time--;
+          if (time <= 0) {
+            clearInterval(timer);
+            sending.value = false;
+            time = 60;
           }
         }, 1000);
-      } else {
-        ElMessage.error(data.msg);
-        this.sending = false;
       }
-    },
-    async submit() {
-      const valid = await this.$refs.formRef.validate();
-      if (!valid) return;
+    };
 
+    const submit = async () => {
       const res = await fetch('/forgot-pwd/', {
         method: 'POST',
         headers: {
-          'Content-Type':'application/json',
-          'X-CSRFToken':'{{ csrf_token }}'
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
-        body: JSON.stringify(this.form)
+        body: JSON.stringify(form)
       });
       const data = await res.json();
       if (data.code === 200) {
-        ElMessage.success('密码重置成功');
-        setTimeout(()=>location.href='/login/',1000);
+        ElMessage.success(data.msg);
+        setTimeout(() => location.href = '/login/', 1000);
       } else {
         ElMessage.error(data.msg);
       }
-    }
+    };
+
+    return { form, sending, sendCode, submit };
   }
-}).use(ElementPlus).mount('#app')
+}).use(ElementPlus).mount('#app');
 </script>
 {% endblock %}

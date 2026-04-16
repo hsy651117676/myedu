@@ -1,39 +1,34 @@
 {% extends "layout/base.html" %}
-
 {% block title %}注册{% endblock %}
 
 {% block content %}
-<div id="app" style="max-width:450px; margin:0 auto;">
-  <h2 style="text-align:center;">用户注册</h2>
+<div id="app" style="max-width:450px; margin:50px auto;">
+  <h2 style="text-align:center; margin-bottom:20px;">用户注册</h2>
 
-  <el-form 
-    ref="formRef" 
-    :model="form" 
-    :rules="rules" 
-    label-width="80px"
-    @submit.prevent="submitForm"
-  >
-    <el-form-item label="用户名" prop="username">
+  <el-form @submit.prevent="submitForm">
+    {% csrf_token %}
+
+    <el-form-item label="用户名">
       <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
     </el-form-item>
 
-    <el-form-item label="邮箱" prop="email">
+    <el-form-item label="邮箱">
       <el-input v-model="form.email" placeholder="请输入邮箱"></el-input>
     </el-form-item>
 
-    <el-form-item label="密码" prop="password1">
-      <el-input v-model="form.password1" type="password" placeholder="密码≥6位"></el-input>
+    <el-form-item label="密码">
+      <el-input v-model="form.password1" type="password" placeholder="密码≥6位" show-password></el-input>
     </el-form-item>
 
-    <el-form-item label="确认密码" prop="password2">
-      <el-input v-model="form.password2" type="password" placeholder="确认密码"></el-input>
+    <el-form-item label="确认密码">
+      <el-input v-model="form.password2" type="password" placeholder="确认密码" show-password></el-input>
     </el-form-item>
 
-    <el-form-item label="验证码" prop="code">
+    <el-form-item label="验证码">
       <div style="display:flex;gap:10px;">
-        <el-input v-model="form.code" placeholder="验证码"></el-input>
-        <el-button @click="sendCode" :disabled="sending || !form.email">
-          <span v-if="sending">{% verbatim %}{{ time }}{% endverbatim %}秒后重发</span>
+        <el-input v-model="form.code" placeholder="6位验证码"></el-input>
+        <el-button @click="sendCode" :disabled="sending">
+          <span v-if="sending">60秒后重发</span>
           <span v-else>发送验证码</span>
         </el-button>
       </div>
@@ -46,96 +41,70 @@
 </div>
 
 <script>
-const { createApp } = Vue;
+const { createApp, reactive, ref } = Vue;
 const { ElMessage } = ElementPlus;
 
 createApp({
-  data() {
-    return {
-      form: {
-        username: '',
-        email: '',
-        password1: '',
-        password2: '',
-        code: ''
-      },
-      rules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: '请输入邮箱', trigger: 'blur' },
-          { type: 'email', message: '邮箱格式不正确' }
-        ],
-        password1: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, message: '密码至少6位' }
-        ],
-        password2: [
-          { required: true, message: '请确认密码', trigger: 'blur' },
-          {
-            validator: (r, v) => v === this.form.password1,
-            message: '两次密码不一致'
-          }
-        ],
-        code: [
-          { required: true, message: '请输入验证码', trigger: 'blur' }
-        ]
-      },
-      sending: false,
-      time: 60
-    }
-  },
-  methods: {
-    async sendCode() {
-      if (!this.form.email) {
-        ElMessage.warning('请输入邮箱');
-        return;
-      }
-      this.sending = true;
+  setup() {
+    const form = reactive({
+      username: '',
+      email: '',
+      password1: '',
+      password2: '',
+      code: ''
+    });
+
+    const sending = ref(false);
+    let time = 60;
+    let timer = null;
+
+    // 发送验证码
+    const sendCode = async () => {
+      const fd = new FormData();
+      fd.append('email', form.email);
+      fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
       const res = await fetch('/send-email-code/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: 'email=' + this.form.email
+        body: fd
       });
       const data = await res.json();
       ElMessage[data.code === 200 ? 'success' : 'error'](data.msg);
+
       if (data.code === 200) {
-        let t = setInterval(() => {
-          this.time--;
-          if (this.time <= 0) {
-            this.sending = false;
-            this.time = 60;
-            clearInterval(t);
+        sending.value = true;
+        timer = setInterval(() => {
+          time--;
+          if (time <= 0) {
+            clearInterval(timer);
+            sending.value = false;
+            time = 60;
           }
         }, 1000);
-      } else {
-        this.sending = false;
       }
-    },
-    async submitForm() {
-      const valid = await this.$refs.formRef.validate();
-      if (!valid) return;
+    };
 
+    // 提交注册
+    const submitForm = async () => {
       const res = await fetch('/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
-        body: JSON.stringify(this.form)
+        body: JSON.stringify(form)
       });
+
       const data = await res.json();
       if (data.code === 200) {
-        ElMessage.success('注册成功，即将跳转到登录');
-        setTimeout(() => location.href = '/login/', 1000);
+        ElMessage.success("注册成功，即将跳转到登录");
+        setTimeout(() => location.href = "/login/", 1000);
       } else {
         ElMessage.error(data.msg);
       }
-    }
+    };
+
+    return { form, sending, sendCode, submitForm };
   }
 }).use(ElementPlus).mount('#app');
 </script>

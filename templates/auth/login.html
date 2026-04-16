@@ -23,7 +23,7 @@
 <div class="login-box" id="app">
   <h3 style="text-align:center; margin-bottom:25px">用户登录</h3>
 
-  <el-form method="post" @submit.prevent="submit">
+  <el-form @submit.prevent="submit">
     {% csrf_token %}
 
     <el-form-item label="用户名">
@@ -36,7 +36,7 @@
 
     <el-form-item label="验证码">
       <div style="display: flex; gap:10px; align-items:center">
-        <el-input v-model="form.captcha" placeholder="请输入验证码"></el-input>
+        <el-input v-model="form.captcha" placeholder="请输入验证码" maxlength="4"></el-input>
         <img class="captcha-img" :src="captchaUrl" @click="refreshCaptcha">
       </div>
     </el-form-item>
@@ -53,11 +53,12 @@
 </div>
 
 <script>
-  if (window.top !== window.self) {
-    window.top.location.href = window.location.href;
+if (window.top !== window.self) {
+  window.top.location.href = window.location.href;
 }
-const { createApp, reactive, ref } = Vue
-const { ElMessage } = ElementPlus
+
+const { createApp, reactive, ref } = Vue;
+const { ElMessage } = ElementPlus;
 
 createApp({
   setup() {
@@ -65,33 +66,37 @@ createApp({
       username: '',
       password: '',
       captcha: ''
-    })
+    });
 
-    const captchaUrl = ref('/captcha/')
+    // 验证码地址
+    const captchaUrl = ref('/captcha?' + Math.random());
 
+    // 刷新验证码
     function refreshCaptcha() {
-      captchaUrl.value = '/captcha?' + Math.random()
+      captchaUrl.value = '/captcha?' + Math.random();
     }
 
+    // 登录：只发请求，完全交给后端验证
     async function submit() {
-      const fd = new FormData()
-      fd.append('username', form.username)
-      fd.append('password', form.password)
-      fd.append('captcha', form.captcha)
-      fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
+      const fd = new FormData();
+      fd.append('username', form.username);
+      fd.append('password', form.password);
+      fd.append('captcha', form.captcha);
+      fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
 
       const res = await fetch('/login/', {
         method: 'POST',
         body: fd
-      })
+      });
 
-      const html = await res.text()
-      if (html.includes('系统登录')) {
-        ElMessage.error('用户名、密码或验证码错误')
-        refreshCaptcha()
-      } else {
-        location.href = '/'
+      // 关键：后端返回页面，说明验证失败
+      if (res.redirected) {
+        location.href = res.url;
+        return;
       }
+      
+      ElMessage.error('用户名/密码/验证码错误');
+      refreshCaptcha();
     }
 
     return {
@@ -99,8 +104,8 @@ createApp({
       captchaUrl,
       refreshCaptcha,
       submit
-    }
+    };
   }
-}).use(ElementPlus).mount('#app')
+}).use(ElementPlus).mount('#app');
 </script>
 {% endblock %}

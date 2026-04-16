@@ -4,18 +4,16 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
-from django.http import HttpResponse
+from django.views.decorators.http import require_POST
+from django.core.mail import send_mail
 from django.conf import settings
 import random
 import string
+import json
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
-from django.views.decorators.http import require_POST
-from django.core.mail import send_mail
-from django.contrib.auth.models import User
-from django.core.cache import cache
-import json
+from django.http import JsonResponse, HttpResponse
+from main.models import UserProfile
 
 def generate_captcha(request):
     width, height = 160, 50
@@ -30,7 +28,7 @@ def generate_captcha(request):
         x2 = random.randint(0, width)
         y2 = random.randint(0, height)
         draw.line((x1, y1, x2, y2), fill=(random.randint(0,200), random.randint(0,200), random.randint(0,200)))
-    draw.text((25, 8), code, font=font, fill=(255,0,0))
+    draw.text((25, 8), code, font=font, fill=(255, 0, 0))
     buf = BytesIO()
     image.save(buf, 'png')
     return HttpResponse(buf.getvalue(), content_type='image/png')
@@ -43,28 +41,21 @@ def login_view(request):
         session_captcha = request.session.get('captcha', '').upper()
         if captcha != session_captcha:
             messages.error(request, '验证码错误')
-            response = render(request, 'auth/login.html')
-            return response
-
-        key = f'login_err:{username}'
-        err_count = cache.get(key, 0)
+            return render(request, 'auth/login.html')
+        err_key = 'login_error_count'
+        err_count = request.session.get(err_key, 0)
         if err_count >= 5:
             messages.error(request, '错误次数过多，请10分钟后再试')
-            response = render(request, 'auth/login.html')
-            return response
-
+            return render(request, 'auth/login.html')
         user = authenticate(request, username=username, password=password)
         if user:
-            cache.delete(key)
+            request.session.pop(err_key, None)
             login(request, user)
             return redirect('home')
-
-        cache.set(key, err_count + 1, 600)
+        request.session[err_key] = err_count + 1
         messages.error(request, f'用户名或密码错误，已失败 {err_count + 1}/5 次')
-        response = render(request, 'auth/login.html')
-        return response
-    response = render(request, 'auth/login.html')
-    return response
+        return render(request, 'auth/login.html')
+    return render(request, 'auth/login.html')
 
 def register_view(request):
     if request.method == 'POST':
@@ -74,7 +65,6 @@ def register_view(request):
         password1 = data.get('password1', '').strip()
         password2 = data.get('password2', '').strip()
         code = data.get('code', '').strip()
-
         if not username:
             return JsonResponse({'code': 400, 'msg': '请输入用户名'})
         if not email:
@@ -89,22 +79,18 @@ def register_view(request):
             return JsonResponse({'code': 400, 'msg': '该邮箱已被注册'})
         if not code:
             return JsonResponse({'code': 400, 'msg': '请输入验证码'})
-
-        lock_key = f'register_lock:{email}'
-        err_count = cache.get(lock_key, 0)
+        err_key = 'register_error_count'
+        err_count = request.session.get(err_key, 0)
         if err_count >= 5:
-            return JsonResponse({'code': 400, 'msg': '验证码尝试次数过多，请10分钟后再试'})
-
-        cache_code = cache.get(f'email_code:{email}')
-        if not cache_code or cache_code != code:
-            cache.set(lock_key, err_count + 1, 600)
+            return JsonResponse({'code': 400, 'msg': '验证码尝试次数过多，请稍后再试'})
+        session_code = request.session.get(f'register_code_{email}')
+        if not session_code or session_code != code:
+            request.session[err_key] = err_count + 1
             return JsonResponse({'code': 400, 'msg': '验证码错误或已过期'})
-
         User.objects.create_user(username=username, email=email, password=password1)
-        cache.delete(f'email_code:{email}')
-        cache.delete(lock_key)
+        request.session.pop(f'register_code_{email}', None)
+        request.session.pop(err_key, None)
         return JsonResponse({'code': 200, 'msg': '注册成功'})
-
     return render(request, 'auth/register.html')
 
 @require_POST
@@ -112,12 +98,16 @@ def send_email_code(request):
     email = request.POST.get('email', '').strip()
     if not email:
         return JsonResponse({'code': 400, 'msg': '请输入邮箱'})
-    lock_key = f"email_lock:{email}"
-    if cache.get(lock_key):
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({'code': 400, 'msg': '该邮箱已被注册，请直接登录'})
+    send_key = f'register_send_lock_{email}'
+    if request.session.get(send_key):
         return JsonResponse({'code': 400, 'msg': '发送频繁，60秒后再试'})
     code = ''.join(random.choices(string.digits, k=6))
-    cache.set(f"email_code:{email}", code, 600)
-    cache.set(lock_key, "1", 60)
+    request.session[f'register_code_{email}'] = code
+    request.session.set_expiry(300)  # 5分钟
+    request.session[send_key] = True
+    request.session.set_expiry(60)  # 60秒内不能重发
     send_mail(
         '注册验证码',
         f'您的验证码：{code}（5分钟内有效）',
@@ -135,81 +125,59 @@ def forgot_pwd_view(request):
         code = data.get('code', '').strip()
         password1 = data.get('password1', '').strip()
         password2 = data.get('password2', '').strip()
-
         if not username:
             return JsonResponse({'code':400, 'msg':'请输入用户名'})
         if not email:
             return JsonResponse({'code':400, 'msg':'请输入邮箱'})
-
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             return JsonResponse({'code':400, 'msg':'用户名不存在'})
-
         if user.email != email:
             return JsonResponse({'code':400, 'msg':'用户名与邮箱不匹配'})
-
         if not code:
             return JsonResponse({'code':400, 'msg':'请输入验证码'})
-        if not password1:
-            return JsonResponse({'code':400, 'msg':'请输入新密码'})
         if len(password1) < 6:
             return JsonResponse({'code':400, 'msg':'密码长度不能少于6位'})
         if password1 != password2:
             return JsonResponse({'code':400, 'msg':'两次密码不一致'})
-
-        lock_key = f'reset_lock:{email}'
-        err_count = cache.get(lock_key, 0)
+        err_key = 'reset_error_count'
+        err_count = request.session.get(err_key, 0)
         if err_count >= 5:
-            return JsonResponse({'code':400, 'msg':'验证码尝试次数过多，10分钟后再试'})
-
-        cache_code = cache.get(f'reset_code:{email}')
-        if not cache_code or cache_code != code:
-            cache.set(lock_key, err_count + 1, 600)
+            return JsonResponse({'code':400, 'msg':'尝试次数过多，请稍后再试'})
+        session_code = request.session.get(f'reset_code_{email}')
+        if not session_code or session_code != code:
+            request.session[err_key] = err_count + 1
             return JsonResponse({'code':400, 'msg':'验证码错误或已过期'})
-
         user.set_password(password1)
         user.save()
-        cache.delete(f'reset_code:{email}')
-        cache.delete(lock_key)
+        request.session.pop(f'reset_code_{email}', None)
+        request.session.pop(err_key, None)
         return JsonResponse({'code':200, 'msg':'密码重置成功，请登录'})
-
     return render(request, 'auth/forgot_pwd.html')
 
-# 发送重置验证码接口
 @require_POST
 def send_reset_code(request):
     username = request.POST.get('username', '').strip()
     email = request.POST.get('email', '').strip()
-
     if not username or not email:
         return JsonResponse({'code':400, 'msg':'请输入用户名和邮箱'})
-
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
         return JsonResponse({'code':400, 'msg':'用户名不存在'})
-
     if user.email != email:
         return JsonResponse({'code':400, 'msg':'用户名与邮箱不匹配'})
-
-    lock_key = f'reset_email_lock:{email}'
-    if cache.get(lock_key):
+    send_key = f'reset_send_lock_{email}'
+    if request.session.get(send_key):
         return JsonResponse({'code':400, 'msg':'发送频繁，60秒后再试'})
-
     code = ''.join(random.choices(string.digits, k=6))
-    cache.set(f'reset_code:{email}', code, 600)
-    cache.set(lock_key, '1', 60)
-
-    send_mail(
-        '密码重置验证码',
-        f'您的重置验证码：{code}（5分钟内有效）',
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-        fail_silently=False
-    )
+    request.session[f'reset_code_{email}'] = code
+    request.session.set_expiry(300)
+    request.session[send_key] = True
+    request.session.set_expiry(60)
+    send_mail( '密码重置验证码', f'您的重置验证码：{code}（5分钟内有效）', settings.DEFAULT_FROM_EMAIL, [email], fail_silently=False)
     return JsonResponse({'code':200, 'msg':'验证码发送成功'})
-
 
 def logout_view(request):
     logout(request)
@@ -218,29 +186,39 @@ def logout_view(request):
 @login_required
 def change_pwd(request):
     user = request.user
-    key = f'pwd_err:{user.id}'
-    err_count = int(cache.get(key) or 0)
+    err_key = 'change_pwd_error'
+    err_count = request.session.get(err_key, 0)
 
     if err_count >= 3:
         return JsonResponse({'code':429, 'msg':'错误次数过多，10分钟后再试'})
-
     if request.method == 'POST':
         old_pwd = request.POST.get('old_pwd')
         new_pwd1 = request.POST.get('new_pwd1')
         new_pwd2 = request.POST.get('new_pwd2')
-
         if not user.check_password(old_pwd):
-            cache.set(key, err_count + 1, 600)
+            request.session[err_key] = err_count + 1
             return JsonResponse({'code':400, 'msg':f'旧密码错误，剩余{2-err_count}次机会'})
         if new_pwd1 != new_pwd2:
             return JsonResponse({'code':400, 'msg':'两次密码不一致'})
-        if len(new_pwd1) < 4:
-            return JsonResponse({'code':400, 'msg':'密码长度不小于4位'})
-
+        if len(new_pwd1) < 6:
+            return JsonResponse({'code':400, 'msg':'密码长度不能少于6位'})
         user.set_password(new_pwd1)
         user.save()
-        login(request, user)
-        cache.delete(key)
+        login(request, user)  # 保持登录状态
+        request.session.pop(err_key, None)
         return JsonResponse({'code':200, 'msg':'修改成功'})
     return render(request, 'auth/change_pwd.html')
 
+@login_required
+def base_info_view(request):
+    user = request.user
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        profile.real_name = data.get('real_name', '').strip()
+        profile.phone = data.get('phone', '').strip()
+        profile.id_card = data.get('id_card', '').strip()
+        profile.address = data.get('address', '').strip()
+        profile.save()
+        return JsonResponse({'code': 200, 'msg': '保存成功'})
+    return render(request, 'auth/base_info.html', {'profile': profile})
