@@ -1,12 +1,12 @@
 from django.urls import path
 from .views.auth import *
 from .views.people import family_query_api, person_manage, data_change, person_query_api, person_save_api,person_query,key_data_update_api
-from .views.home import home
+from .views.home import home_view
 from .views.tools import linux, encrypt, decrypt, piano
 from .views.system import base_info
 
 urlpatterns = [
-    path('', home, name='home'),
+    path('', home_view, name='home'),
 
     # 认证
     path('login/', login_view, name='login'),
