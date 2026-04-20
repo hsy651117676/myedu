@@ -42,13 +42,10 @@ def person_query_api(request):
 
     try:
         conn, cursor = get_db()
-
-        # 调用存储过程
         cursor.execute("{CALL B_population_EDIT('SELECT', 0, ?, ?, '', '', '', '', '', ?, '', '', '', '', '', ?, ?)}",
             (idCard, name, address, page, pageSize)
         )
 
-        # ✅ 用字段名读取，永远不会下标越界
         data = []
         columns = [col[0] for col in cursor.description]
         for row in cursor.fetchall():
@@ -145,6 +142,8 @@ def person_save_api(request):
 def key_data_update_api(request):
     if request.method != "POST":
         return JsonResponse({"code": 405, "msg": "方法错误"})
+    if not request.user.is_superuser:
+        return JsonResponse({"code": 403, "msg": "无权限，仅超级管理员可操作"})
     data = json.loads(request.body)
     rsid = data.get("RSID")
     new_name = data.get("Name", "").strip()

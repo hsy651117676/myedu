@@ -1,187 +1,107 @@
 {% extends "layout/base.html" %}
 {% block content %}
-<div id="app" style="padding:0; font-size:14px; height:100vh; display:flex; flex-direction:column;">
-  <!-- 顶部查询栏 -->
-  <!-- <el-collapse v-model="activeName" accordion class="query-collapse"> -->
-    <el-collapse v-model="activeName" accordion>
-  <el-collapse-item title="查询条件" name="1">
-    <el-card>
-      <el-form :inline="true" :model="queryForm" label-width="80px">
-        <el-form-item label="人员姓名">
-          <el-input v-model="queryForm.name" style="width:200px"></el-input>
-        </el-form-item>
-        <el-form-item label="身份证号">
-          <el-input v-model="queryForm.idCard" style="width:220px"></el-input>
-        </el-form-item>
-        <el-form-item label="家庭住址">
-          <el-input v-model="queryForm.address" style="width:280px"></el-input>
-        </el-form-item>
+<div id="app" style="padding:0;font-size:14px;height:100vh;display:flex;flex-direction:column;">
+  <el-collapse v-model="activeName" accordion>
+    <el-collapse-item title="查询条件" name="1">
+      <el-card><el-form :inline="true" :model="q" label-width="80px">
+        <el-form-item label="人员姓名"><el-input v-model="q.name" style="width:200px"></el-input></el-form-item>
+        <el-form-item label="身份证号"><el-input v-model="q.idCard" style="width:220px"></el-input></el-form-item>
+        <el-form-item label="家庭住址"><el-input v-model="q.address" style="width:280px"></el-input></el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="doQuery">查询</el-button>
-          <el-button @click="resetQuery">重置</el-button>
+          <el-button type="primary" @click="query">查询</el-button>
+          <el-button @click="reset">重置</el-button>
         </el-form-item>
-      </el-form>
-    </el-card>
-  </el-collapse-item>
-</el-collapse>
-  <el-splitter style="flex:1; height:0;" v-model="splitPos" :min="20" :max="80">
-    <!-- 左侧 -->
+      </el-form></el-card>
+    </el-collapse-item>
+  </el-collapse>
+  <el-splitter style="flex:1;height:0;" v-model="sp" :min="20" :max="80">
     <el-splitter-panel :collapsible="true" collapse-direction="start" size="30%">
-      <div style="height:100%; display:flex; flex-direction:column;">
-        <div style="margin-bottom:10px; font-weight:bold;">人员列表</div>
-          <el-table :data="list" border style="flex:1;min-width:100%;" height="100%" :scrollbar-always-on="true" @row-click="selectPerson">
+      <div style="height:100%;display:flex;flex-direction:column;">
+        <div style="margin-bottom:10px;font-weight:bold;">人员列表</div>
+        <el-table :data="list" border style="flex:1;min-width:100%;" height="100%" :scrollbar-always-on="true" @row-click="selPerson">
           <el-table-column label="姓名" prop="Name" width="80"></el-table-column>
           <el-table-column label="性别" prop="Gender" width="40"></el-table-column>
           <el-table-column label="年龄" prop="Age" width="50"></el-table-column>
           <el-table-column label="身份证号" prop="IDCard" width="175"></el-table-column>
           <el-table-column label="家庭住址" prop="HomeAddress" width="500"></el-table-column>
         </el-table>
-
-        <div style="text-align:right; padding-top:10px;font-size:8px;">
-          <el-pagination
-            v-model:current-page="page"
-            v-model:page-size="pageSize"
-            :page-sizes="[30,50,100]"
-            :total="total"
-            :pager-count="5"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="doQuery"
-            @current-change="doQuery"
-             style="--el-pagination-button-offset: 2px; --el-pagination-gap: 2px;"
-          ></el-pagination>
+        <div style="text-align:right;padding-top:10px;font-size:8px;">
+          <el-pagination v-model:current-page="p" v-model:page-size="ps" :page-sizes="[30,50,100]" :total="total" :pager-count="5"
+            layout="total, sizes, prev, pager, next, jumper" @size-change="query" @current-change="query"
+            style="--el-pagination-button-offset:2px;--el-pagination-gap:2px;"></el-pagination>
         </div>
       </div>
     </el-splitter-panel>
-
-    <!-- 右侧 -->
     <el-splitter-panel :collapsible="true" collapse-direction="end">
-  <div style="height:100%; display:flex; flex-direction:column;">
-    <div style="margin-bottom:10px; font-weight:bold;">家庭成员信息(双击跳转到该人员视角)</div>
-
-    <!-- 核心修改：给表格加 height="100%"，父容器 flex:1 高度穿透 -->
-    <div style="flex:1; overflow:hidden;">
-      <el-table
-        :data="familyList"
-        border
-        style="width:100%;"
-        height="100%"
-        :scrollbar-always-on="true"
-         @row-dblclick="selectFamilyMember"
-        @row-click="handleMobileClick"
-        :loading="familyLoading"
-      >
-        <el-table-column label="关系" prop="关系" width="80"></el-table-column>
-        <el-table-column label="姓名" prop="姓名" width="90"></el-table-column>
-        <el-table-column label="性别" prop="性别" width="50"></el-table-column>
-        <el-table-column label="民族" prop="民族" width="90"></el-table-column>
-        <el-table-column label="出生时间" prop="出生时间" width="120"></el-table-column>
-        <el-table-column label="死亡时间" prop="死亡时间" width="120"></el-table-column>
-        <el-table-column label="身份证号" prop="身份证号" width="180"></el-table-column>
-        <el-table-column label="工作单位" prop="工作单位" min-width="150"></el-table-column>
-        <el-table-column label="联系电话" prop="联系电话" width="130"></el-table-column>
-        <el-table-column label="家庭住址" prop="家庭住址" min-width="200"></el-table-column>
-        <el-table-column label="父亲身份证号" prop="父亲身份证号" width="180"></el-table-column>
-        <el-table-column label="母亲身份证号" prop="母亲身份证号" width="180"></el-table-column>
-        <el-table-column label="配偶身份证号" prop="配偶身份证号" width="180"></el-table-column>
-      </el-table>
-    </div>
-  </div>
-</el-splitter-panel>
+      <div style="height:100%;display:flex;flex-direction:column;">
+        <div style="margin-bottom:10px;font-weight:bold;">家庭成员信息(双击跳转到该人员视角)</div>
+        <div style="flex:1;overflow:hidden;">
+          <el-table :data="fList" border style="width:100%;" height="100%" :scrollbar-always-on="true"
+            @row-dblclick="selFamily" @row-click="mobileDbl" :loading="fLoading">
+            <el-table-column label="关系" prop="关系" width="80"></el-table-column>
+            <el-table-column label="姓名" prop="姓名" width="90"></el-table-column>
+            <el-table-column label="性别" prop="性别" width="50"></el-table-column>
+            <el-table-column label="民族" prop="民族" width="90"></el-table-column>
+            <el-table-column label="出生时间" prop="出生时间" width="120"></el-table-column>
+            <el-table-column label="死亡时间" prop="死亡时间" width="120"></el-table-column>
+            <el-table-column label="身份证号" prop="身份证号" width="180"></el-table-column>
+            <el-table-column label="工作单位" prop="工作单位" min-width="150"></el-table-column>
+            <el-table-column label="联系电话" prop="联系电话" width="130"></el-table-column>
+            <el-table-column label="家庭住址" prop="家庭住址" min-width="200"></el-table-column>
+            <el-table-column label="父亲身份证号" prop="父亲身份证号" width="180"></el-table-column>
+            <el-table-column label="母亲身份证号" prop="母亲身份证号" width="180"></el-table-column>
+            <el-table-column label="配偶身份证号" prop="配偶身份证号" width="180"></el-table-column>
+          </el-table>
+        </div>
+      </div>
+    </el-splitter-panel>
   </el-splitter>
 </div>
-
 <script>
 const { createApp, ref } = Vue;
 createApp({
   setup() {
-    // 分割面板位置
-    const splitPos = ref(30);
-    const queryForm = ref({ name:'', idCard:'', address:'' });
-    const list = ref([]);
-    const total = ref(0);
-    const page = ref(1);
-    const activeName = ref('1');
-    const pageSize = ref(30);
-    const familyList = ref([]);
-    const familyLoading = ref(false);
-
-    // 年龄计算
-    const computeAge = (birth, death) => {
-      if(!birth) return '';
-      try{
-        let base = death ? new Date(death) : new Date();
-        let birthDt = new Date(birth);
-        let age = base.getFullYear() - birthDt.getFullYear();
-        if (base < new Date(base.getFullYear(), birthDt.getMonth(), birthDt.getDate())) age--;
-        return age.toString();
-      }catch(e){
-        return '';
-      }
-    };
-
-    // 查询人员
-    const doQuery = () => {
-      axios.get('/api/person-query/', {
-        params: { ...queryForm.value, page: page.value, pageSize: pageSize.value }
-      }).then(res => {
-        if(res.data.code === 0){
-          list.value = res.data.data.map(item => ({
-            ...item,
-            Age: computeAge(item.BirthDate, item.DeathDate)
-          }));
-          total.value = res.data.total;
-          familyList.value = [];
-        }
-      });
-    };
-
-    // 重置
-    const resetQuery = () => {
-      queryForm.value = { name:'', idCard:'', address:'' };
-      doQuery();
-    };
-    // 点击左侧人员
-    const selectPerson = (row) => {
-      familyList.value = [];
-      axios.get('/api/family-query/', { params: { rsid: row.RSID } }).then(res => {
-        if(res.data.code === 0){
-          familyList.value = res.data.data;
-        }
-      });
-    };
-
-    // 点击右侧成员
-    const selectFamilyMember = async (row) => {
-      if (!row.RSID) {
-        ElMessage.warning('该行无RSID，无法查询');
-        return;
-      }
-      familyLoading.value = true;
-      familyList.value = [];
+    const sp = ref(30), an = ref('1'), p = ref(1), ps = ref(30), q = ref({name:'',idCard:'',address:''});
+    const list = ref([]), total = ref(0), fList = ref([]), fLoading = ref(false), lct = ref(0);
+    const calcAge = (b, d) => {
+      if(!b) return '';
       try {
-        const res = await axios.get('/api/family-query/', { params: { rsid: row.RSID } });
-        familyList.value = res.data?.code === 0 ? res.data.data : [];
-      } catch (err) {
-        ElMessage.error('查询失败');
-      } finally {
-        familyLoading.value = false;
-      }
+        const base = d ? new Date(d) : new Date(), bd = new Date(b);
+        let age = base.getFullYear() - bd.getFullYear();
+        return base < new Date(base.getFullYear(), bd.getMonth(), bd.getDate()) ? --age : age + '';
+      } catch(e) { return ''; }
     };
-const lastClickTime = ref(0);
-const handleMobileClick = (row) => {
-  const now = Date.now();
-  if (now - lastClickTime.value < 350) {
-    selectFamilyMember(row);
-    lastClickTime.value = 0;
-  } else {
-    lastClickTime.value = now;
-  }
-};
-    return {
-      splitPos, activeName,
-      queryForm, list, total, page, pageSize, familyList, familyLoading,
-      doQuery, resetQuery, selectPerson, selectFamilyMember,lastClickTime, handleMobileClick
+    const query = () => {
+      axios.get('/api/person-query/', {params:{...q.value,page:p.value,pageSize:ps.value}}).then(res => {
+        if(res.data.code===0){
+          list.value = res.data.data.map(i=>({...i,Age:calcAge(i.BirthDate,i.DeathDate)}));
+          total.value = res.data.total;
+          fList.value = [];
+        }
+      });
     };
+    const reset = () => { q.value={name:'',idCard:'',address:''}; query(); };
+    const selPerson = (r) => {
+      fList.value = [];
+      axios.get('/api/family-query/', {params:{rsid:r.RSID}}).then(res => {
+        if(res.data.code===0) fList.value = res.data.data;
+      });
+    };
+    const selFamily = async (r) => {
+      if(!r.RSID) return ElMessage.warning('该行无RSID，无法查询');
+      fLoading.value = true;
+      try {
+        const res = await axios.get('/api/family-query/', {params:{rsid:r.RSID}});
+        fList.value = res.data?.code===0 ? res.data.data : [];
+      } catch (err) { ElMessage.error('查询失败'); }
+      finally { fLoading.value = false; }
+    };
+    const mobileDbl = (r) => {
+      const n = Date.now();
+      if(n - lct.value < 350){ selFamily(r); lct.value=0; }
+      else lct.value = n;
+    };
+    return {sp,activeName:an,q,list,total,p,ps,fList,fLoading,lastClickTime:lct,query,reset,selPerson,selFamily,mobileDbl};
   }
 }).use(ElementPlus,{locale:ElementPlusLocaleZhCn}).mount('#app');
 </script>
