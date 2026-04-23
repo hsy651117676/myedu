@@ -7,6 +7,7 @@
         <el-form-item label="人员姓名"><el-input v-model="q.name" style="width:200px"></el-input></el-form-item>
         <el-form-item label="身份证号"><el-input v-model="q.idCard" style="width:220px"></el-input></el-form-item>
         <el-form-item label="家庭住址"><el-input v-model="q.address" style="width:280px"></el-input></el-form-item>
+        <el-form-item label="工作单位"><el-input v-model="q.workUnit" style="width:280px"></el-input></el-form-item>
         <el-form-item>
           <el-button type="primary" @click="query">查询</el-button>
           <el-button @click="reset">重置</el-button>
@@ -23,7 +24,8 @@
           <el-table-column label="性别" prop="Gender" width="40"></el-table-column>
           <el-table-column label="年龄" prop="Age" width="50"></el-table-column>
           <el-table-column label="身份证号" prop="IDCard" width="175"></el-table-column>
-          <el-table-column label="家庭住址" prop="HomeAddress" width="500"></el-table-column>
+          <el-table-column label="家庭住址" prop="HomeAddress" width="200"></el-table-column>
+          <el-table-column label="工作单位" prop="WorkUnit" min-width="150"></el-table-column>
         </el-table>
         <div style="text-align:right;padding-top:10px;font-size:8px;">
           <el-pagination v-model:current-page="p" v-model:page-size="ps" :page-sizes="[30,50,100]" :total="total" :pager-count="5"
@@ -61,7 +63,7 @@
 const { createApp, ref } = Vue;
 createApp({
   setup() {
-    const sp = ref(30), an = ref('1'), p = ref(1), ps = ref(30), q = ref({name:'',idCard:'',address:''});
+    const sp = ref(30), an = ref('1'), p = ref(1), ps = ref(30), q = ref({name:'',idCard:'',address:'',workUnit:''});
     const list = ref([]), total = ref(0), fList = ref([]), fLoading = ref(false), lct = ref(0);
     const calcAge = (b, d) => {
       if(!b) return '';
@@ -80,7 +82,10 @@ createApp({
         }
       });
     };
-    const reset = () => { q.value={name:'',idCard:'',address:''}; query(); };
+    const reset = () => { 
+      q.value={name:'',idCard:'',address:'',workUnit:''}; 
+      query(); 
+    };
     const selPerson = (r) => {
       fList.value = [];
       axios.get('/api/family-query/', {params:{rsid:r.RSID}}).then(res => {

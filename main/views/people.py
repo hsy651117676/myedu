@@ -37,13 +37,14 @@ def person_query_api(request):
     name = request.GET.get("name", "").strip()
     idCard = request.GET.get("idCard", "").strip()
     address = request.GET.get("address", "").strip()
+    workUnit = request.GET.get("workUnit", "").strip()  # 新增：接收工作单位参数
     page = int(request.GET.get("page", 1))
     pageSize = int(request.GET.get("pageSize", 30))
 
     try:
         conn, cursor = get_db()
-        cursor.execute("{CALL B_population_EDIT('SELECT', 0, ?, ?, '', '', '', '', '', ?, '', '', '', '', '', ?, ?)}",
-            (idCard, name, address, page, pageSize)
+        cursor.execute("{CALL B_population_EDIT('SELECT', 0, ?, ?, '', '', '', '', '', ?, ?, '', '', '', '', ?, ?)}",
+            (idCard, name, address, workUnit, page, pageSize)
         )
 
         data = []
