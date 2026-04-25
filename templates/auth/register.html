@@ -1,47 +1,119 @@
 {% extends "layout/base.html" %}
-{% block title %}注册{% endblock %}
+{% block title %}用户注册{% endblock %}
 
 {% block content %}
-<div id="app" style="max-width:450px; margin:50px auto;">
-  <h2 style="text-align:center; margin-bottom:20px;">用户注册</h2>
+<style>
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
 
-  <el-form @submit.prevent="submitForm">
-    {% csrf_token %}
+.register-box {
+  width: 450px;
+  padding: 30px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+</style>
 
-    <el-form-item label="用户名">
-      <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
-    </el-form-item>
+<div class="register-container">
+  <div class="register-box" id="app">
+    <h2 style="text-align:center; margin-bottom:30px; color: #303133;">用户注册</h2>
 
-    <el-form-item label="邮箱">
-      <el-input v-model="form.email" placeholder="请输入邮箱"></el-input>
-    </el-form-item>
+    <el-form 
+      ref="registerForm"
+      :model="form" 
+      :rules="rules"
+      @submit.prevent="handleRegister">
+      
+      {% csrf_token %}
 
-    <el-form-item label="密码">
-      <el-input v-model="form.password1" type="password" placeholder="密码≥6位" show-password></el-input>
-    </el-form-item>
+      <el-form-item prop="username">
+        <el-input 
+          v-model="form.username" 
+          placeholder="请输入用户名（至少3个字符）"
+          prefix-icon="el-icon-user"
+          size="large">
+        </el-input>
+      </el-form-item>
 
-    <el-form-item label="确认密码">
-      <el-input v-model="form.password2" type="password" placeholder="确认密码" show-password></el-input>
-    </el-form-item>
+      <el-form-item prop="email">
+        <el-input 
+          v-model="form.email" 
+          placeholder="请输入邮箱"
+          prefix-icon="el-icon-message"
+          size="large">
+        </el-input>
+      </el-form-item>
 
-    <el-form-item label="验证码">
-      <div style="display:flex;gap:10px;">
-        <el-input v-model="form.code" placeholder="6位验证码"></el-input>
-        <el-button @click="sendCode" :disabled="sending">
-          <span v-if="sending">60秒后重发</span>
-          <span v-else>发送验证码</span>
+      <el-form-item prop="password1">
+        <el-input 
+          v-model="form.password1" 
+          type="password" 
+          placeholder="请输入密码（至少6位）"
+          prefix-icon="el-icon-lock"
+          show-password
+          size="large">
+        </el-input>
+      </el-form-item>
+
+      <el-form-item prop="password2">
+        <el-input 
+          v-model="form.password2" 
+          type="password" 
+          placeholder="请确认密码"
+          prefix-icon="el-icon-lock"
+          show-password
+          size="large">
+        </el-input>
+      </el-form-item>
+
+      <el-form-item prop="code">
+        <div style="display:flex; gap:12px;">
+          <el-input 
+            v-model="form.code" 
+            placeholder="邮箱验证码"
+            prefix-icon="el-icon-key"
+            maxlength="6"
+            size="large"
+            style="flex:1;">
+          </el-input>
+          <el-button 
+            @click="sendCode" 
+            :disabled="sending || !form.email"
+            size="large"
+            style="width:140px;">
+            <span v-if="sending">[[ countdown ]]秒后重发</span>
+            <span v-else>发送验证码</span>
+          </el-button>
+        </div>
+      </el-form-item>
+
+      <el-form-item>
+        <el-button 
+          type="primary" 
+          native-type="submit"
+          size="large"
+          :loading="loading"
+          style="width:100%;">
+          {{ loading ? '注册中...' : '注 册' }}
         </el-button>
-      </div>
-    </el-form-item>
+      </el-form-item>
 
-    <el-form-item>
-      <el-button type="primary" style="width:100%" native-type="submit">注册</el-button>
-    </el-form-item>
-  </el-form>
+      <div style="text-align:center; margin-top:15px; color: #909399;">
+        已有账号？
+        <a href="/login/" style="color: #409EFF;">立即登录</a>
+      </div>
+    </el-form>
+  </div>
 </div>
 
 <script>
-const { createApp, reactive, ref } = Vue;
+const { createApp, ref, reactive, watch } = Vue;
 const { ElMessage } = ElementPlus;
 
 createApp({
@@ -54,57 +126,133 @@ createApp({
       code: ''
     });
 
+    const loading = ref(false);
     const sending = ref(false);
-    let time = 60;
+    const countdown = ref(60);
     let timer = null;
+
+    // 表单验证规则
+    const validatePass2 = (rule, value, callback) => {
+      if (value !== form.password1) {
+        callback(new Error('两次密码不一致'));
+      } else {
+        callback();
+      }
+    };
+
+    const rules = {
+      username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' },
+        { min: 3, message: '用户名至少3个字符', trigger: 'blur' }
+      ],
+      email: [
+        { required: true, message: '请输入邮箱', trigger: 'blur' },
+        { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+      ],
+      password1: [
+        { required: true, message: '请输入密码', trigger: 'blur' },
+        { min: 6, message: '密码至少6位', trigger: 'blur' }
+      ],
+      password2: [
+        { required: true, message: '请确认密码', trigger: 'blur' },
+        { validator: validatePass2, trigger: 'blur' }
+      ],
+      code: [
+        { required: true, message: '请输入验证码', trigger: 'blur' }
+      ]
+    };
 
     // 发送验证码
     const sendCode = async () => {
-      const fd = new FormData();
-      fd.append('email', form.email);
-      fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+      if (!form.email) {
+        ElMessage.warning('请先输入邮箱');
+        return;
+      }
 
-      const res = await fetch('/send-email-code/', {
-        method: 'POST',
-        body: fd
-      });
-      const data = await res.json();
-      ElMessage[data.code === 200 ? 'success' : 'error'](data.msg);
+      sending.value = true;
+      try {
+        const formData = new FormData();
+        formData.append('email', form.email);
 
-      if (data.code === 200) {
-        sending.value = true;
-        timer = setInterval(() => {
-          time--;
-          if (time <= 0) {
-            clearInterval(timer);
-            sending.value = false;
-            time = 60;
+        const response = await fetch('/send-email-code/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
           }
-        }, 1000);
+        });
+
+        const data = await response.json();
+        
+        if (data.code === 200) {
+          ElMessage.success('验证码已发送');
+          // 开始倒计时
+          countdown.value = 60;
+          timer = setInterval(() => {
+            countdown.value--;
+            if (countdown.value <= 0) {
+              clearInterval(timer);
+              sending.value = false;
+              countdown.value = 60;
+            }
+          }, 1000);
+        } else {
+          ElMessage.error(data.msg);
+          sending.value = false;
+        }
+      } catch (error) {
+        ElMessage.error('发送失败，请稍后重试');
+        sending.value = false;
       }
     };
 
     // 提交注册
-    const submitForm = async () => {
-      const res = await fetch('/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify(form)
-      });
+    const handleRegister = async () => {
+      loading.value = true;
+      
+      try {
+        const response = await fetch('/register/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: JSON.stringify(form)
+        });
 
-      const data = await res.json();
-      if (data.code === 200) {
-        ElMessage.success("注册成功，即将跳转到登录");
-        setTimeout(() => location.href = "/login/", 1000);
-      } else {
-        ElMessage.error(data.msg);
+        const data = await response.json();
+
+        if (data.code === 200) {
+          ElMessage.success('注册成功！即将跳转...');
+          setTimeout(() => {
+            window.location.href = '/login/';
+          }, 1500);
+        } else {
+          ElMessage.error(data.msg);
+        }
+      } catch (error) {
+        ElMessage.error('注册失败，请稍后重试');
+      } finally {
+        loading.value = false;
       }
     };
 
-    return { form, sending, sendCode, submitForm };
+    // 组件卸载时清除定时器
+    onUnmounted(() => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    });
+
+    return {
+      form,
+      rules,
+      loading,
+      sending,
+      countdown,
+      sendCode,
+      handleRegister
+    };
   }
 }).use(ElementPlus).mount('#app');
 </script>

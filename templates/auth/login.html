@@ -1,66 +1,126 @@
 {% extends 'layout/base.html' %}
-
-{% block title %}登录{% endblock %}
+{% block title %}用户登录{% endblock %}
 
 {% block content %}
 <style>
-.login-box {
-  max-width: 400px;
-  margin: 80px auto;
-  padding: 30px;
-  border: 1px solid #eee;
-  border-radius: 10px;
-  background: #fff;
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
+
+.login-box {
+  width: 420px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #303133;
+  font-size: 24px;
+  font-weight: bold;
+}
+
 .captcha-img {
-  height: 38px;
+  height: 40px;
   border-radius: 4px;
   cursor: pointer;
   border: 1px solid #dcdfe6;
+  transition: all 0.3s;
+}
+
+.captcha-img:hover {
+  border-color: #409EFF;
+  transform: scale(1.05);
+}
+
+.el-form-item {
+  margin-bottom: 24px;
 }
 </style>
 
-<div class="login-box" id="app">
-  <h3 style="text-align:center; margin-bottom:25px">用户登录</h3>
+<div class="login-container">
+  <div class="login-box" id="app">
+    <div class="login-title">系统登录</div>
 
-  <el-form @submit.prevent="submit">
-    {% csrf_token %}
+    <el-form ref="loginForm" :model="form" :rules="rules" @submit.prevent="handleLogin">
+      {% csrf_token %}
 
-    <el-form-item label="用户名">
-      <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
-    </el-form-item>
+      <el-form-item prop="username">
+        <el-input 
+          v-model="form.username" 
+          placeholder="请输入用户名"
+          prefix-icon="el-icon-user"
+          size="large">
+        </el-input>
+      </el-form-item>
 
-    <el-form-item label="密码">
-      <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password></el-input>
-    </el-form-item>
+      <el-form-item prop="password">
+        <el-input 
+          v-model="form.password" 
+          type="password" 
+          placeholder="请输入密码"
+          prefix-icon="el-icon-lock"
+          show-password
+          size="large"
+          @keyup.enter="handleLogin">
+        </el-input>
+      </el-form-item>
 
-    <el-form-item label="验证码">
-      <div style="display: flex; gap:10px; align-items:center">
-        <el-input v-model="form.captcha" placeholder="请输入验证码" maxlength="4"></el-input>
-        <img class="captcha-img" :src="captchaUrl" @click="refreshCaptcha">
+      <el-form-item prop="captcha">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <el-input 
+            v-model="form.captcha" 
+            placeholder="验证码"
+            prefix-icon="el-icon-key"
+            maxlength="4"
+            size="large"
+            style="flex: 1;">
+          </el-input>
+          <img 
+            class="captcha-img" 
+            :src="captchaUrl" 
+            @click="refreshCaptcha"
+            title="点击刷新验证码">
+        </div>
+      </el-form-item>
+
+      <el-form-item>
+        <el-button 
+          type="primary" 
+          native-type="submit" 
+          size="large"
+          :loading="loading"
+          style="width: 100%;">
+          [[ loading ? '登录中...' : '登 录' ]]
+        </el-button>
+      </el-form-item>
+
+      <div style="text-align: center; color: #909399; font-size: 14px;">
+        <a href="/register/" style="margin-right: 20px; color: #409EFF;">注册账号</a>
+        <span style="margin: 0 10px;">|</span>
+        <a href="/forgot-pwd/" style="color: #409EFF;">忘记密码</a>
       </div>
-    </el-form-item>
-
-    <el-form-item>
-      <el-button type="primary" native-type="submit" style="width:100%">登录</el-button>
-    </el-form-item>
-
-    <div style="text-align:center; margin-top:10px">
-      <a href="/register/" style="margin-right:15px">注册账号</a>
-      <a href="/forgot-pwd/">忘记密码</a>
-    </div>
-  </el-form>
+    </el-form>
+  </div>
 </div>
 
 <script>
+  // 防止iframe嵌套
 if (window.top !== window.self) {
   window.top.location.href = window.location.href;
 }
 
-const { createApp, reactive, ref } = Vue;
+const { createApp, ref, reactive } = Vue;
 const { ElMessage } = ElementPlus;
 
-createApp({
+const app = createApp({
   setup() {
     const form = reactive({
       username: '',
@@ -68,44 +128,189 @@ createApp({
       captcha: ''
     });
 
-    // 验证码地址
-    const captchaUrl = ref('/captcha?' + Math.random());
+    const loading = ref(false);
+    const captchaUrl = ref('/captcha/?' + Date.now());
 
-    // 刷新验证码
-    function refreshCaptcha() {
-      captchaUrl.value = '/captcha?' + Math.random();
-    }
+    const rules = {
+      username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' }
+      ],
+      password: [
+        { required: true, message: '请输入密码', trigger: 'blur' }
+      ],
+      captcha: [
+        { required: true, message: '请输入验证码', trigger: 'blur' },
+        { min: 4, max: 4, message: '验证码长度为4位', trigger: 'blur' }
+      ]
+    };
 
-    // 登录：只发请求，完全交给后端验证
-    async function submit() {
-      const fd = new FormData();
-      fd.append('username', form.username);
-      fd.append('password', form.password);
-      fd.append('captcha', form.captcha);
-      fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    // 获取CSRF token的函数
+    const getCSRFToken = () => {
+      const token = document.querySelector('[name=csrfmiddlewaretoken]');
+      return token ? token.value : '';
+    };
 
-      const res = await fetch('/login/', {
-        method: 'POST',
-        body: fd
-      });
+    const refreshCaptcha = () => {
+      captchaUrl.value = '/captcha/?' + Date.now();
+    };
 
-      // 关键：后端返回页面，说明验证失败
-      if (res.redirected) {
-        location.href = res.url;
-        return;
-      }
+    const handleLogin = async () => {
+      loading.value = true;
       
-      ElMessage.error('用户名/密码/验证码错误');
-      refreshCaptcha();
-    }
+      try {
+        // 修复：使用传统的表单提交方式，确保CSRF token被正确传递
+        const formData = new FormData();
+        formData.append('username', form.username);
+        formData.append('password', form.password);
+        formData.append('captcha', form.captcha);
+        
+        // 关键：从页面获取CSRF token
+        const csrfToken = getCSRFToken();
+        if (csrfToken) {
+          formData.append('csrfmiddlewaretoken', csrfToken);
+        }
+        
+        const response = await fetch('/login/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+
+        refreshCaptcha();
+        form.captcha = '';
+        
+        const text = await response.text();
+        
+        // 检查是否返回了登录页面（说明登录失败）
+        if (text.includes('login-box') || text.includes('login-container')) {
+          ElMessage.error('用户名或密码错误');
+        } else {
+          // 登录成功，刷新页面
+          window.location.reload();
+        }
+      } catch (error) {
+        ElMessage.error('登录失败，请稍后重试');
+        refreshCaptcha();
+      } finally {
+        loading.value = false;
+      }
+    };
 
     return {
       form,
+      rules,
+      loading,
       captchaUrl,
       refreshCaptcha,
-      submit
+      handleLogin
     };
   }
-}).use(ElementPlus).mount('#app');
+});
+
+// 设置自定义分隔符
+app.config.compilerOptions.delimiters = ['[[', ']]'];
+app.use(ElementPlus).mount('#app');
+// 防止iframe嵌套
+  
+if (window.top !== window.self) {
+  window.top.location.href = window.location.href;
+}
+
+const { createApp, ref, reactive } = Vue;
+const { ElMessage } = ElementPlus;
+
+const app = createApp({
+  setup() {
+    const form = reactive({
+      username: '',
+      password: '',
+      captcha: ''
+    });
+
+    const loading = ref(false);
+    const captchaUrl = ref('/captcha/?' + Date.now());
+
+    const rules = {
+      username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' }
+      ],
+      password: [
+        { required: true, message: '请输入密码', trigger: 'blur' }
+      ],
+      captcha: [
+        { required: true, message: '请输入验证码', trigger: 'blur' },
+        { min: 4, max: 4, message: '验证码长度为4位', trigger: 'blur' }
+      ]
+    };
+
+    const refreshCaptcha = () => {
+      captchaUrl.value = '/captcha/?' + Date.now();
+    };
+
+    const handleLogin = async () => {
+      loading.value = true;
+      
+      try {
+        const formData = new FormData();
+        formData.append('username', form.username);
+        formData.append('password', form.password);
+        formData.append('captcha', form.captcha);
+        
+        const response = await fetch('/login/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+
+        refreshCaptcha();
+        form.captcha = '';
+        
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const errorEl = doc.querySelector('.el-alert');
+        
+        if (errorEl) {
+          ElMessage.error(errorEl.textContent.trim());
+        } else {
+          ElMessage.error('用户名或密码错误');
+        }
+      } catch (error) {
+        ElMessage.error('登录失败，请稍后重试');
+        refreshCaptcha();
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    return {
+      form,
+      rules,
+      loading,
+      captchaUrl,
+      refreshCaptcha,
+      handleLogin
+    };
+  }
+});
+
+// 设置自定义分隔符，避免与Django模板冲突
+app.config.compilerOptions.delimiters = ['[[', ']]'];
+
+app.use(ElementPlus).mount('#app');
 </script>
 {% endblock %}
