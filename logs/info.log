@@ -143,3 +143,369 @@
 [INFO] 2026-04-25 21:25:34,222 basehttp 13742 140072425436864 "GET /api/family-query/?rsid=957407 HTTP/1.0" 200 3710
 [INFO] 2026-04-25 21:25:36,908 basehttp 13742 140072425436864 "GET /api/family-query/?rsid=1156136 HTTP/1.0" 200 3710
 [INFO] 2026-04-25 21:25:36,960 basehttp 13742 140072425436864 "GET /api/family-query/?rsid=1156136 HTTP/1.0" 200 3710
+[INFO] 2026-04-26 07:24:30,316 basehttp 13742 140072425436864 "GET / HTTP/1.0" 302 0
+[INFO] 2026-04-26 07:24:31,825 basehttp 13742 140072425436864 "GET /login/?next=/ HTTP/1.0" 200 10923
+[INFO] 2026-04-26 07:24:36,664 basehttp 13742 140072425436864 "GET /login/?next=/ HTTP/1.0" 200 10923
+[INFO] 2026-04-26 07:25:24,676 autoreload 17115 140595281921856 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:25:29,801 basehttp 17115 140595148355264 "GET /login/?next=/ HTTP/1.0" 200 10923
+[INFO] 2026-04-26 07:28:53,325 basehttp 17115 140595148355264 "GET /login/?next=/ HTTP/1.0" 200 2835
+[WARNING] 2026-04-26 07:28:53,412 basehttp 17115 140595148355264 "GET /favicon.ico HTTP/1.0" 404 7055
+[INFO] 2026-04-26 07:28:58,518 basehttp 17115 140595148355264 "GET /login/?next=/ HTTP/1.0" 200 2835
+[INFO] 2026-04-26 07:30:03,865 basehttp 17115 140595148355264 "GET /login/?next=/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 07:30:04,544 basehttp 17115 140595148355264 "GET /captcha/?1777159804125 HTTP/1.0" 200 2909
+[INFO] 2026-04-26 07:30:16,237 auth 17115 140595148355264 用户 hsy 登录成功
+[INFO] 2026-04-26 07:30:16,253 basehttp 17115 140595148355264 "POST /login/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 07:30:16,315 basehttp 17115 140595148355264 "GET / HTTP/1.0" 200 15180
+[INFO] 2026-04-26 07:30:16,386 basehttp 17115 140595148355264 "GET / HTTP/1.0" 200 15180
+[INFO] 2026-04-26 07:30:16,763 basehttp 17115 140595148355264 "GET /static/welcome.html HTTP/1.0" 200 505
+[INFO] 2026-04-26 07:30:19,654 basehttp 17115 140595148355264 "GET /person-query/ HTTP/1.0" 200 9326
+[INFO] 2026-04-26 07:30:22,707 basehttp 17115 140595148355264 "GET /person-manage/ HTTP/1.0" 200 12605
+[INFO] 2026-04-26 07:30:25,419 people 17115 140595148355264 查询完成，共1167181条记录，耗时: 0.320秒
+[INFO] 2026-04-26 07:30:25,420 basehttp 17115 140595148355264 "GET /api/person-query/?name=&idCard=&address=&page=1&pageSize=30 HTTP/1.0" 200 12285
+[INFO] 2026-04-26 07:30:26,959 basehttp 17115 140595148355264 "GET /api/family-query/?rsid=4 HTTP/1.0" 200 1294
+[INFO] 2026-04-26 07:30:32,948 basehttp 17115 140595148355264 "GET /data-change/ HTTP/1.0" 200 8130
+[INFO] 2026-04-26 07:30:33,399 people 17115 140595148355264 从缓存返回结果，耗时: 0.001秒
+[INFO] 2026-04-26 07:30:33,402 basehttp 17115 140595148355264 "GET /api/person-query/?name=&idCard=&address=&page=1&pageSize=30 HTTP/1.0" 200 12285
+[INFO] 2026-04-26 07:31:23,930 basehttp 17115 140595148355264 "GET /api/family-query/?rsid=2 HTTP/1.0" 200 596
+[INFO] 2026-04-26 07:31:26,490 people 17115 140595148355264 查询完成，共1167181条记录，耗时: 0.068秒
+[INFO] 2026-04-26 07:31:26,493 basehttp 17115 140595148355264 "GET /api/person-query/?name=&idCard=&address=&page=2&pageSize=30 HTTP/1.0" 200 13027
+[INFO] 2026-04-26 07:31:43,113 auth 17115 140595148355264 用户 hsy 退出登录
+[INFO] 2026-04-26 07:31:43,115 basehttp 17115 140595148355264 "GET /logout/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 07:31:43,149 basehttp 17115 140595148355264 "GET /login/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 07:31:43,529 basehttp 17115 140595148355264 "GET /captcha/?1777159903195 HTTP/1.0" 200 2509
+[WARNING] 2026-04-26 07:31:45,022 basehttp 17115 140595148355264 "GET /register/ HTTP/1.0" 405 0
+[WARNING] 2026-04-26 07:31:58,591 basehttp 17115 140595148355264 "GET /register/ HTTP/1.0" 405 0
+[INFO] 2026-04-26 07:34:18,870 autoreload 17115 140595281921856 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:34:20,371 autoreload 17264 140058557630272 Watching for file changes with StatReloader
+[WARNING] 2026-04-26 07:34:27,723 basehttp 17264 140058491176640 "GET /register/ HTTP/1.0" 405 0
+[WARNING] 2026-04-26 07:34:35,534 basehttp 17264 140058491176640 "GET /register/ HTTP/1.0" 405 0
+[INFO] 2026-04-26 07:36:19,055 autoreload 17264 140058557630272 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:36:20,390 autoreload 17337 140077609060160 Watching for file changes with StatReloader
+[WARNING] 2026-04-26 07:36:27,457 basehttp 17337 140077472675520 "GET /register/ HTTP/1.0" 400 72
+[WARNING] 2026-04-26 07:38:25,039 basehttp 17337 140077472675520 "GET /register/ HTTP/1.0" 400 72
+[WARNING] 2026-04-26 07:38:28,507 basehttp 17337 140077472675520 "GET /register/ HTTP/1.0" 400 72
+[INFO] 2026-04-26 07:39:41,335 autoreload 17337 140077609060160 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:39:42,096 autoreload 17364 140212315744064 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:39:48,128 basehttp 17364 140212249335488 "GET / HTTP/1.0" 302 0
+[INFO] 2026-04-26 07:39:48,173 basehttp 17364 140212249335488 "GET /login/?next=/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 07:39:51,320 basehttp 17364 140212249335488 "GET /captcha/?1777160390913 HTTP/1.0" 200 2611
+[WARNING] 2026-04-26 07:39:57,871 basehttp 17364 140212249335488 "GET /register/ HTTP/1.0" 400 72
+[WARNING] 2026-04-26 07:40:34,512 basehttp 17364 140212249335488 "GET /register/ HTTP/1.0" 400 72
+[INFO] 2026-04-26 07:40:47,776 autoreload 17403 140234282358592 Watching for file changes with StatReloader
+[WARNING] 2026-04-26 07:40:51,488 basehttp 17403 140234215913152 "GET /register/ HTTP/1.0" 400 72
+[INFO] 2026-04-26 07:40:56,797 basehttp 17403 140234215913152 "GET /login/?next=/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 07:40:57,594 basehttp 17403 140234215913152 "GET /captcha/?1777160457209 HTTP/1.0" 200 2508
+[WARNING] 2026-04-26 07:40:58,327 basehttp 17403 140234215913152 "GET /register/ HTTP/1.0" 400 72
+[INFO] 2026-04-26 07:43:04,879 autoreload 17403 140234282358592 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:43:05,682 autoreload 17429 140138126604096 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:43:10,649 basehttp 17429 140137992332992 "GET /register/ HTTP/1.0" 200 9541
+[INFO] 2026-04-26 07:43:30,726 basehttp 17429 140137992332992 "POST /register/ HTTP/1.0" 200 60
+[ERROR] 2026-04-26 07:43:47,504 basehttp 17429 140137992332992 "POST /send-email-code/ HTTP/1.0" 500 80493
+[INFO] 2026-04-26 07:48:27,611 autoreload 17429 140138126604096 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:48:28,460 autoreload 17461 140200147875648 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:50:01,001 autoreload 17461 140200147875648 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:50:01,705 autoreload 17471 140474758686528 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:50:05,424 autoreload 17471 140474758686528 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:50:06,216 autoreload 17475 140376642041664 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:50:13,223 basehttp 17475 140376507676352 "GET / HTTP/1.0" 302 0
+[INFO] 2026-04-26 07:50:13,263 basehttp 17475 140376507676352 "GET /login/?next=/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 07:50:13,895 basehttp 17475 140376507676352 "GET /captcha/?1777161013498 HTTP/1.0" 200 1910
+[INFO] 2026-04-26 07:50:15,725 basehttp 17475 140376507676352 "GET /register/ HTTP/1.0" 200 9541
+[INFO] 2026-04-26 07:50:34,487 basehttp 17475 140376507676352 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 07:54:48,709 autoreload 17475 140376642041664 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:54:49,550 autoreload 17787 140103664908096 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:55:17,504 autoreload 17787 140103664908096 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:55:18,289 autoreload 17790 140658668414784 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:55:35,377 auth 17790 140658601981632 验证码已发送到 651117676@qq.com，验证码: 003198
+[INFO] 2026-04-26 07:55:35,379 basehttp 17790 140658601981632 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 07:58:37,102 autoreload 17790 140658668414784 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:58:37,844 autoreload 17883 140134996830016 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:59:12,996 autoreload 17883 140134996830016 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 07:59:13,826 autoreload 17890 140555896551232 Watching for file changes with StatReloader
+[INFO] 2026-04-26 07:59:17,494 auth 17890 140555757549248 验证码: 416311
+[INFO] 2026-04-26 07:59:17,498 basehttp 17890 140555757549248 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:01:12,558 autoreload 17890 140555896551232 /home/hsy/myedu/myedu/settings.py changed, reloading.
+[INFO] 2026-04-26 08:01:13,292 autoreload 17939 140303065225024 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:01:24,180 auth 17939 140302998779584 验证码: 398353
+[INFO] 2026-04-26 08:01:24,182 basehttp 17939 140302998779584 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:03:47,806 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 60
+[ERROR] 2026-04-26 08:03:55,219 auth 17939 140302998779584 注册失败: (1048, "Column 'id_card' cannot be null")
+[INFO] 2026-04-26 08:03:55,224 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 84
+[INFO] 2026-04-26 08:04:00,766 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:04:16,396 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:04:19,623 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:04:20,591 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:04:21,931 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:04:22,694 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:04:26,751 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:04:31,031 basehttp 17939 140302998779584 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:06:03,549 autoreload 17939 140303065225024 /home/hsy/myedu/myedu/settings.py changed, reloading.
+[INFO] 2026-04-26 08:06:04,370 autoreload 18031 139919044208448 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:15:29,771 basehttp 18031 139918977746624 "POST /send-email-code/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:15:34,826 basehttp 18031 139918977746624 "GET /register/ HTTP/1.0" 200 9541
+[INFO] 2026-04-26 08:15:53,029 basehttp 18031 139918977746624 "POST /send-email-code/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:16:13,952 basehttp 18031 139918977746624 "GET /admin HTTP/1.0" 301 0
+[INFO] 2026-04-26 08:16:14,010 basehttp 18031 139918977746624 "GET /admin/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:16:14,103 basehttp 18031 139918977746624 "GET /admin/login/?next=/admin/ HTTP/1.0" 200 4363
+[INFO] 2026-04-26 08:16:14,217 basehttp 18031 139918977746624 "GET /static/admin/simpleui-x/elementui/theme-chalk/index.css HTTP/1.0" 200 240033
+[INFO] 2026-04-26 08:16:14,289 basehttp 18031 139918977746624 "GET /static/admin/simpleui-x/css/login.css?_=2.1 HTTP/1.0" 200 500
+[INFO] 2026-04-26 08:16:14,314 basehttp 18031 139918977746624 "GET /static/admin/simpleui-x/fontawesome-free-6.2.0-web/css/all.min.css HTTP/1.0" 200 101784
+[INFO] 2026-04-26 08:16:14,337 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/js/vue.min.js?_=2026.01.13 HTTP/1.0" 200 93675
+[INFO] 2026-04-26 08:16:14,341 basehttp 18031 139918977746624 "GET /static/admin/simpleui-x/img/logo.png HTTP/1.0" 200 115997
+[INFO] 2026-04-26 08:16:14,368 basehttp 18031 139918977746624 "GET /static/admin/simpleui-x/elementui/umd/locale/en.js?_=2026.01.13 HTTP/1.0" 200 3516
+[INFO] 2026-04-26 08:16:14,411 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/elementui/index.js?_=2026.01.13 HTTP/1.0" 200 664912
+[INFO] 2026-04-26 08:16:14,542 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/js/login.js?_=3.3 HTTP/1.0" 200 669
+[INFO] 2026-04-26 08:16:14,595 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/particles/particles.js HTTP/1.0" 200 51264
+[INFO] 2026-04-26 08:16:14,693 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/particles/app.js HTTP/1.0" 200 3728
+[INFO] 2026-04-26 08:16:14,906 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/img/bg.svg HTTP/1.0" 200 9547
+[INFO] 2026-04-26 08:16:15,528 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/fontawesome-free-6.2.0-web/webfonts/fa-solid-900.woff2 HTTP/1.0" 200 150472
+[INFO] 2026-04-26 08:16:21,854 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/elementui/theme-chalk/fonts/element-icons.woff HTTP/1.0" 200 28200
+[INFO] 2026-04-26 08:16:25,492 basehttp 18031 139918894429888 "POST /admin/login/?next=/admin/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:16:25,772 basehttp 18031 139918894429888 "GET /admin/ HTTP/1.0" 200 16677
+[INFO] 2026-04-26 08:16:25,888 basehttp 18031 139918877644480 "GET /static/admin/simpleui-x/automatic/segment.js?_=2026.01.13 HTTP/1.0" 200 1194
+[INFO] 2026-04-26 08:16:25,889 basehttp 18031 139918869251776 "GET /static/admin/simpleui-x/waves/waves.min.css?_=2.1 HTTP/1.0" 200 3861
+[INFO] 2026-04-26 08:16:25,891 basehttp 18031 139918852466368 "GET /static/admin/simpleui-x/automatic/dicts.js?_=2026.01.13 HTTP/1.0" 200 12677
+[INFO] 2026-04-26 08:16:25,899 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/elementui/theme-chalk/index.css HTTP/1.0" 200 240033
+[INFO] 2026-04-26 08:16:25,902 basehttp 18031 139918886037184 "GET /static/admin/simpleui-x/css/index.css?_=3.2 HTTP/1.0" 200 7007
+[INFO] 2026-04-26 08:16:25,908 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/fontawesome-free-6.2.0-web/css/all.min.css HTTP/1.0" 200 101784
+[INFO] 2026-04-26 08:16:25,923 basehttp 18031 139918886037184 "GET /static/admin/simpleui-x/locale/en-us.js?_=2026.01.13 HTTP/1.0" 200 811
+[INFO] 2026-04-26 08:16:25,929 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/locale/zh-hans.js?_=2026.01.13 HTTP/1.0" 200 1254
+[INFO] 2026-04-26 08:16:25,940 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/js/cookie.js?_=2026.01.13 HTTP/1.0" 200 524
+[INFO] 2026-04-26 08:16:25,986 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/theme/theme.js?_=2026.01.13 HTTP/1.0" 200 4274
+[INFO] 2026-04-26 08:16:25,996 basehttp 18031 139918886037184 "GET /static/admin/simpleui-x/js/menu.js?_=2026.01.13 HTTP/1.0" 200 1192
+[INFO] 2026-04-26 08:16:25,997 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/waves/waves.min.js?_=2026.01.13 HTTP/1.0" 200 6329
+[INFO] 2026-04-26 08:16:26,010 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/js/index.js?_=2026.01.13 HTTP/1.0" 200 21589
+[WARNING] 2026-04-26 08:16:26,513 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/src/js/waves.js HTTP/1.0" 404 2024
+[INFO] 2026-04-26 08:16:26,555 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/fontawesome-free-6.2.0-web/webfonts/fa-regular-400.woff2 HTTP/1.0" 200 25096
+[INFO] 2026-04-26 08:16:32,668 basehttp 18031 139918860859072 "GET /admin/auth/user/ HTTP/1.0" 200 36710
+[INFO] 2026-04-26 08:16:32,719 basehttp 18031 139918860859072 "GET /static/admin/css/base.css?_=2.7 HTTP/1.0" 200 22120
+[INFO] 2026-04-26 08:16:32,740 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/js/language.js?_=2.1.2 HTTP/1.0" 200 189
+[INFO] 2026-04-26 08:16:32,742 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/locale/en-us.js?_=2.1.2 HTTP/1.0" 200 811
+[INFO] 2026-04-26 08:16:32,747 basehttp 18031 139918877644480 "GET /static/admin/simpleui-x/locale/zh-hans.js HTTP/1.0" 200 1254
+[INFO] 2026-04-26 08:16:32,748 basehttp 18031 139918886037184 "GET /static/admin/simpleui-x/css/base.css?_=2.7 HTTP/1.0" 200 4985
+[INFO] 2026-04-26 08:16:32,751 basehttp 18031 139918852466368 "GET /static/admin/simpleui-x/theme/simpleui.css HTTP/1.0" 200 4270
+[INFO] 2026-04-26 08:16:32,762 basehttp 18031 139918852466368 "GET /static/admin/css/changelists.css?_=20180905 HTTP/1.0" 200 6878
+[INFO] 2026-04-26 08:16:32,772 basehttp 18031 139918886037184 "GET /static/admin/simpleui-x/js/cookie.js HTTP/1.0" 200 524
+[INFO] 2026-04-26 08:16:32,787 basehttp 18031 139918852466368 "GET /static/admin/css/responsive.css?_=20180905 HTTP/1.0" 200 16565
+[INFO] 2026-04-26 08:16:32,798 basehttp 18031 139918886037184 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.0" 200 285314
+[INFO] 2026-04-26 08:16:32,801 basehttp 18031 139918894429888 "GET /static/admin/js/jquery.init.js HTTP/1.0" 200 347
+[INFO] 2026-04-26 08:16:32,821 basehttp 18031 139918852466368 "GET /static/admin/js/core.js HTTP/1.0" 200 6208
+[INFO] 2026-04-26 08:16:32,843 basehttp 18031 139918894429888 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.0" 200 9777
+[INFO] 2026-04-26 08:16:32,844 basehttp 18031 139918877644480 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:16:32,852 basehttp 18031 139918877644480 "GET /static/admin/js/actions.js HTTP/1.0" 200 8076
+[INFO] 2026-04-26 08:16:32,859 basehttp 18031 139918877644480 "GET /static/admin/js/urlify.js HTTP/1.0" 200 7887
+[INFO] 2026-04-26 08:16:32,867 basehttp 18031 139918877644480 "GET /static/admin/js/prepopulate.js HTTP/1.0" 200 1531
+[INFO] 2026-04-26 08:16:32,906 basehttp 18031 139918877644480 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.0" 200 325171
+[INFO] 2026-04-26 08:16:32,914 basehttp 18031 139918877644480 "GET /static/admin/js/vendor/jquery/jquery.min.js HTTP/1.0" 200 87533
+[INFO] 2026-04-26 08:16:32,920 basehttp 18031 139918877644480 "GET /static/admin/simpleui-x/automatic/dicts.js HTTP/1.0" 200 12677
+[INFO] 2026-04-26 08:16:32,926 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/automatic/segment.js HTTP/1.0" 200 1194
+[INFO] 2026-04-26 08:16:32,949 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/js/axios.min.js HTTP/1.0" 200 14237
+[INFO] 2026-04-26 08:16:33,035 basehttp 18031 139918877644480 "GET /static/admin/img/icon-no.svg HTTP/1.0" 200 560
+[INFO] 2026-04-26 08:16:33,036 basehttp 18031 139918894429888 "GET /static/admin/img/icon-yes.svg HTTP/1.0" 200 436
+[INFO] 2026-04-26 08:16:33,625 basehttp 18031 139918894429888 "GET /static/admin/img/sorting-icons.svg HTTP/1.0" 200 1097
+[INFO] 2026-04-26 08:16:44,454 basehttp 18031 139918894429888 "POST /admin/auth/user/ HTTP/1.0" 200 6511
+[INFO] 2026-04-26 08:16:44,502 basehttp 18031 139918877644480 "GET /static/admin/simpleui-x/theme/simpleui.css HTTP/1.0" 200 4270
+[INFO] 2026-04-26 08:16:44,510 basehttp 18031 139918852466368 "GET /static/admin/simpleui-x/css/base.css?_=2.7 HTTP/1.0" 200 4985
+[INFO] 2026-04-26 08:16:44,514 basehttp 18031 139918886037184 "GET /static/admin/css/base.css?_=2.7 HTTP/1.0" 200 22120
+[INFO] 2026-04-26 08:16:44,518 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/elementui/theme-chalk/index.css HTTP/1.0" 200 240033
+[INFO] 2026-04-26 08:16:44,515 basehttp 18031 139918869251776 "GET /static/admin/css/responsive.css?_=20180905 HTTP/1.0" 200 16565
+[INFO] 2026-04-26 08:16:44,626 basehttp 18031 139918894429888 "GET /static/admin/js/cancel.js HTTP/1.0" 200 884
+[INFO] 2026-04-26 08:16:47,263 basehttp 18031 139918894429888 "POST /admin/auth/user/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:16:47,329 basehttp 18031 139918894429888 "GET /admin/auth/user/ HTTP/1.0" 200 36040
+[INFO] 2026-04-26 08:16:47,380 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/elementui/theme-chalk/index.css HTTP/1.0" 200 240033
+[INFO] 2026-04-26 08:16:47,395 basehttp 18031 139918852466368 "GET /static/admin/simpleui-x/theme/simpleui.css HTTP/1.0" 200 4270
+[INFO] 2026-04-26 08:16:47,397 basehttp 18031 139918877644480 "GET /static/admin/css/base.css?_=2.7 HTTP/1.0" 200 22120
+[INFO] 2026-04-26 08:16:47,402 basehttp 18031 139918869251776 "GET /static/admin/css/changelists.css?_=20180905 HTTP/1.0" 200 6878
+[INFO] 2026-04-26 08:16:47,404 basehttp 18031 139918886037184 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:16:47,411 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/css/base.css?_=2.7 HTTP/1.0" 200 4985
+[INFO] 2026-04-26 08:16:47,425 basehttp 18031 139918894429888 "GET /static/admin/css/responsive.css?_=20180905 HTTP/1.0" 200 16565
+[INFO] 2026-04-26 08:16:53,248 basehttp 18031 139918894429888 "GET /admin/auth/user/1/change/ HTTP/1.0" 200 21267
+[INFO] 2026-04-26 08:16:53,328 basehttp 18031 139918886037184 "GET /static/admin/css/base.css?_=2.7 HTTP/1.0" 200 22120
+[INFO] 2026-04-26 08:16:53,331 basehttp 18031 139918852466368 "GET /static/admin/simpleui-x/css/base.css?_=2.7 HTTP/1.0" 200 4985
+[INFO] 2026-04-26 08:16:53,338 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/theme/simpleui.css HTTP/1.0" 200 4270
+[INFO] 2026-04-26 08:16:53,333 basehttp 18031 139918869251776 "GET /static/admin/css/forms.css HTTP/1.0" 200 8525
+[INFO] 2026-04-26 08:16:53,341 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/elementui/theme-chalk/index.css HTTP/1.0" 200 240033
+[INFO] 2026-04-26 08:16:53,351 basehttp 18031 139918877644480 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:16:53,380 basehttp 18031 139918877644480 "GET /static/admin/css/responsive.css?_=20180905 HTTP/1.0" 200 16565
+[INFO] 2026-04-26 08:16:53,386 basehttp 18031 139918877644480 "GET /static/admin/js/calendar.js HTTP/1.0" 200 9141
+[INFO] 2026-04-26 08:16:53,396 basehttp 18031 139918877644480 "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.0" 200 19319
+[INFO] 2026-04-26 08:16:53,413 basehttp 18031 139918877644480 "GET /static/admin/js/SelectBox.js HTTP/1.0" 200 4530
+[INFO] 2026-04-26 08:16:53,425 basehttp 18031 139918877644480 "GET /static/admin/js/SelectFilter2.js HTTP/1.0" 200 15845
+[INFO] 2026-04-26 08:16:53,472 basehttp 18031 139918877644480 "GET /static/admin/js/change_form.js HTTP/1.0" 200 606
+[INFO] 2026-04-26 08:16:53,519 basehttp 18031 139918877644480 "GET /static/admin/js/prepopulate_init.js HTTP/1.0" 200 586
+[INFO] 2026-04-26 08:16:53,602 basehttp 18031 139918877644480 "GET /static/admin/img/icon-addlink.svg HTTP/1.0" 200 331
+[INFO] 2026-04-26 08:16:53,720 basehttp 18031 139918877644480 "GET /static/admin/css/widgets.css HTTP/1.0" 200 11973
+[INFO] 2026-04-26 08:16:53,823 basehttp 18031 139918877644480 "GET /static/admin/img/search.svg HTTP/1.0" 200 458
+[INFO] 2026-04-26 08:16:53,830 basehttp 18031 139918894429888 "GET /static/admin/img/selector-icons.svg HTTP/1.0" 200 3291
+[INFO] 2026-04-26 08:16:53,832 basehttp 18031 139918860859072 "GET /static/admin/img/icon-clock.svg HTTP/1.0" 200 677
+[INFO] 2026-04-26 08:16:53,834 basehttp 18031 139918869251776 "GET /static/admin/img/icon-calendar.svg HTTP/1.0" 200 1086
+[INFO] 2026-04-26 08:17:01,983 basehttp 18031 139918869251776 "POST /admin/auth/user/1/change/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:17:02,052 basehttp 18031 139918869251776 "GET /admin/auth/user/ HTTP/1.0" 200 36098
+[INFO] 2026-04-26 08:17:02,117 basehttp 18031 139918860859072 "GET /static/admin/simpleui-x/css/base.css?_=2.7 HTTP/1.0" 200 4985
+[INFO] 2026-04-26 08:17:02,134 basehttp 18031 139918894429888 "GET /static/admin/simpleui-x/theme/simpleui.css HTTP/1.0" 200 4270
+[INFO] 2026-04-26 08:17:02,136 basehttp 18031 139918869251776 "GET /static/admin/css/base.css?_=2.7 HTTP/1.0" 200 22120
+[INFO] 2026-04-26 08:17:02,150 basehttp 18031 139918852466368 "GET /static/admin/css/changelists.css?_=20180905 HTTP/1.0" 200 6878
+[INFO] 2026-04-26 08:17:02,150 basehttp 18031 139918844073664 "GET /static/admin/css/responsive.css?_=20180905 HTTP/1.0" 200 16565
+[INFO] 2026-04-26 08:17:02,150 basehttp 18031 139918886037184 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:17:02,160 basehttp 18031 139918877644480 "GET /static/admin/simpleui-x/elementui/theme-chalk/index.css HTTP/1.0" 200 240033
+[INFO] 2026-04-26 08:17:08,678 basehttp 18031 139918877644480 "GET / HTTP/1.0" 200 15176
+[INFO] 2026-04-26 08:17:09,294 basehttp 18031 139918877644480 "GET /static/welcome.html HTTP/1.0" 200 505
+[INFO] 2026-04-26 08:17:13,588 auth 18031 139918877644480 用户 admin 退出登录
+[INFO] 2026-04-26 08:17:13,590 basehttp 18031 139918877644480 "GET /logout/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:17:13,624 basehttp 18031 139918877644480 "GET /login/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 08:17:14,218 basehttp 18031 139918877644480 "GET /captcha/?1777162633760 HTTP/1.0" 200 2031
+[INFO] 2026-04-26 08:17:15,816 basehttp 18031 139918877644480 "GET /register/ HTTP/1.0" 200 9541
+[INFO] 2026-04-26 08:17:34,575 auth 18031 139918877644480 验证码: 273147
+[INFO] 2026-04-26 08:17:34,576 basehttp 18031 139918877644480 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:18:23,439 autoreload 18031 139919044208448 /home/hsy/myedu/myedu/settings.py changed, reloading.
+[INFO] 2026-04-26 08:18:24,420 autoreload 18593 139905990899520 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:18:56,268 auth 18593 139905924466368 验证码: 222539
+[INFO] 2026-04-26 08:18:56,270 basehttp 18593 139905924466368 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:19:07,912 autoreload 18593 139905990899520 /home/hsy/myedu/myedu/settings.py changed, reloading.
+[INFO] 2026-04-26 08:19:08,801 autoreload 18599 139788664497984 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:27:54,171 autoreload 18599 139788664497984 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 08:27:54,975 autoreload 18669 140098334082880 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:27:58,107 basehttp 18669 140098200499904 "GET /register/ HTTP/1.0" 200 9541
+[INFO] 2026-04-26 08:28:17,843 auth 18669 140098200499904 验证码: 957509
+[INFO] 2026-04-26 08:28:17,844 basehttp 18669 140098200499904 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:35:59,923 autoreload 18669 140098334082880 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 08:36:00,950 autoreload 18701 139998230992704 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:36:43,563 autoreload 18701 139998230992704 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 08:36:44,433 autoreload 18708 139636806092608 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:36:51,917 basehttp 18708 139636739638976 "GET /register/ HTTP/1.0" 200 9541
+[INFO] 2026-04-26 08:37:00,389 auth 18708 139636739638976 注册验证码: 909118
+[INFO] 2026-04-26 08:37:00,391 basehttp 18708 139636739638976 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:38:03,615 autoreload 18733 139700247340864 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:38:07,453 auth 18733 139700113241792 注册验证码: 517548
+[INFO] 2026-04-26 08:38:07,456 basehttp 18733 139700113241792 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:44:17,643 autoreload 18733 139700247340864 /home/hsy/myedu/myedu/settings.py changed, reloading.
+[INFO] 2026-04-26 08:44:18,591 autoreload 18753 139878385948480 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:44:25,350 auth 18753 139878319486656 注册验证码: 483284
+[INFO] 2026-04-26 08:44:25,353 basehttp 18753 139878319486656 "POST /send-email-code/ HTTP/1.0" 200 60
+[ERROR] 2026-04-26 08:45:12,130 auth 18753 139878319486656 注册失败: (1048, "Column 'id_card' cannot be null")
+[INFO] 2026-04-26 08:45:12,134 basehttp 18753 139878319486656 "POST /register/ HTTP/1.0" 200 84
+[INFO] 2026-04-26 08:52:59,541 basehttp 18753 139878319486656 "POST /register/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:53:16,840 basehttp 18753 139878319486656 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:53:37,613 basehttp 18753 139878319486656 "GET / HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:53:53,535 basehttp 18753 139878319486656 "GET / HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:53:53,657 basehttp 18753 139878319486656 "GET /login/?next=/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 08:53:54,509 basehttp 18753 139878319486656 "GET /captcha/?1777164833899 HTTP/1.0" 200 2563
+[INFO] 2026-04-26 08:54:04,082 basehttp 18753 139878319486656 "GET /admin/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:54:04,178 basehttp 18753 139878319486656 "GET /admin/login/?next=/admin/ HTTP/1.0" 200 4363
+[INFO] 2026-04-26 08:54:04,301 basehttp 18753 139878319486656 "GET /static/admin/simpleui-x/elementui/theme-chalk/index.css HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,337 basehttp 18753 139878319486656 "GET /static/admin/simpleui-x/fontawesome-free-6.2.0-web/css/all.min.css HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,373 basehttp 18753 139878319486656 "GET /static/admin/simpleui-x/css/login.css?_=2.1 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,412 basehttp 18753 139878319486656 "GET /static/admin/simpleui-x/js/vue.min.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,486 basehttp 18753 139878319486656 "GET /static/admin/simpleui-x/elementui/umd/locale/en.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,526 basehttp 18753 139878319486656 "GET /static/admin/simpleui-x/elementui/index.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,559 basehttp 18753 139878319486656 "GET /static/admin/simpleui-x/particles/particles.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,566 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/js/login.js?_=3.3 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,593 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/particles/app.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,635 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/img/logo.png HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,675 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/img/bg.svg HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,717 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/fontawesome-free-6.2.0-web/webfonts/fa-solid-900.woff2 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:04,755 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/elementui/theme-chalk/fonts/element-icons.woff HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:06,444 basehttp 18753 139878209672896 "POST /admin/login/?next=/admin/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:54:06,668 basehttp 18753 139878209672896 "GET /admin/ HTTP/1.0" 200 15218
+[INFO] 2026-04-26 08:54:06,791 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/css/index.css?_=3.2 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:06,823 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/waves/waves.min.css?_=2.1 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:06,980 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/automatic/dicts.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,019 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/automatic/segment.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,053 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/locale/en-us.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,087 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/locale/zh-hans.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,128 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/js/cookie.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,161 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/theme/theme.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,203 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/waves/waves.min.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,237 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/js/menu.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:07,286 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/js/index.js?_=2026.01.13 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:17,794 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/fontawesome-free-6.2.0-web/webfonts/fa-regular-400.woff2 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:20,844 basehttp 18753 139878209672896 "POST /admin/logout/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:54:20,922 basehttp 18753 139878209672896 "GET /login/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 08:54:21,457 basehttp 18753 139878209672896 "GET /captcha/?1777164860935 HTTP/1.0" 200 3180
+[INFO] 2026-04-26 08:54:35,109 auth 18753 139878209672896 用户 admin 登录成功
+[INFO] 2026-04-26 08:54:35,115 basehttp 18753 139878209672896 "POST /login/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:54:35,206 basehttp 18753 139878209672896 "GET / HTTP/1.0" 200 15176
+[INFO] 2026-04-26 08:54:35,313 basehttp 18753 139878209672896 "GET / HTTP/1.0" 200 15176
+[INFO] 2026-04-26 08:54:35,911 basehttp 18753 139878209672896 "GET /static/welcome.html HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:38,394 basehttp 18753 139878209672896 "GET /person-query/ HTTP/1.0" 200 9326
+[INFO] 2026-04-26 08:54:43,320 basehttp 18753 139878209672896 "GET /admin/ HTTP/1.0" 200 17483
+[INFO] 2026-04-26 08:54:45,978 basehttp 18753 139878209672896 "GET /admin/auth/user/ HTTP/1.0" 200 36709
+[INFO] 2026-04-26 08:54:46,090 basehttp 18753 139878209672896 "GET /static/admin/css/base.css?_=2.7 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,128 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/css/base.css?_=2.7 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,166 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/theme/simpleui.css HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,313 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/js/language.js?_=2.1.2 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,344 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/locale/en-us.js?_=2.1.2 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,384 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/locale/zh-hans.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,422 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/js/cookie.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,462 basehttp 18753 139878209672896 "GET /static/admin/css/changelists.css?_=20180905 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,518 basehttp 18753 139878209672896 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:54:46,535 basehttp 18753 139878209672896 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,578 basehttp 18753 139878209672896 "GET /static/admin/js/jquery.init.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,613 basehttp 18753 139878209672896 "GET /static/admin/js/core.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,657 basehttp 18753 139878209672896 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,695 basehttp 18753 139878209672896 "GET /static/admin/js/actions.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,735 basehttp 18753 139878209672896 "GET /static/admin/js/urlify.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,775 basehttp 18753 139878209672896 "GET /static/admin/js/prepopulate.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,814 basehttp 18753 139878209672896 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,857 basehttp 18753 139878209672896 "GET /static/admin/css/responsive.css?_=20180905 HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,899 basehttp 18753 139878209672896 "GET /static/admin/js/vendor/jquery/jquery.min.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,937 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/automatic/dicts.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:46,979 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/automatic/segment.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:47,021 basehttp 18753 139878209672896 "GET /static/admin/simpleui-x/js/axios.min.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:47,060 basehttp 18753 139878209672896 "GET /static/admin/img/icon-no.svg HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:47,097 basehttp 18753 139878209672896 "GET /static/admin/img/icon-yes.svg HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:47,141 basehttp 18753 139878209672896 "GET /static/admin/img/sorting-icons.svg HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:53,189 basehttp 18753 139878209672896 "POST /admin/auth/user/ HTTP/1.0" 200 6510
+[INFO] 2026-04-26 08:54:53,811 basehttp 18753 139878209672896 "GET /static/admin/js/cancel.js HTTP/1.0" 304 0
+[INFO] 2026-04-26 08:54:55,247 basehttp 18753 139878209672896 "POST /admin/auth/user/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:54:55,397 basehttp 18753 139878209672896 "GET /admin/auth/user/ HTTP/1.0" 200 36041
+[INFO] 2026-04-26 08:54:55,785 basehttp 18753 139878209672896 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:55:04,292 basehttp 18753 139878209672896 "POST /register/ HTTP/1.0" 200 78
+[INFO] 2026-04-26 08:55:10,263 auth 18753 139878209672896 注册验证码: 552395
+[INFO] 2026-04-26 08:55:10,267 basehttp 18753 139878209672896 "POST /send-email-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:55:28,102 signals 18753 139878209672896 为新用户 11111 创建扩展信息
+[ERROR] 2026-04-26 08:55:28,137 auth 18753 139878209672896 注册失败: (1062, "Duplicate entry '6' for key 'user_id'")
+[INFO] 2026-04-26 08:55:28,143 basehttp 18753 139878209672896 "POST /register/ HTTP/1.0" 200 84
+[INFO] 2026-04-26 08:58:24,234 autoreload 18753 139878385948480 /home/hsy/myedu/main/views/auth.py changed, reloading.
+[INFO] 2026-04-26 08:58:25,242 autoreload 19309 139819201533760 Watching for file changes with StatReloader
+[INFO] 2026-04-26 08:58:31,343 basehttp 19309 139819135125184 "POST /register/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 08:58:39,411 basehttp 19309 139819135125184 "GET /admin/auth/group/ HTTP/1.0" 200 29508
+[INFO] 2026-04-26 08:58:39,779 basehttp 19309 139819135125184 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:59:00,466 basehttp 19309 139819135125184 "POST /register/ HTTP/1.0" 200 66
+[INFO] 2026-04-26 08:59:14,869 basehttp 19309 139819135125184 "GET /admin/auth/user/ HTTP/1.0" 200 36713
+[INFO] 2026-04-26 08:59:15,232 basehttp 19309 139819135125184 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:59:20,029 basehttp 19309 139819135125184 "POST /admin/auth/user/ HTTP/1.0" 200 6652
+[INFO] 2026-04-26 08:59:21,614 signals 19309 139819135125184 用户 11111 的扩展信息被删除
+[INFO] 2026-04-26 08:59:21,621 basehttp 19309 139819135125184 "POST /admin/auth/user/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 08:59:21,732 basehttp 19309 139819135125184 "GET /admin/auth/user/ HTTP/1.0" 200 36041
+[INFO] 2026-04-26 08:59:22,093 basehttp 19309 139819135125184 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 08:59:27,133 signals 19309 139819135125184 为新用户 sdsd 创建扩展信息
+[INFO] 2026-04-26 08:59:27,139 auth 19309 139819135125184 新用户注册成功: sdsd
+[INFO] 2026-04-26 08:59:27,142 basehttp 19309 139819135125184 "POST /register/ HTTP/1.0" 200 48
+[INFO] 2026-04-26 08:59:28,694 basehttp 19309 139819135125184 "GET /login/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 08:59:29,165 basehttp 19309 139819135125184 "GET /captcha/?1777165168645 HTTP/1.0" 200 1969
+[INFO] 2026-04-26 08:59:33,438 basehttp 19309 139819135125184 "GET /forgot-pwd/ HTTP/1.0" 200 5945
+[INFO] 2026-04-26 08:59:43,587 basehttp 19309 139819135125184 "GET /admin/auth/user/ HTTP/1.0" 200 36711
+[INFO] 2026-04-26 08:59:43,921 basehttp 19309 139819135125184 "GET /admin/jsi18n/ HTTP/1.0" 200 9327
+[INFO] 2026-04-26 09:00:56,269 auth 19309 139819135125184 重置验证码: 904235
+[INFO] 2026-04-26 09:00:56,273 basehttp 19309 139819135125184 "POST /send-reset-code/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 09:02:09,423 basehttp 19309 139819135125184 "GET /forgot-pwd/ HTTP/1.0" 200 5945
+[INFO] 2026-04-26 09:04:26,349 basehttp 19309 139819135125184 "GET /forgot-pwd/ HTTP/1.0" 200 6631
+[INFO] 2026-04-26 09:04:47,979 auth 19309 139819135125184 用户 sdsd 密码重置成功
+[INFO] 2026-04-26 09:04:47,981 basehttp 19309 139819135125184 "POST /forgot-pwd/ HTTP/1.0" 200 60
+[INFO] 2026-04-26 09:04:49,541 basehttp 19309 139819135125184 "GET /login/ HTTP/1.0" 200 8506
+[INFO] 2026-04-26 09:04:49,899 basehttp 19309 139819135125184 "GET /captcha/?1777165489395 HTTP/1.0" 200 2881
+[INFO] 2026-04-26 09:05:11,306 auth 19309 139819135125184 用户 sdsd 登录成功
+[INFO] 2026-04-26 09:05:11,310 basehttp 19309 139819135125184 "POST /login/ HTTP/1.0" 302 0
+[INFO] 2026-04-26 09:05:11,353 basehttp 19309 139819135125184 "GET / HTTP/1.0" 200 15175
+[INFO] 2026-04-26 09:05:11,400 basehttp 19309 139819135125184 "GET / HTTP/1.0" 200 15175
+[INFO] 2026-04-26 09:05:11,846 basehttp 19309 139819135125184 "GET /static/welcome.html HTTP/1.0" 200 505
+[WARNING] 2026-04-26 09:05:21,374 basehttp 19309 139819135125184 "GET /archivesSystem/log HTTP/1.0" 404 7076
+[WARNING] 2026-04-26 09:05:22,544 basehttp 19309 139819135125184 "GET /archivesSystem/batch HTTP/1.0" 404 7082
+[WARNING] 2026-04-26 09:05:30,080 basehttp 19309 139819135125184 "GET /linux/ HTTP/1.0" 404 7040
+[WARNING] 2026-04-26 09:05:42,226 basehttp 19309 139819135125184 "GET /piano/ HTTP/1.0" 404 7040
+[WARNING] 2026-04-26 09:05:44,399 basehttp 19309 139819135125184 "GET /decrypt/ HTTP/1.0" 404 7046
+[WARNING] 2026-04-26 09:05:48,200 basehttp 19309 139819135125184 "GET /daily/receive HTTP/1.0" 404 7061
+[WARNING] 2026-04-26 09:05:49,248 basehttp 19309 139819135125184 "GET /daily/look HTTP/1.0" 404 7052
+[INFO] 2026-04-26 09:05:50,584 basehttp 19309 139819135125184 "GET /person-query/ HTTP/1.0" 200 9326
+[INFO] 2026-04-26 09:05:53,095 basehttp 19309 139819135125184 "GET /person-manage/ HTTP/1.0" 200 12605

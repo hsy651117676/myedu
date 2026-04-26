@@ -189,13 +189,13 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 465))
 EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True').lower() == 'true'
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '651117676@qq.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'axtdkjqmjnfcbcig')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'rphcxwtfwljtbehb')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_TIMEOUT = 30
 
 # 开发环境使用控制台后端
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # ==================== 国际化 ====================
 

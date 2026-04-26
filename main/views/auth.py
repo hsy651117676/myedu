@@ -179,111 +179,93 @@ def login_view(request):
     
     return render(request, 'auth/login.html')
 
-
 # ==================== 注册 ====================
-
-@require_http_methods(["POST"])
-@validate_json(required_fields=['username', 'email', 'password1', 'password2', 'code'])
-@rate_limit(10, 3600, '注册请求过于频繁，请1小时后再试')
-def send_email_code(request, data):
+@require_POST
+def send_email_code(request):
     """发送注册验证码"""
-    email = data['email']
+    email = request.POST.get('email', '').strip()
     
-    # 检查邮箱是否已注册
+    if not email:
+        return JsonResponse({'code': 400, 'msg': '请输入邮箱'})
     if User.objects.filter(email=email).exists():
         return JsonResponse({'code': 400, 'msg': '该邮箱已被注册'})
     
-    # 检查发送频率限制
     send_key = f'email_code_send_{email}'
     if cache.get(send_key):
         return JsonResponse({'code': 400, 'msg': '发送频繁，请60秒后再试'})
     
-    # 生成验证码
     code = ''.join(random.choices(string.digits, k=6))
-    cache_key = f'register_code_{email}'
-    cache.set(cache_key, code, CODE_EXPIRE_TIME)
-    cache.set(send_key, True, SEND_INTERVAL)
+    cache.set(f'register_code_{email}', code, 300)
+    cache.set(send_key, True, 60)
     
     try:
         send_mail(
             '注册验证码',
-            f'您的验证码是: {code}\n有效期 {CODE_EXPIRE_TIME // 60} 分钟，请勿泄露。',
+            f'您的验证码是: {code}\n有效期5分钟。',
             settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
         )
-        logger.info(f"验证码已发送至 {email}")
+        logger.info(f"注册验证码: {code}")
         return JsonResponse({'code': 200, 'msg': '验证码已发送'})
     except Exception as e:
         logger.error(f"邮件发送失败: {e}")
-        cache.delete(cache_key)
+        cache.delete(f'register_code_{email}')
         cache.delete(send_key)
-        return JsonResponse({'code': 500, 'msg': '邮件发送失败，请稍后重试'})
+        return JsonResponse({'code': 500, 'msg': f'发送失败: {str(e)}'})
 
-
-@require_http_methods(["POST"])
-@validate_json(required_fields=['username', 'email', 'password1', 'password2', 'code'])
-def register_view(request, data):
+def register_view(request):
     """用户注册"""
-    username = data['username']
-    email = data['email']
-    password1 = data['password1']
-    password2 = data['password2']
-    code = data['code']
+    if request.method == 'GET':
+        return render(request, 'auth/register.html')
     
-    # 验证用户名
-    if len(username) < 3:
-        return JsonResponse({'code': 400, 'msg': '用户名至少3个字符'})
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'code': 400, 'msg': '请求数据格式错误'})
     
-    if not username.isalnum():
-        return JsonResponse({'code': 400, 'msg': '用户名只能包含字母和数字'})
+    username = data.get('username', '').strip()
+    email = data.get('email', '').strip()
+    password1 = data.get('password1', '').strip()
+    password2 = data.get('password2', '').strip()
+    code = data.get('code', '').strip()
     
-    # 验证密码
+    if not username:
+        return JsonResponse({'code': 400, 'msg': '请输入用户名'})
+    if not email:
+        return JsonResponse({'code': 400, 'msg': '请输入邮箱'})
     if len(password1) < 6:
         return JsonResponse({'code': 400, 'msg': '密码长度不能少于6位'})
-    
     if password1 != password2:
         return JsonResponse({'code': 400, 'msg': '两次密码不一致'})
-    
-    # 检查用户名和邮箱唯一性
     if User.objects.filter(username=username).exists():
         return JsonResponse({'code': 400, 'msg': '用户名已存在'})
-    
     if User.objects.filter(email=email).exists():
         return JsonResponse({'code': 400, 'msg': '该邮箱已被注册'})
+    if not code:
+        return JsonResponse({'code': 400, 'msg': '请输入验证码'})
     
-    # 验证邮箱验证码
-    cache_key = f'register_code_{email}'
-    stored_code = cache.get(cache_key)
-    
+    # 从 Redis 验证验证码
+    stored_code = cache.get(f'register_code_{email}')
     if not stored_code or stored_code != code:
         return JsonResponse({'code': 400, 'msg': '验证码错误或已过期'})
     
-    # 创建用户
     try:
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password1
         )
-        UserProfile.objects.create(user=user)
-        
-        cache.delete(cache_key)
+        UserProfile.objects.get_or_create(user=user)
+        cache.delete(f'register_code_{email}')
         logger.info(f"新用户注册成功: {username}")
-        
-        # 自动登录
-        login(request, user)
-        return JsonResponse({'code': 200, 'msg': '注册成功', 'redirect': reverse('home')})
-        
+        return JsonResponse({'code': 200, 'msg': '注册成功'})
     except Exception as e:
         logger.error(f"注册失败: {e}")
         return JsonResponse({'code': 500, 'msg': '注册失败，请稍后重试'})
 
-
 # ==================== 密码重置 ====================
-
 @require_POST
-@rate_limit(10, 3600, '请求过于频繁')
 def send_reset_code(request):
     """发送密码重置验证码"""
     username = request.POST.get('username', '').strip()
@@ -300,42 +282,52 @@ def send_reset_code(request):
     if user.email != email:
         return JsonResponse({'code': 400, 'msg': '用户名与邮箱不匹配'})
     
-    # 检查发送频率
     send_key = f'reset_send_{email}'
     if cache.get(send_key):
         return JsonResponse({'code': 400, 'msg': '发送频繁，请60秒后再试'})
     
-    # 生成验证码
     code = ''.join(random.choices(string.digits, k=6))
-    cache.set(f'reset_code_{email}', code, CODE_EXPIRE_TIME)
-    cache.set(send_key, True, SEND_INTERVAL)
+    cache.set(f'reset_code_{email}', code, 300)
+    cache.set(send_key, True, 60)
     
     try:
         send_mail(
             '密码重置验证码',
-            f'您的重置验证码是: {code}\n有效期 {CODE_EXPIRE_TIME // 60} 分钟。',
+            f'您的重置验证码: {code}\n有效期5分钟。',
             settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
         )
+        logger.info(f"重置验证码: {code}")
         return JsonResponse({'code': 200, 'msg': '验证码已发送'})
     except Exception as e:
-        logger.error(f"重置验证码发送失败: {e}")
-        return JsonResponse({'code': 500, 'msg': '邮件发送失败'})
+        logger.error(f"邮件发送失败: {e}")
+        cache.delete(f'reset_code_{email}')
+        cache.delete(send_key)
+        return JsonResponse({'code': 500, 'msg': f'发送失败: {str(e)}'})
 
-
-@require_http_methods(["POST"])
-@validate_json(required_fields=['username', 'email', 'code', 'password1', 'password2'])
-@rate_limit(5, 1800, '重置次数过多，请30分钟后再试')
-def forgot_pwd_view(request, data):
-    """忘记密码重置"""
-    username = data['username']
-    email = data['email']
-    code = data['code']
-    password1 = data['password1']
-    password2 = data['password2']
+def forgot_pwd_view(request):
+    """忘记密码"""
+    if request.method == 'GET':
+        return render(request, 'auth/forgot_pwd.html')
     
-    # 验证用户
+    # POST 处理
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'code': 400, 'msg': '请求数据格式错误'})
+    
+    username = data.get('username', '').strip()
+    email = data.get('email', '').strip()
+    code = data.get('code', '').strip()
+    password1 = data.get('password1', '').strip()
+    password2 = data.get('password2', '').strip()
+    
+    if not username:
+        return JsonResponse({'code': 400, 'msg': '请输入用户名'})
+    if not email:
+        return JsonResponse({'code': 400, 'msg': '请输入邮箱'})
+    
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
@@ -344,29 +336,27 @@ def forgot_pwd_view(request, data):
     if user.email != email:
         return JsonResponse({'code': 400, 'msg': '用户名与邮箱不匹配'})
     
-    # 验证密码
+    if not code:
+        return JsonResponse({'code': 400, 'msg': '请输入验证码'})
     if len(password1) < 6:
         return JsonResponse({'code': 400, 'msg': '密码长度不能少于6位'})
-    
     if password1 != password2:
         return JsonResponse({'code': 400, 'msg': '两次密码不一致'})
     
-    # 验证重置验证码
+    # 从 Redis 验证验证码
     stored_code = cache.get(f'reset_code_{email}')
     if not stored_code or stored_code != code:
         return JsonResponse({'code': 400, 'msg': '验证码错误或已过期'})
     
-    # 重置密码
     try:
         user.set_password(password1)
         user.save()
         cache.delete(f'reset_code_{email}')
         logger.info(f"用户 {username} 密码重置成功")
-        return JsonResponse({'code': 200, 'msg': '密码重置成功，请登录'})
+        return JsonResponse({'code': 200, 'msg': '密码重置成功'})
     except Exception as e:
         logger.error(f"密码重置失败: {e}")
         return JsonResponse({'code': 500, 'msg': '重置失败，请稍后重试'})
-
 
 # ==================== 用户操作 ====================
 

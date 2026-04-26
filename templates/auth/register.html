@@ -24,12 +24,7 @@
   <div class="register-box" id="app">
     <h2 style="text-align:center; margin-bottom:30px; color: #303133;">用户注册</h2>
 
-    <el-form 
-      ref="registerForm"
-      :model="form" 
-      :rules="rules"
-      @submit.prevent="handleRegister">
-      
+    <el-form ref="registerForm" :model="form" :rules="rules" @submit.prevent="handleRegister">
       {% csrf_token %}
 
       <el-form-item prop="username">
@@ -87,8 +82,7 @@
             :disabled="sending || !form.email"
             size="large"
             style="width:140px;">
-            <span v-if="sending">[[ countdown ]]秒后重发</span>
-            <span v-else>发送验证码</span>
+            [[ sending ? countdown + '秒后重发' : '发送验证码' ]]
           </el-button>
         </div>
       </el-form-item>
@@ -100,7 +94,7 @@
           size="large"
           :loading="loading"
           style="width:100%;">
-          {{ loading ? '注册中...' : '注 册' }}
+          [[ loading ? '注册中...' : '注 册' ]]
         </el-button>
       </el-form-item>
 
@@ -113,10 +107,10 @@
 </div>
 
 <script>
-const { createApp, ref, reactive, watch } = Vue;
+const { createApp, ref, reactive } = Vue;
 const { ElMessage } = ElementPlus;
 
-createApp({
+const app = createApp({
   setup() {
     const form = reactive({
       username: '',
@@ -130,15 +124,6 @@ createApp({
     const sending = ref(false);
     const countdown = ref(60);
     let timer = null;
-
-    // 表单验证规则
-    const validatePass2 = (rule, value, callback) => {
-      if (value !== form.password1) {
-        callback(new Error('两次密码不一致'));
-      } else {
-        callback();
-      }
-    };
 
     const rules = {
       username: [
@@ -154,12 +139,17 @@ createApp({
         { min: 6, message: '密码至少6位', trigger: 'blur' }
       ],
       password2: [
-        { required: true, message: '请确认密码', trigger: 'blur' },
-        { validator: validatePass2, trigger: 'blur' }
+        { required: true, message: '请确认密码', trigger: 'blur' }
       ],
       code: [
         { required: true, message: '请输入验证码', trigger: 'blur' }
       ]
+    };
+
+    // 获取CSRF token
+    const getCSRFToken = () => {
+      const token = document.querySelector('[name=csrfmiddlewaretoken]');
+      return token ? token.value : '';
     };
 
     // 发送验证码
@@ -173,20 +163,17 @@ createApp({
       try {
         const formData = new FormData();
         formData.append('email', form.email);
+        formData.append('csrfmiddlewaretoken', getCSRFToken());
 
         const response = await fetch('/send-email-code/', {
           method: 'POST',
-          body: formData,
-          headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-          }
+          body: formData
         });
 
         const data = await response.json();
         
         if (data.code === 200) {
           ElMessage.success('验证码已发送');
-          // 开始倒计时
           countdown.value = 60;
           timer = setInterval(() => {
             countdown.value--;
@@ -201,7 +188,7 @@ createApp({
           sending.value = false;
         }
       } catch (error) {
-        ElMessage.error('发送失败，请稍后重试');
+        ElMessage.error('发送失败');
         sending.value = false;
       }
     };
@@ -211,13 +198,20 @@ createApp({
       loading.value = true;
       
       try {
+        // 关键：使用 fetch 发送 JSON 数据
         const response = await fetch('/register/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            'X-CSRFToken': getCSRFToken()
           },
-          body: JSON.stringify(form)
+          body: JSON.stringify({
+            username: form.username,
+            email: form.email,
+            password1: form.password1,
+            password2: form.password2,
+            code: form.code
+          })
         });
 
         const data = await response.json();
@@ -231,18 +225,12 @@ createApp({
           ElMessage.error(data.msg);
         }
       } catch (error) {
+        console.error('注册失败:', error);
         ElMessage.error('注册失败，请稍后重试');
       } finally {
         loading.value = false;
       }
     };
-
-    // 组件卸载时清除定时器
-    onUnmounted(() => {
-      if (timer) {
-        clearInterval(timer);
-      }
-    });
 
     return {
       form,
@@ -254,6 +242,9 @@ createApp({
       handleRegister
     };
   }
-}).use(ElementPlus).mount('#app');
+});
+
+app.config.compilerOptions.delimiters = ['[[', ']]'];
+app.use(ElementPlus).mount('#app');
 </script>
 {% endblock %}

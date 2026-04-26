@@ -108,3 +108,23 @@ Traceback (most recent call last):
     if os.path.exists(font_path):
        ^^
 NameError: name 'os' is not defined
+[ERROR] 2026-04-26 07:43:47,499 log 17429 140137992332992 Internal Server Error: /send-email-code/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/auth.py", line 64, in wrapper
+    data = json.loads(request.body)
+                      ^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/http/request.py", line 379, in body
+    raise RawPostDataException(
+django.http.request.RawPostDataException: You cannot access body after reading from request's data stream
+[ERROR] 2026-04-26 08:03:55,219 auth 17939 140302998779584 注册失败: (1048, "Column 'id_card' cannot be null")
+[ERROR] 2026-04-26 08:45:12,130 auth 18753 139878319486656 注册失败: (1048, "Column 'id_card' cannot be null")
+[ERROR] 2026-04-26 08:55:28,137 auth 18753 139878209672896 注册失败: (1062, "Duplicate entry '6' for key 'user_id'")
