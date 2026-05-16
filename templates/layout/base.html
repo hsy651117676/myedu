@@ -4,23 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}系统平台{% endblock %}</title>
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
-  
-  <!-- JavaScript -->
-  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/index.full.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/locale/zh-cn.min.js"></script>
-  <script src="https://cdn.bootcdn.net/ajax/libs/axios/1.6.0/axios.min.js"></script>
-  
-  <!-- Axios全局配置 -->
+<link rel="stylesheet" href="/static/lib/element-plus.css">
+<script src="/static/lib/vue.global.prod.js"></script>
+<script src="/static/lib/element-plus.min.js"></script>
+<script src="/static/lib/element-plus-icons.min.js"></script>
+<script src="/static/lib/element-plus-zh-cn.min.js"></script>
+<script src="/static/lib/axios.min.js"></script>
   <script>
-    // 配置axios默认值
     axios.defaults.xsrfCookieName = 'csrftoken';
     axios.defaults.xsrfHeaderName = 'X-CSRFToken';
-    
-    // 响应拦截器 - 统一处理未登录
     axios.interceptors.response.use(
       response => response,
       error => {
@@ -35,95 +27,27 @@
   <link rel="shortcut icon" href="/static/favicon.ico">
   
   <style>
-    * { 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
-    }
-    
-    body { 
-      background: #f5f7fa; 
-      min-height: 100vh; 
-      font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", 
-                   "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
-    }
-    
-    /* 折叠面板优化 */
-    .el-collapse-item__header {
-      height: 32px !important;
-      min-height: 32px !important;
-      padding: 0 15px !important;
-      line-height: 32px !important;
-      background: #f8f9fa;
-      border-radius: 4px;
-      font-weight: 500;
-    }
-    
-    .el-collapse-item__header:hover {
-      background: #e9ecef;
-    }
-    
-    .el-collapse-item__arrow {
-      line-height: 32px !important;
-    }
-    
-    .el-collapse-item__content {
-      padding-bottom: 16px;
-    }
-    
-    /* 标签页优化 */
-    .el-tabs__header {
-      height: 32px !important;
-      margin: 0 !important;
-    }
-    
-    .el-tabs__nav-wrap {
-      height: 32px !important;
-    }
-    
-    .el-tabs__nav {
-      height: 32px !important;
-    }
-    
-    .el-tabs__item {
-      height: 32px !important;
-      line-height: 32px !important;
-      padding: 0 16px !important;
-      font-size: 13px;
-    }
-    
-    .el-tabs__active-bar {
-      height: 2px !important;
-    }
-    
-    /* 表格优化 */
-    .el-table {
-      font-size: 13px;
-    }
-    
-    .el-table th {
-      background-color: #f5f7fa;
-      color: #606266;
-      font-weight: 600;
-    }
-    
-    /* 卡片优化 */
-    .el-card {
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* 按钮间距 */
-    .el-button + .el-button {
-      margin-left: 8px;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f5f7fa; min-height: 100vh; font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif; }
+    .el-collapse-item__header { height: 32px !important; min-height: 32px !important; padding: 0 15px !important; line-height: 32px !important; background: #f8f9fa; border-radius: 4px; font-weight: 500; }
+    .el-collapse-item__header:hover { background: #e9ecef; }
+    .el-collapse-item__arrow { line-height: 32px !important; }
+    .el-collapse-item__content { padding-bottom: 16px; }
+    .el-tabs__header { height: 32px !important; margin: 0 !important; }
+    .el-tabs__nav-wrap { height: 32px !important; }
+    .el-tabs__nav { height: 32px !important; }
+    .el-tabs__item { height: 32px !important; line-height: 32px !important; padding: 0 16px !important; font-size: 13px; }
+    .el-tabs__active-bar { height: 2px !important; }
+    .el-table { font-size: 13px; }
+    .el-table th { background-color: #f5f7fa; color: #606266; font-weight: 600; }
+    .el-card { border-radius: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+    .el-button + .el-button { margin-left: 8px; }
   </style>
   
   {% block extra_head %}{% endblock %}
 </head>
 <body>
   {% block content %}{% endblock %}
-  
   {% block extra_js %}{% endblock %}
 </body>
 </html>

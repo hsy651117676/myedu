@@ -1,0 +1,106 @@
+{% extends "layout/base.html" %}
+{% block title %}任前联审登记表{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+</style>
+<div id="app" v-if="rsid" style="padding:10px;font-size:14px;overflow-y:auto;height:100%;">
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 8px;background:#fff;border-bottom:1px solid #e0e0e0;position:sticky;top:0;z-index:10;">
+    <span style="font-weight:bold;color:#409EFF;">任前联审登记表</span>
+    <el-button size="small" @click="refreshData">刷新</el-button>
+    <el-button size="small" @click="exportData">导出Excel</el-button>
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr><td colspan="4" style="padding:8px;border:1px solid #ddd;"><b>姓名：</b>[[ data.rqls1 ]]</td><td colspan="10" style="padding:8px;border:1px solid #ddd;"><b>工作单位及职务：</b>[[ data.rqls2 ]]</td></tr>
+    <tr style="background:#f5f5f5;">
+      <th style="padding:6px;border:1px solid #ddd;">项目</th>
+      <th colspan="6" style="padding:6px;border:1px solid #ddd;">信息是否一致</th>
+      <th colspan="6" style="padding:6px;border:1px solid #ddd;">是否涂改</th>
+      <th colspan="6" style="padding:6px;border:1px solid #ddd;">是否认定</th>
+      <th colspan="6" style="padding:6px;border:1px solid #ddd;">确认信息</th>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;">出生时间</td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls3" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls6" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls9" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;">[[ data.rqls12 ]]</td>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;">参加工作时间</td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls4" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls7" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls10" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;">[[ data.rqls13 ]]</td>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;">入党时间</td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls5" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls8" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls11" disabled></td>
+      <td colspan="6" style="padding:6px;border:1px solid #ddd;">[[ data.rqls14 ]]</td>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;" colspan="2">全日制教育</td>
+      <td colspan="7" style="padding:6px;border:1px solid #ddd;">[[ data.rqls15 ]]</td>
+      <td colspan="7" style="padding:6px;border:1px solid #ddd;">[[ data.rqls17 ]]</td>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;" colspan="2">在职教育</td>
+      <td colspan="7" style="padding:6px;border:1px solid #ddd;">[[ data.rqls16 ]]</td>
+      <td colspan="7" style="padding:6px;border:1px solid #ddd;">[[ data.rqls18 ]]</td>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;">民族</td><td style="padding:6px;border:1px solid #ddd;">[[ data.rqls19 ]]</td>
+      <td style="padding:6px;border:1px solid #ddd;">籍贯</td><td style="padding:6px;border:1px solid #ddd;">[[ data.rqls20 ]]</td>
+      <td style="padding:6px;border:1px solid #ddd;">出生地</td><td colspan="2" style="padding:6px;border:1px solid #ddd;">[[ data.rqls21 ]]</td>
+      <td style="padding:6px;border:1px solid #ddd;">工作经历材料是否齐全</td><td colspan="4" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls22" disabled></td>
+      <td style="padding:6px;border:1px solid #ddd;">干部身份是否存疑</td><td colspan="4" style="padding:6px;border:1px solid #ddd;text-align:center;"><input type="checkbox" :checked="data.rqls23" disabled></td>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;">现任职务级别</td><td style="padding:6px;border:1px solid #ddd;">[[ data.rqls24 ]]</td>
+      <td style="padding:6px;border:1px solid #ddd;">任现职级时间</td><td style="padding:6px;border:1px solid #ddd;">[[ data.rqls25 ]]</td>
+      <td style="padding:6px;border:1px solid #ddd;">近三年年度考核结果</td><td colspan="3" style="padding:6px;border:1px solid #ddd;">[[ data.rqls26 ]]</td>
+      <td style="padding:6px;border:1px solid #ddd;">是否受过处分</td><td colspan="3" style="padding:6px;border:1px solid #ddd;">[[ data.rqls27 ]]</td>
+    </tr>
+    <tr>
+      <td style="padding:6px;border:1px solid #ddd;">审核发现的问题</td><td colspan="6" style="padding:6px;border:1px solid #ddd;">[[ data.rqls28 ]]</td>
+      <td style="padding:6px;border:1px solid #ddd;">处理意见建议</td><td colspan="6" style="padding:6px;border:1px solid #ddd;">[[ data.rqls29 ]]</td>
+    </tr>
+  </table>
+</div>
+<div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+  const app = createApp({
+    setup() {
+      const p = new URLSearchParams(window.location.search);
+      const rsid = ref(p.get('rsid'));
+      const data = ref({});
+
+      const loadData = () => {
+        axios.get('/archives/api/preaudit/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) data.value = res.data.data || {};
+        });
+      };
+
+      const refreshData = () => loadData();
+      const exportData = () => {
+        axios.get('/archives/api/preaudit-export/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) window.top.location.href = res.data.url;
+        });
+      };
+
+      onMounted(loadData);
+      return { rsid, data, refreshData, exportData };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus).mount('#app');
+})();
+</script>
+{% endblock %}

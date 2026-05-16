@@ -1,0 +1,140 @@
+{% extends "layout/base.html" %}
+{% block title %}职务变动9-2-1{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.gz-table { border-collapse:collapse; width:100%; font-size:13px; }
+.gz-table th, .gz-table td { padding:5px 8px; border:1px solid #ddd; }
+.gz-table th { background:#f5f5f5; position:sticky; top:0; }
+.gz-table td input { width:100%; border:none; padding:3px; font-size:13px; background:transparent; }
+.gz-table td input:focus { background:#fff; }
+</style>
+<div id="app" v-if="rsid" style="padding:10px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:6px 0;border-bottom:1px solid #e4e7ed;">
+  <span style="font-weight:bold;font-size:16px;color:#409EFF;">职务变动表 9-2-1</span>
+  <div style="display:flex;gap:6px;">
+    <el-button size="small" @click="addRow">添加行</el-button>
+    <el-button type="danger" size="small" @click="deleteRow">删除选中行</el-button>
+    <el-button type="success" size="small" @click="savePosition">保存</el-button>
+    <el-button size="small" @click="exportPosition">导出Excel</el-button>
+    <el-button size="small" @click="printPosition">打印</el-button>
+  </div>
+</div>
+
+  <div style="flex:1;overflow:auto;">
+    <table class="gz-table">
+      <thead>
+        <tr>
+          <th style="width:50px;">序号</th>
+          <th style="width:110px;">任职时间</th>
+          <th style="width:110px;">免职时间</th>
+          <th style="width:200px;">部门</th>
+          <th style="width:200px;">职务</th>
+          <th style="width:180px;">批准文电号</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(r,i) in positionList" :key="i" @click="selectPosRow(i, $event)">
+          <td><input type="checkbox" :checked="r._selected" @click.stop="r._selected=!r._selected"></td>
+          <td>[[ r.序号 ]]</td>
+          <td><input v-model="r.任职时间"/></td>
+          <td><input v-model="r.免职时间"/></td>
+          <td><input v-model="r.部门"/></td>
+          <td><input v-model="r.职务"/></td>
+          <td><input v-model="r.批准文电号"/></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
+
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+  const { ElMessage } = ElementPlus;
+  const app = createApp({
+    setup() {
+      const p = new URLSearchParams(window.location.search);
+      const rsid = ref(p.get('rsid'));
+      const positionList = ref([]);
+
+      const loadPosition = () => {
+        axios.get('/archives/api/position/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) positionList.value = res.data.data || [];
+        });
+      };
+      const addRow = () => {
+  let maxSxh = 0;
+  positionList.value.forEach(r => {
+    if (parseInt(r.序号) > maxSxh) maxSxh = parseInt(r.序号);
+  });
+  positionList.value.push({
+    序号: maxSxh + 1,
+    任职时间: '', 免职时间: '', 部门: '', 职务: '', 批准文电号: ''
+  });
+};
+
+const deleteRow = () => {
+  // 删除选中的行（利用 _selected 标记）
+  let toDelete = [];
+  positionList.value.forEach((r, i) => {
+    if (r._selected) toDelete.push(i);
+  });
+  if (!toDelete.length) { ElMessage.warning('请先选中行'); return; }
+  
+  // 从后往前删，避免索引错位
+  toDelete.reverse().forEach(i => positionList.value.splice(i, 1));
+  
+  // 重新排序号
+  positionList.value.forEach((r, i) => r.序号 = i + 1);
+  ElMessage.success('已删除');
+};
+
+      const savePosition = () => {
+        let rows = positionList.value.map((r,i) => ({
+          序号: r.序号 || i + 1,
+          任职时间: r.任职时间 || '',
+          免职时间: r.免职时间 || '',
+          部门: r.部门 || '',
+          职务: r.职务 || '',
+          批准文电号: r.批准文电号 || ''
+        }));
+        axios.post('/archives/api/position-save/', { rsid: rsid.value, rows }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+          if(res.data.code===0) loadPosition();
+        });
+      };
+
+      const exportPosition = () => {
+        axios.get('/archives/api/position-export/', { params: { rsid: rsid.value } }).then(res => {
+          if(res.data.code===0) window.top.location.href = res.data.url;
+        });
+      };
+
+      const printPosition = () => {
+        let w = window.open('','_blank');
+        w.document.write('<html><head><meta charset="utf-8"><title>干部职务变动登记表</title><style>');
+        w.document.write('body{font-family:宋体;margin:10px}.title{text-align:center;font-size:16pt;font-weight:bold}');
+        w.document.write('table{width:100%;border-collapse:collapse;font-size:12pt}');
+        w.document.write('td,th{border:1px solid #000;padding:5px 6px;text-align:center}');
+        w.document.write('@page{size:A4 landscape;margin:10mm}');
+        w.document.write('</style></head><body>');
+        w.document.write('<div class="title">干部职务变动登记表</div><table>');
+        w.document.write('<tr><th>任职时间</th><th>免职时间</th><th>部门</th><th>职务</th><th>批准文电号</th></tr>');
+        positionList.value.forEach(r => w.document.write(`<tr><td>${r.任职时间||''}</td><td>${r.免职时间||''}</td><td>${r.部门||''}</td><td>${r.职务||''}</td><td>${r.批准文电号||''}</td></tr>`));
+        w.document.write('</table></body></html>');
+        w.document.close();w.print();
+      };
+
+      onMounted(loadPosition);
+      return { rsid, positionList, addRow, deleteRow, savePosition, exportPosition, printPosition };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus).mount('#app');
+})();
+</script>
+{% endblock %}

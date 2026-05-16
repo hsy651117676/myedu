@@ -3,13 +3,8 @@
 
 {% block content %}
 <div id="app" style="display:flex;flex-direction:column;height:100vh;">
-  <!-- 顶部导航栏 -->
-  <header style="height:40px;background:#1f2d3d;color:#fff;display:flex;align-items:center;
-                 justify-content:space-between;padding:0 20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:100;">
-    <div class="logo" style="font-size:18px;font-weight:bold;">
-      <i class="el-icon-monitor"></i> 系统管理平台
-    </div>
-    
+  <header style="height:40px;background:#1f2d3d;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:100;">
+    <div class="logo" style="font-size:18px;font-weight:bold;">系统管理平台</div>
     <div class="user-info">
       <el-dropdown trigger="click" @command="handleCommand">
         <span style="cursor:pointer;color: white;">
@@ -18,349 +13,187 @@
         </span>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item command="profile">
-              <i class="el-icon-user"></i> 基本信息
-            </el-dropdown-item>
-            <el-dropdown-item command="password">
-              <i class="el-icon-lock"></i> 修改密码
-            </el-dropdown-item>
-            <el-dropdown-item command="admin">
-              <i class="el-icon-setting"></i> 后台管理
-            </el-dropdown-item>
-            <el-dropdown-item divided command="logout">
-              <i class="el-icon-switch-button"></i> 退出登录
-            </el-dropdown-item>
+            <el-dropdown-item command="profile">基本信息</el-dropdown-item>
+            <el-dropdown-item command="password">修改密码</el-dropdown-item>
+            <el-dropdown-item command="admin">后台管理</el-dropdown-item>
+            <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
     </div>
   </header>
 
-  <!-- 主体内容区 -->
   <div class="main-container" style="display:flex;flex:1;overflow:hidden;">
-    <!-- 侧边栏 -->
-    <div class="sidebar" id="sidebar" 
-         style="width:200px;background:#2f4050;display:flex;flex-direction:column;overflow:hidden;transition:width 0.3s;">
-      
-      <!-- 折叠按钮 -->
+    <div class="sidebar" id="sidebar" style="width:200px;background:#2f4050;display:flex;flex-direction:column;overflow:hidden;transition:width 0.3s;">
       <div style="text-align:center;padding:10px 0;background:#2f4050;border-bottom:1px solid #384b5f;flex-shrink:0;">
         <el-button type="text" style="color:#fff;width:100%;" @click="toggleCollapse">
           <span v-if="isCollapse">☰</span>
           <span v-else>主菜单 <i class="el-icon-d-arrow-left" style="float:right;"></i></span>
         </el-button>
       </div>
-      
-      <!-- 菜单 -->
       <div style="flex:1;overflow-y:auto;overflow-x:hidden;">
-        <el-menu 
-          :default-active="activeTab" 
-          background-color="#2f4050" 
-          text-color="#bfcbd9" 
-          active-text-color="#409EFF"
-          :collapse="isCollapse"
-          style="border:none;"
-          @select="handleMenuSelect">
-          
-          <!-- 人口信息 -->
-          <el-sub-menu index="people">
-            <template #title>
-              <i class="el-icon-user"></i>
-              <span>人口信息</span>
-            </template>
-            <el-menu-item index="/person-query/">
-              <i class="el-icon-search"></i> 人员查询
-            </el-menu-item>
-            <el-menu-item index="/person-manage/">
-              <i class="el-icon-edit"></i> 人员维护
-            </el-menu-item>
-            <el-menu-item index="/data-change/">
-              <i class="el-icon-key"></i> 关键数据变更
-            </el-menu-item>
-          </el-sub-menu>
-          
-          <!-- 档案管理 -->
-          <el-sub-menu index="archives">
-            <template #title>
-              <i class="el-icon-folder"></i>
-              <span>档案管理</span>
-            </template>
-            <el-menu-item index="/archives/person">人员维护</el-menu-item>
-            <el-menu-item index="/archives/dept">机构维护</el-menu-item>
-            <el-menu-item index="/archives/label">档案标签</el-menu-item>
-            <el-menu-item index="/archives/query">查询统计</el-menu-item>
-            <el-menu-item index="/archives/file">常用文件</el-menu-item>
-          </el-sub-menu>
-          
-          <!-- 日常业务 -->
-          <el-sub-menu index="daily">
-            <template #title>
-              <i class="el-icon-document"></i>
-              <span>日常业务</span>
-            </template>
-            <el-menu-item index="/daily/look">档案查阅</el-menu-item>
-            <el-menu-item index="/daily/borrow">档案借阅</el-menu-item>
-            <el-menu-item index="/daily/transfer">档案转递</el-menu-item>
-            <el-menu-item index="/daily/receive">档案接收</el-menu-item>
-          </el-sub-menu>
-          
-          <!-- 系统管理 -->
-          <el-sub-menu index="system">
-            <template #title>
-              <i class="el-icon-setting"></i>
-              <span>系统管理</span>
-            </template>
-            <el-menu-item index="/archivesSystem/batch">批量维护</el-menu-item>
-            <el-menu-item index="/archivesSystem/log">日志查询</el-menu-item>
-          </el-sub-menu>
-          
-          <!-- 常用工具 -->
-          <el-sub-menu index="tools">
-            <template #title>
-              <i class="el-icon-tools"></i>
-              <span>常用工具</span>
-            </template>
-            <el-menu-item index="/linux/">Linux命令</el-menu-item>
-            <el-menu-item index="/encrypt/">算法加密</el-menu-item>
-            <el-menu-item index="/decrypt/">算法解密</el-menu-item>
-            <el-menu-item index="/piano/">键盘电子琴</el-menu-item>
-          </el-sub-menu>
+        <el-menu :default-active="activeTab" background-color="#2f4050" text-color="#bfcbd9" active-text-color="#409EFF" :collapse="isCollapse" style="border:none;" @select="handleMenuSelect">
+          <template v-for="menu in menus" :key="menu.id">
+            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.id.toString()">
+              <template #title>
+                <span>[[ menu.name ]]</span>
+              </template>
+              <el-menu-item v-for="child in menu.children" :key="child.id" :index="child.url">[[ child.name ]]</el-menu-item>
+            </el-sub-menu>
+            <el-menu-item v-else :index="menu.url">[[ menu.name ]]</el-menu-item>
+          </template>
         </el-menu>
       </div>
     </div>
 
-    <!-- 内容区域 -->
     <div class="main-content" style="flex:1;padding:0;overflow:hidden;display:flex;flex-direction:column;">
-      <el-tabs 
-        v-model="activeTab" 
-        type="card" 
-        closable 
-        @tab-remove="removeTab" 
-        @contextmenu.prevent="showContextMenu"
-        style="background:#f0f2f5;flex-shrink:0;">
-        
-        <el-tab-pane 
-          v-for="item in tabs" 
-          :key="item.name" 
-          :label="item.title" 
-          :name="item.name">
-        </el-tab-pane>
+      <el-tabs v-model="activeTab" type="card" closable @tab-remove="removeTab" @contextmenu.prevent="showContextMenu" style="background:#f0f2f5;flex-shrink:0;">
+        <el-tab-pane v-for="item in tabs" :key="item.name" :label="item.title" :name="item.name"></el-tab-pane>
       </el-tabs>
-      
-      <!-- iframe容器 -->
       <div style="flex:1;overflow:hidden;background:#fff;">
-        <iframe 
-          v-for="item in tabs" 
-          :key="item.name"
-          :src="item.url" 
-          v-show="activeTab === item.name"
-          style="width:100%;height:100%;border:none;"
-          sandbox="allow-same-origin allow-forms allow-scripts allow-popups">
-        </iframe>
+        <iframe v-for="item in tabs" :key="item.name" :src="item.url" v-show="activeTab === item.name" style="width:100%;height:100%;border:none;"
+          sandbox="allow-same-origin allow-forms allow-scripts allow-popups allow-top-navigation-by-user-activation allow-downloads"></iframe>
       </div>
     </div>
   </div>
 
-  <!-- 底部 -->
-  <footer style="height:25px;background:#1f2d3d;color:#bfcbd9;display:flex;align-items:center;
-                 justify-content:center;font-size:12px;flex-shrink:0;">
+  <footer style="height:25px;background:#1f2d3d;color:#bfcbd9;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
     © 2025 系统管理平台 - 版权所有
   </footer>
 
-  <!-- 右键菜单 -->
-  <div 
-    class="context-menu" 
-    v-show="showMenu" 
-    :style="{left:menuX+'px',top:menuY+'px'}"
-    style="position:fixed;background:#fff;border:1px solid #e4e7ed;border-radius:4px;
-           padding:5px 0;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,0.1);min-width:120px;">
-    <div @click="closeCurrent" style="padding:8px 15px;cursor:pointer;font-size:13px;">
-      <i class="el-icon-close"></i> 关闭当前
-    </div>
-    <div @click="closeAll" style="padding:8px 15px;cursor:pointer;font-size:13px;">
-      <i class="el-icon-circle-close"></i> 关闭全部
-    </div>
-    <div @click="closeLeft" style="padding:8px 15px;cursor:pointer;font-size:13px;">
-      <i class="el-icon-back"></i> 关闭左侧
-    </div>
-    <div @click="closeRight" style="padding:8px 15px;cursor:pointer;font-size:13px;">
-      <i class="el-icon-right"></i> 关闭右侧
-    </div>
+  <div class="context-menu" v-show="showMenu" @click.stop :style="{left:menuX+'px',top:menuY+'px'}"
+       style="position:fixed;background:#fff;border:1px solid #e4e7ed;border-radius:4px;padding:5px 0;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,0.1);min-width:120px;">
+    <div @click="closeCurrent" style="padding:8px 15px;cursor:pointer;font-size:13px;">关闭当前</div>
+    <div @click="closeAll" style="padding:8px 15px;cursor:pointer;font-size:13px;">关闭全部</div>
+    <div @click="closeLeft" style="padding:8px 15px;cursor:pointer;font-size:13px;">关闭左侧</div>
+    <div @click="closeRight" style="padding:8px 15px;cursor:pointer;font-size:13px;">关闭右侧</div>
   </div>
 </div>
 
 <script>
-// 防止iframe嵌套
 if (window.top !== window.self) {
   window.top.location.href = window.location.href;
 }
 
-const { createApp, ref } = Vue;
-const { ElMessage, ElMessageBox } = ElementPlus;
+const { createApp, ref, onMounted } = Vue;
+const { ElMessageBox } = ElementPlus;
 
-createApp({
+const app = createApp({
   setup() {
     const isCollapse = ref(false);
-    const activeTab = ref('/static/welcome.html');
+    const activeTab = ref('/welcome/');
     const showMenu = ref(false);
     const menuX = ref(0);
     const menuY = ref(0);
     const rightClickedTab = ref('');
-    
-    // 标签页数据
-    const tabs = ref([
-      { title: '欢迎页', name: '/static/welcome.html', url: '/static/welcome.html' }
-    ]);
-    
-    // 页面标题映射
-    const titleMap = {
-      '/': '首页',
-      '/person-query/': '人员查询',
-      '/person-manage/': '人员维护',
-      '/data-change/': '关键数据变更',
-      '/linux/': 'Linux命令',
-      '/encrypt/': '算法加密',
-      '/decrypt/': '算法解密',
-      '/base-info/': '基本信息维护',
-      '/change-pwd/': '密码修改',
-      '/static/HTML5piano.html': '键盘电子琴',
-      '/archives/person': '人员维护',
-      '/archives/dept': '机构维护',
-      '/archives/label': '档案标签',
-      '/archives/query': '查询统计',
-      '/archives/file': '常用文件',
-      '/daily/look': '档案查阅',
-      '/daily/borrow': '档案借阅',
-      '/daily/transfer': '档案转递',
-      '/daily/receive': '档案接收',
-      '/archivesSystem/batch': '批量维护',
-      '/archivesSystem/log': '日志查询',
+    const menus = ref([]);
+const tabs = ref([
+  { title: '欢迎页', name: '/welcome/', url: '/static/welcome.html' }
+]);
+
+    const findTitle = (url, list) => {
+      if (!list || list.length === 0) return url;
+      for (const m of list) {
+        if (m.url === url) return m.name;
+        if (m.children && m.children.length > 0) {
+          const f = findTitle(url, m.children);
+          if (f && f !== url) return f;
+        }
+      }
+      return url;
     };
-    
-    // 切换侧边栏
+
+    const loadMenus = async () => {
+      try {
+        const res = await axios.get('/api/menu/');
+        if (res.data.code === 0) {
+          menus.value = res.data.data;
+        }
+      } catch (e) {
+        console.error('加载菜单失败', e);
+      }
+    };
+
+    onMounted(() => loadMenus());
+
     const toggleCollapse = () => {
       isCollapse.value = !isCollapse.value;
-      const sidebar = document.getElementById('sidebar');
-      sidebar.style.width = isCollapse.value ? '64px' : '200px';
+      document.getElementById('sidebar').style.width = isCollapse.value ? '20px' : '200px';
     };
-    
-    // 菜单选择
+
     const handleMenuSelect = (index) => {
       openTab(index);
     };
-    
-    // 用户下拉菜单命令
-    const handleCommand = (command) => {
-      const actions = {
-        profile: () => openTab('/base-info/'),
-        password: () => openTab('/change-pwd/'),
-        admin: () => window.open('/admin/', '_blank'),
-        logout: () => {
-          ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }).then(() => {
-            window.location.href = '/logout/';
-          });
-        }
-      };
-      
-      if (actions[command]) {
-        actions[command]();
-      }
-    };
-    
-    // 打开标签页
+const handleCommand = (cmd) => {
+  if (cmd === 'profile') openTab('/base-info/');
+  else if (cmd === 'password') openTab('/change-pwd/');
+  else if (cmd === 'admin') window.open('/admin/', '_blank');
+  else if (cmd === 'logout') {
+    ElMessageBox.confirm('确定要退出吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      window.location.href = '/logout/';
+    }).catch(() => {});
+  }
+};
+
     const openTab = (url) => {
-      const title = titleMap[url] || url;
-      const exists = tabs.value.find(tab => tab.name === url);
-      
+      const title = findTitle(url, menus.value);
+      const exists = tabs.value.find(t => t.name === url);
       if (!exists) {
-        tabs.value.push({ title, name: url, url });
+        tabs.value.push({ title: title, name: url, url: url });
       }
-      
       activeTab.value = url;
-      showMenu.value = false;
     };
-    
-    // 移除标签页
+
     const removeTab = (name) => {
-      const index = tabs.value.findIndex(tab => tab.name === name);
-      
-      if (index === -1) return;
-      
-      tabs.value.splice(index, 1);
-      
+      const i = tabs.value.findIndex(t => t.name === name);
+      if (i === -1) return;
+      tabs.value.splice(i, 1);
       if (activeTab.value === name) {
-        activeTab.value = tabs.value[Math.max(0, index - 1)].name;
+        activeTab.value = tabs.value[Math.max(0, i - 1)].name;
       }
     };
-    
-    // 右键菜单
+
     const showContextMenu = (e) => {
-      e.preventDefault();
+      e.stopPropagation();
       menuX.value = e.clientX;
       menuY.value = e.clientY;
       showMenu.value = true;
-      
       const target = e.target.closest('.el-tabs__item');
       if (target) {
-        rightClickedTab.value = target.id?.replace('tab-', '') || activeTab.value;
+        const tabName = target.getAttribute('id')?.replace('tab-', '');
+        if (tabName) rightClickedTab.value = tabName;
       }
-      
-      const closeMenu = () => {
-        showMenu.value = false;
-        document.removeEventListener('click', closeMenu);
-      };
-      document.addEventListener('click', closeMenu);
+      setTimeout(() => {
+        document.addEventListener('click', () => { showMenu.value = false; }, { once: true });
+      }, 0);
     };
-    
-    // 关闭当前标签
-    const closeCurrent = () => {
-      removeTab(rightClickedTab.value);
-    };
-    
-    // 关闭所有标签
-    const closeAll = () => {
-      tabs.value = [tabs.value[0]];
-      activeTab.value = tabs.value[0].name;
-    };
-    
-    // 关闭左侧标签
+
+    const closeCurrent = () => { removeTab(rightClickedTab.value); showMenu.value = false; };
+    const closeAll = () => { tabs.value = [tabs.value[0]]; activeTab.value = tabs.value[0].name; showMenu.value = false; };
     const closeLeft = () => {
-      const index = tabs.value.findIndex(tab => tab.name === rightClickedTab.value);
-      if (index > 0) {
-        tabs.value = tabs.value.slice(index);
-      }
+      const i = tabs.value.findIndex(t => t.name === rightClickedTab.value);
+      if (i > 0) tabs.value = tabs.value.slice(i);
+      showMenu.value = false;
     };
-    
-    // 关闭右侧标签
     const closeRight = () => {
-      const index = tabs.value.findIndex(tab => tab.name === rightClickedTab.value);
-      if (index < tabs.value.length - 1) {
-        tabs.value = tabs.value.slice(0, index + 1);
-      }
+      const i = tabs.value.findIndex(t => t.name === rightClickedTab.value);
+      if (i < tabs.value.length - 1) tabs.value = tabs.value.slice(0, i + 1);
+      showMenu.value = false;
     };
-    
+
     return {
-      isCollapse,
-      tabs,
-      activeTab,
-      showMenu,
-      menuX,
-      menuY,
-      toggleCollapse,
-      handleMenuSelect,
-      handleCommand,
-      openTab,
-      removeTab,
-      showContextMenu,
-      closeCurrent,
-      closeAll,
-      closeLeft,
-      closeRight,
+      isCollapse, tabs, activeTab, showMenu, menuX, menuY, menus,
+      toggleCollapse, handleMenuSelect, handleCommand,
+      openTab, removeTab, showContextMenu, closeCurrent, closeAll, closeLeft, closeRight
     };
   }
-}).use(ElementPlus).mount('#app');
+});
+
+app.config.compilerOptions.delimiters = ['[[', ']]'];
+app.use(ElementPlus).mount('#app');
 </script>
 {% endblock %}

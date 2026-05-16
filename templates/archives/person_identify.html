@@ -1,0 +1,281 @@
+{% extends "layout/base.html" %}
+{% block title %}认定表{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.audit-section { background:#fff; margin:6px 8px; padding:8px 12px; border:1px solid #e0e0e0; }
+.audit-section h3 { font-size:14px; margin:0 0 8px 0; padding-bottom:4px; border-bottom:2px solid #409EFF; color:#303133; }
+.audit-row { display:flex; align-items:center; margin:3px 0; font-size:13px; }
+.audit-row label { width:140px; text-align:right; padding-right:8px; color:#606266; flex-shrink:0; }
+.audit-row input[type="text"] { flex:1; border:1px solid #ddd; padding:3px 6px; border-radius:3px; }
+.audit-row textarea { flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:3px; resize:vertical; min-height:60px; font-size:13px; }
+</style>
+
+<div id="app" v-if="rsid">
+  <div style="display:flex;align-items:center;padding:6px 12px;background:#fff;border-bottom:1px solid #e0e0e0;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;">
+    <span style="font-weight:bold;font-size:15px;color:#409EFF;">认定表</span>
+    <el-button type="primary" size="small" @click="saveIdentify">保存生成认定意见</el-button>
+    <el-button size="small" @click="generateIdentify">生成认定意见</el-button>
+    <el-button size="small" @click="printIdentify">打印</el-button>
+    <el-button size="small" @click="exportIdentify">导出Excel</el-button>
+    <el-button size="small" @click="loadIdentify">刷新</el-button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding-bottom:20px;">
+
+    <!-- 人员信息 -->
+    <div class="audit-section">
+      <div class="audit-row">
+        <label>姓名：</label><span>[[ data.xm ]]</span>
+        <label style="margin-left:30px;">工作单位及职务：</label><span>[[ data.JOBUNIT ]]</span>
+      </div>
+    </div>
+
+    <!-- 认定表内容 -->
+    <div class="audit-section">
+      <h3>专审认定信息</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="background:#f5f5f5;">
+          <th style="padding:6px;border:1px solid #ddd;">项目</th>
+          <th style="padding:6px;border:1px solid #ddd;">认定时间</th>
+          <th style="padding:6px;border:1px solid #ddd;">认定依据材料</th>
+          <th style="padding:6px;border:1px solid #ddd;">出现的各种不同时间</th>
+        </tr>
+        <tr>
+          <td style="padding:4px;border:1px solid #ddd;">出生年月</td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBa1" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBa2" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBa3" style="width:100%;border:none;padding:2px;"></td>
+        </tr>
+        <tr>
+          <td style="padding:4px;border:1px solid #ddd;">参加工作时间</td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBb1" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBb2" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBb3" style="width:100%;border:none;padding:2px;"></td>
+        </tr>
+        <tr>
+          <td style="padding:4px;border:1px solid #ddd;">入党时间</td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBc1" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBc2" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input type="text" v-model="data.RDBc3" style="width:100%;border:none;padding:2px;"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 涂改情况 -->
+    <div class="audit-section">
+      <h3>涂改情况</h3>
+      <div style="display:flex;gap:4px;margin-bottom:6px;">
+        <el-button size="small" @click="saveAlteration">保存涂改数据</el-button>
+        <el-button size="small" @click="addAlteration">添加涂改行</el-button>
+        <el-button size="small" @click="deleteAllAlteration">删除所有涂改数据</el-button>
+        <el-button type="danger" size="small" @click="deleteAlterationRow">删除光标所在行数据</el-button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="background:#f5f5f5;">
+          <th style="padding:4px;border:1px solid #ddd;width:40px;">序号</th>
+          <th style="padding:4px;border:1px solid #ddd;">涂改类型</th>
+          <th style="padding:4px;border:1px solid #ddd;">被涂改材料名称</th>
+          <th style="padding:4px;border:1px solid #ddd;width:160px;">被涂改材料形成时间(yyyymmdd)</th>
+          <th style="padding:4px;border:1px solid #ddd;width:160px;">涂改后时间</th>
+        </tr>
+        <tr v-for="(r,i) in alterations" :key="i" @click="selectAlteration(i)" :style="{ background: r._selected ? '#b8d6ff' : '' }">
+          <td style="padding:4px;border:1px solid #ddd;text-align:center;">[[ r.序号 ]]</td>
+          <td style="padding:4px;border:1px solid #ddd;">
+            <select v-model="r.涂改类型" style="width:100%;border:none;padding:2px;">
+              <option value="">请选择</option>
+              <option value="出生年月">出生年月</option>
+              <option value="参加工作时间">参加工作时间</option>
+            </select>
+          </td>
+          <td style="padding:4px;border:1px solid #ddd;"><input v-model="r.被涂改材料名称" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input v-model="r.被涂改材料形成时间" style="width:100%;border:none;padding:2px;"></td>
+          <td style="padding:4px;border:1px solid #ddd;"><input v-model="r.涂改后时间" style="width:100%;border:none;padding:2px;"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 审核意见 -->
+    <div class="audit-section">
+      <h3>审核中发现的有关问题及审核意见</h3>
+      <div class="audit-row" style="flex-direction:column;align-items:stretch;">
+        <label style="text-align:left;width:100%;">初步判断文字：</label>
+        <textarea v-model="data.RDBd1_main" style="width:100%;min-height:80px;"></textarea>
+      </div>
+      <div class="audit-row" style="flex-direction:column;align-items:stretch;margin-top:8px;">
+        <label style="text-align:left;width:100%;">调查核实内容（有调查核实报告才填写）：</label>
+        <textarea v-model="data.JL01" style="width:100%;min-height:60px;"></textarea>
+      </div>
+      <div class="audit-row" style="flex-direction:column;align-items:stretch;margin-top:8px;">
+        <label style="text-align:left;width:100%;">结论：</label>
+        <textarea v-model="data.JL02" style="width:100%;min-height:80px;"></textarea>
+      </div>
+      <div class="audit-row" style="flex-direction:column;align-items:stretch;margin-top:8px;">
+        <label style="text-align:left;width:100%;">组织人事部门意见：</label>
+        <textarea v-model="data.RDBd2" style="width:100%;min-height:80px;"></textarea>
+      </div>
+    </div>
+
+    <!-- 审核人信息 -->
+    <div class="audit-section">
+      <h3>审核人及时间</h3>
+      <div class="audit-row">
+        <label>初审人：</label><input type="text" v-model="data.RDBe1" style="width:150px;">
+        <label>初审时间：</label><input type="text" v-model="data.RDBe2" style="width:150px;">
+        <label>复审人：</label><input type="text" v-model="data.RDBe3" style="width:150px;">
+        <label>复审时间：</label><input type="text" v-model="data.RDBe4" style="width:150px;">
+      </div>
+      <div class="audit-row" style="margin-top:4px;">
+        <label>党组会时间：</label><input type="text" v-model="data.RDBe5" style="width:150px;">
+        <label>本人签字时间：</label><input type="text" v-model="data.RDBe6" style="width:150px;">
+        <label>本人意见：</label><input type="text" v-model="data.RDBe7" style="flex:1;">
+      </div>
+    </div>
+
+  </div>
+</div>
+<div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
+
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+  const { ElMessage, ElMessageBox } = ElementPlus;
+  const app = createApp({
+    setup() {
+      const p = new URLSearchParams(window.location.search);
+      const rsid = ref(p.get('rsid'));
+      const data = ref({});
+      const alterations = ref([]);
+      const selectedAlteration = ref(-1);
+
+      // ==================== 数据加载 ====================
+
+      const loadIdentify = () => {
+        axios.get('/archives/api/identify/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) {
+            data.value = res.data.data || {};
+            alterations.value = (res.data.alterations || []).map(r => ({ ...r, _selected: false }));
+          }
+        });
+      };
+
+      // ==================== 生成认定意见 ====================
+const generateIdentify = () => {
+  axios.get('/archives/api/identify-generate/', { 
+    params: { rsid: rsid.value, JL01: data.value.JL01 || '' }
+  }).then(res => {
+    if (res.data.code === 0) {
+      data.value.RDBd1_main = res.data.RDBd1 || '';
+      data.value.JL02 = res.data.JL02 || '';
+      data.value.RDBd2 = res.data.RDBd2 || '';
+      ElMessage.success('认定意见已生成');
+    }
+  });
+};
+
+      // ==================== 保存 ====================
+
+      const saveIdentify = () => {
+        axios.post('/archives/api/identify-save/', {
+          rsid: rsid.value,
+          RDBa1: data.value.RDBa1, RDBa2: data.value.RDBa2, RDBa3: data.value.RDBa3,
+          RDBb1: data.value.RDBb1, RDBb2: data.value.RDBb2, RDBb3: data.value.RDBb3,
+          RDBc1: data.value.RDBc1, RDBc2: data.value.RDBc2, RDBc3: data.value.RDBc3,
+          RDBd1_main: data.value.RDBd1_main, JL01: data.value.JL01, JL02: data.value.JL02,
+          RDBd2: data.value.RDBd2,
+          RDBe1: data.value.RDBe1, RDBe2: data.value.RDBe2, RDBe3: data.value.RDBe3,
+          RDBe4: data.value.RDBe4, RDBe5: data.value.RDBe5, RDBe6: data.value.RDBe6,
+          RDBe7: data.value.RDBe7,
+        }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+        });
+      };
+
+      // ==================== 涂改记录管理 ====================
+
+      const selectAlteration = (i) => {
+        alterations.value.forEach(r => r._selected = false);
+        if (i >= 0 && i < alterations.value.length) {
+          alterations.value[i]._selected = true;
+          selectedAlteration.value = i;
+        }
+      };
+
+      const addAlteration = () => {
+        let maxXh = 0;
+        alterations.value.forEach(r => { if (parseInt(r.序号) > maxXh) maxXh = parseInt(r.序号); });
+        alterations.value.push({
+          序号: maxXh + 1, 涂改类型: '', 被涂改材料名称: '',
+          被涂改材料形成时间: '', 涂改后时间: '', _selected: false
+        });
+      };
+
+      const deleteAlterationRow = () => {
+        let sel = selectedAlteration.value;
+        if (sel < 0) { ElMessage.warning('请先选中一行'); return; }
+        let row = alterations.value[sel];
+        
+        ElMessageBox.confirm('确定删除该行涂改记录？', '确认', { type: 'warning' }).then(() => {
+          if (row.序号) {
+            axios.get('/archives/api/alteration-delete/', { params: { rsid: rsid.value, xh: row.序号 } }).then(res => {
+              if (res.data.code === 0) {
+                alterations.value.splice(sel, 1);
+                alterations.value.forEach((r, i) => r.序号 = i + 1);
+                selectedAlteration.value = -1;
+                ElMessage.success('已删除');
+              }
+            });
+          } else {
+            alterations.value.splice(sel, 1);
+            alterations.value.forEach((r, i) => r.序号 = i + 1);
+            selectedAlteration.value = -1;
+          }
+        });
+      };
+
+      const deleteAllAlteration = () => {
+        ElMessageBox.confirm('确定删除所有涂改数据？', '确认', { type: 'warning' }).then(() => {
+          axios.get('/archives/api/alteration-clear/', { params: { rsid: rsid.value } }).then(res => {
+            if (res.data.code === 0) {
+              alterations.value = [];
+              selectedAlteration.value = -1;
+              ElMessage.success('已清空');
+            }
+          });
+        });
+      };
+
+      const saveAlteration = () => {
+        let rows = alterations.value.map(r => ({
+          序号: r.序号, 涂改类型: r.涂改类型 || '', 被涂改材料名称: r.被涂改材料名称 || '',
+          被涂改材料形成时间: r.被涂改材料形成时间 || '', 涂改后时间: r.涂改后时间 || ''
+        }));
+        axios.post('/archives/api/alteration-save/', { rsid: rsid.value, rows }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+          if (res.data.code===0) loadIdentify();
+        });
+      };
+
+      const printIdentify = () => { ElMessage.info('打印功能开发中'); };
+const exportIdentify = () => {
+  axios.get('/archives/api/identify-export/', { params: { rsid: rsid.value } }).then(res => {
+    if (res.data.code === 0) window.top.location.href = res.data.url;
+  });
+};
+
+      onMounted(loadIdentify);
+
+      return {
+        rsid, data, alterations, selectedAlteration,
+        loadIdentify, generateIdentify, saveIdentify,
+        selectAlteration, addAlteration, deleteAlterationRow, deleteAllAlteration, saveAlteration,
+        printIdentify, exportIdentify
+      };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus).mount('#app');
+})();
+</script>
+{% endblock %}

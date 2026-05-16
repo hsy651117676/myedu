@@ -1,0 +1,46 @@
+<template v-for="node in treeData" :key="node.tid">
+  <!-- 分组 -->
+  <div v-if="!node.isPerson && node.pid == '-1'" class="tree-node tree-unit" @click.stop="toggleUnit(node)">
+    <span style="font-size:12px;">[[ node.expanded ? '▼' : '▶' ]]</span> 📁 [[ node.tname ]]
+  </div>
+
+  <!-- 单位 -->
+  <div v-if="!node.isPerson && node.pid != '-1'" class="tree-node tree-unit" @click.stop="toggleUnit(node)">
+    <span style="font-size:12px;">[[ node.expanded ? '▼' : '▶' ]]</span> 🏢 [[ node.tname ]]
+  </div>
+
+  <!-- 人员 -->
+  <div v-if="node.isPerson"
+       class="tree-node tree-person"
+       :style="{ background: currentPerson.rsid == node.rsid ? '#d0e4fc' : '' }"
+       @click.stop="selectTreeNode(node)">
+    [[ node.sex == '男' ? '👨' : node.sex == '女' ? '👩' : '👤' ]] [[ node.tname ]]
+  </div>
+
+  <!-- 展开的子节点 -->
+  <template v-if="!node.isPerson && node.expanded && node.children">
+    <div v-for="child in node.children" :key="child.tid">
+      <!-- 单位 -->
+      <div v-if="!child.isPerson" class="tree-node tree-unit" style="padding-left:18px;" @click.stop="toggleUnit(child)">
+        <span style="font-size:12px;">[[ child.expanded ? '▼' : '▶' ]]</span> 🏢 [[ child.tname ]]
+      </div>
+      <!-- 人员 -->
+      <div v-if="child.isPerson"
+           class="tree-node tree-person" style="padding-left:18px;"
+           :style="{ background: currentPerson.rsid == child.rsid ? '#d0e4fc' : '' }"
+           @click.stop="selectTreeNode(child)">
+        [[ child.sex == '男' ? '👨' : child.sex == '女' ? '👩' : '👤' ]] [[ child.tname ]]
+      </div>
+      <!-- 单位展开后的人员 -->
+      <template v-if="!child.isPerson && child.expanded && child.children">
+        <div v-for="gc in child.children" :key="gc.tid"
+             class="tree-node tree-person" style="padding-left:32px;"
+             :style="{ background: currentPerson.rsid == gc.rsid ? '#d0e4fc' : '' }"
+             @click.stop="selectTreeNode(gc)">
+          [[ gc.sex == '男' ? '👨' : gc.sex == '女' ? '👩' : '👤' ]] [[ gc.tname ]]
+        </div>
+      </template>
+    </div>
+  </template>
+</template>
+<div v-if="treeData.length === 0" style="text-align:center;color:#909399;padding:20px;">加载中...</div>

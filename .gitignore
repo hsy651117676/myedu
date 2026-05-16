@@ -3,3 +3,36 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+# === 虚拟环境 ===
+django_env/
+venv/
+env/
+
+# === Django 上传资源 ===
+media/
+
+# === 静态文件收集 ===
+static_collect/
+
+# === 数据库 ===
+*.sqlite3
+*.db
+*.s3db
+
+# === Python 缓存 ===
+__pycache__/
+*.py[cod]
+*.pyo
+
+# === 日志 ===
+logs/
+*.log
+
+# === 证书/密钥（敏感信息） ===
+*.pem
+*.crt
+*.key
+
+# === 系统文件 ===
+.DS_Store
+Thumbs.db

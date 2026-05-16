@@ -47,6 +47,10 @@
 
 <div class="login-container">
   <div class="login-box" id="app">
+    <div v-if="showCertWarning" style="background:#fff8e1;border:1px solid #ffc107;padding:12px;margin-bottom:20px;border-radius:4px;font-size:13px;color:#795548;">
+  ⚠️ 浏览器提示"不安全"？请安装根证书<br>
+  <a href="/static/ca.crt" download style="color:#409EFF;">📥 点击下载 CA 根证书</a>
+</div>
     <div class="login-title">系统登录</div>
 
     <el-form ref="loginForm" :model="form" :rules="rules" @submit.prevent="handleLogin">
@@ -126,6 +130,22 @@ const app = createApp({
       password: '',
       captcha: ''
     });
+const showCertWarning = ref(false);
+
+// 检测证书：尝试请求一个静态资源，失败说明证书不被信任
+const checkCert = async () => {
+  try {
+    // 请求静态文件，如果证书不被信任，fetch 会失败
+    const resp = await fetch('/static/favicon.ico', { cache: 'reload' });
+    // 能到这里说明证书 ok
+    showCertWarning.value = false;
+  } catch (e) {
+    // 证书问题导致请求失败
+    showCertWarning.value = true;
+  }
+};
+
+checkCert();
 
     const loading = ref(false);
     const captchaUrl = ref('/captcha/?' + Date.now());
@@ -207,6 +227,7 @@ const app = createApp({
       rules,
       loading,
       captchaUrl,
+      showCertWarning,
       refreshCaptcha,
       handleLogin
     };

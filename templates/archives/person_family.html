@@ -1,0 +1,88 @@
+{% extends "layout/base.html" %}
+{% block title %}家庭成员{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; padding:10px; }
+.fam-table { border-collapse:collapse; width:100%; font-size:13px; }
+.fam-table th, .fam-table td { padding:4px 6px; border:1px solid #ddd; text-align:center; }
+.fam-table th { background:#f5f5f5; }
+.fam-table td input, .fam-table td select { width:100%; border:none; padding:2px; background:transparent; }
+</style>
+<div id="app" v-if="rsid">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 8px;background:#fff;border-bottom:1px solid #e0e0e0;position:sticky;top:0;z-index:10;">
+    <span style="font-weight:bold;color:#409EFF;">家庭成员</span>
+    <el-button type="primary" size="small" @click="saveData">保存</el-button>
+    <el-button size="small" @click="loadData">刷新</el-button>
+  </div>
+  <div style="flex:1;overflow:auto;">
+    <table class="fam-table">
+      <thead>
+        <tr>
+          <th style="width:150px;">称谓</th>
+          <th style="width:100px;">姓名</th>
+          <th style="width:60px;">性别</th>
+          <th style="width:180px;">身份证号</th>
+          <th>工作单位及职务</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(r,i) in list" :key="i">
+          <td>
+  <el-select v-model="r.称谓" filterable allow-create  style="width:100%;">
+    <el-option v-for="opt in appellationOptions" :key="opt" :label="opt" :value="opt"></el-option>
+  </el-select>
+</td>
+          <td><input v-model="r.姓名"></td>
+          <td>
+            <select v-model="r.性别">
+              <option value="男">男</option><option value="女">女</option>
+            </select>
+          </td>
+          <td><input v-model="r.身份证号"></td>
+          <td><input v-model="r.工作单位及职务"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+  const { ElMessage } = ElementPlus;
+  const appellationOptions = [
+  "父亲","母亲","配偶","夫","妻","子","独生子","长子","次子","三子","四子","五子",
+  "养子或继子","女婿","其他子","女","独生女","长女","二女","三女","四女","五女",
+  "养女","儿媳","其他女儿","孙子","孙女","外孙子","外孙女","孙媳妇","孙女婿",
+  "祖父","祖母","外祖父","外祖母","公公","婆婆","岳父","岳母",
+  "继父或养父","继母或养母","兄","嫂","弟","弟媳","姐姐","姐夫","妹妹","妹夫",
+  "伯父","伯母","叔父","婶母","舅父","舅母","姨父","姨母","姑父","姑母",
+  "堂兄弟","堂姐妹","表兄弟","表姐妹","侄子","侄女","外甥","外甥女",
+  "保姆","非亲属","本人","户主"
+];
+  const app = createApp({
+    setup() {
+      const p = new URLSearchParams(window.location.search);
+      const rsid = ref(p.get('rsid'));
+      const list = ref([]);
+      const loadData = () => {
+        axios.get('/archives/api/family/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) list.value = res.data.data || [];
+        });
+      };
+      const saveData = () => {
+        let rows = list.value.map((r,i) => ({ ...r, serialNumber: r.serialNumber || i+1 }));
+        axios.post('/archives/api/family-save/', { rsid: rsid.value, rows }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+        });
+      };
+      onMounted(loadData);
+      return { rsid, list, loadData, saveData,appellationOptions};
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus).mount('#app');
+})();
+</script>
+{% endblock %}

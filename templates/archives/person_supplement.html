@@ -1,0 +1,60 @@
+{% extends "layout/base.html" %}
+{% block title %}补充信息{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; padding:10px; }
+.audit-row { display:flex; flex-direction:column; margin:6px 0; }
+.audit-row label { font-weight:bold; margin-bottom:4px; color:#303133; }
+.audit-row textarea { border:1px solid #ddd; padding:6px 8px; border-radius:3px; resize:vertical; font-size:13px; }
+</style>
+<div id="app" v-if="rsid">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 8px;background:#fff;border-bottom:1px solid #e0e0e0;position:sticky;top:0;z-index:10;">
+    <span style="font-weight:bold;color:#409EFF;">补充信息</span>
+    <el-button type="primary" size="small" @click="saveData">保存</el-button>
+    <el-button size="small" @click="loadData">刷新</el-button>
+  </div>
+  <div style="flex:1;overflow-y:auto;background:#fff;padding:10px;border:1px solid #e0e0e0;">
+    <div class="audit-row">
+      <label>年度考核结果</label>
+      <textarea v-model="data.assessmentResults" style="min-height:80px;"></textarea>
+    </div>
+    <div class="audit-row">
+      <label>奖励情况</label>
+      <textarea v-model="data.reward" style="min-height:80px;"></textarea>
+    </div>
+    <div class="audit-row">
+      <label>简历</label>
+      <textarea v-model="data.resume" style="min-height:200px;"></textarea>
+    </div>
+  </div>
+</div>
+<div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+  const { ElMessage } = ElementPlus;
+  const app = createApp({
+    setup() {
+      const p = new URLSearchParams(window.location.search);
+      const rsid = ref(p.get('rsid'));
+      const data = ref({});
+      const loadData = () => {
+        axios.get('/archives/api/supplement/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) data.value = res.data.data || {};
+        });
+      };
+      const saveData = () => {
+        axios.post('/archives/api/supplement-save/', { rsid: rsid.value, ...data.value }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+        });
+      };
+      onMounted(loadData);
+      return { rsid, data, loadData, saveData };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus).mount('#app');
+})();
+</script>
+{% endblock %}

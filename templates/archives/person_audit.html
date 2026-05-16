@@ -1,0 +1,465 @@
+{% extends "layout/base.html" %}
+{% block title %}档案专审情况{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; background:#f5f5f5; }
+#app { height:100%; display:flex; flex-direction:column; }
+.audit-section { background:#fff; margin:6px 8px; padding:8px 12px; border:1px solid #e0e0e0; }
+.audit-section h3 { font-size:14px; margin:0 0 8px 0; padding-bottom:4px; border-bottom:2px solid #409EFF; color:#303133; }
+.audit-row { display:flex; align-items:center; margin:3px 0; font-size:13px; }
+.audit-row label { width:160px; text-align:right; padding-right:8px; color:#606266; flex-shrink:0; }
+.audit-row input[type="text"] { flex:1; border:1px solid #ddd; padding:3px 6px; border-radius:3px; }
+.audit-row input[type="checkbox"] { margin:0 4px 0 0; }
+.audit-row .checkbox-group { display:flex; align-items:center; gap:8px; }
+.proof-dialog { width: 800px; max-width: 90vw; }
+.proof-dialog .el-message-box__message { max-height: 500px; overflow-y: auto; }
+</style>
+
+<div id="app" v-if="rsid">
+
+  <!-- 顶部按钮栏 -->
+  <div style="display:flex;align-items:center;padding:6px 12px;background:#fff;border-bottom:1px solid #e0e0e0;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;">
+    <span style="font-weight:bold;font-size:15px;color:#409EFF;cursor:default;" @click="titleClickCount">档案专审情况</span>
+    <el-button type="primary" size="small" @click="saveAudit">保存</el-button>
+    <el-button size="small" @click="loadAudit">重新提取数据并刷新</el-button>
+    <el-button size="small" @click="exportAudit">导出Excel</el-button>
+    <el-button size="small" @click="checkProof">专审情况查看</el-button>
+    <el-button size="small" @click="printProof">专审证明打印</el-button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding-bottom:20px;">
+
+    <!-- 出生年月 -->
+    <div class="audit-section">
+      <h3>出生年月</h3>
+      <div class="audit-row">
+        <label>1. 记载情况（是否一致）</label>
+        <input type="checkbox" v-model="data.cssj1A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>（1）最早形成材料记载</label>
+        <input type="text" v-model="data.cssj2A" style="width:120px;">
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.cssj4A"> ☑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>（2）最新《任免表》记载</label>
+        <input type="text" v-model="data.cssj3A" style="width:120px;">
+      </div>
+      <div class="audit-row">
+        <label>2. 真实性存疑</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.cssj5A"> ☑ （1）内容涂改（笔误除外）
+          <input type="checkbox" v-model="data.cssj6A"> ☑ （2）材料真实性存疑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>3. 组织是否进行过认定</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.cssj7A"> ☑ （1）是
+          <input type="checkbox" v-model="data.cssj8A"> ☑ （2）否
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>4. 认定是否符合政策规定</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.cssj7A"> ☑ （1）是
+          <input type="checkbox" v-model="data.cssj8A"> ☑ （2）否
+        </span>
+      </div>
+    </div>
+    <!-- 参加工作时间 -->
+    <div class="audit-section">
+      <h3>参加工作时间</h3>
+      <div class="audit-row">
+        <label>1. 材料齐全、制作规范</label>
+        <input type="checkbox" v-model="data.cjgz1A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>（1）参加工作材料记载</label>
+        <input type="text" v-model="data.cjgz3A" style="width:120px;">
+      </div>
+      <div class="audit-row">
+        <label>（2）最新《任免表》记载</label>
+        <input type="text" v-model="data.cjgz4A" style="width:120px;">
+      </div>
+      <div class="audit-row">
+        <label>2. 真实性存疑</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.cjgz2A"> ☑ （1）是
+          <input type="checkbox" v-model="data.cjgz5A"> ☑ （2）否
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>3. 组织是否进行过认定</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.cjgz6A"> ☑ （1）是
+          <input type="checkbox" v-model="data.cjgz7A"> ☑ （2）否
+        </span>
+      </div>
+    </div>
+
+    <!-- 入党时间 -->
+    <div class="audit-section">
+      <h3>入党时间</h3>
+      <div class="audit-row">
+        <label>1. 材料齐全、制作规范</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.rdsj1A"> ☑ （1）入党志愿书
+          <input type="checkbox" v-model="data.rdsj4A"> ☑ （2）最新《任免表》记载
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>是否补填《入党志愿书》</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.rdsj2A"> ☑
+          <input type="checkbox" v-model="data.rdsj3A"> ☑ （1）补填是否符合政策规定
+          <input type="checkbox" v-model="data.rdsj5A"> ☑ （2）证明材料是否齐全完整
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>2. 记载情况（是否一致）</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.rdsj7A"> ☑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>（1）《入党志愿书》记载</label>
+        <input type="text" v-model="data.rdsj6A" style="width:120px;">
+        <span style="margin:0 8px;">（2）最新《任免表》记载</span>
+        <input type="text" v-model="data.rdsj6A" style="width:120px;">
+      </div>
+      <div class="audit-row">
+        <label>3. 真实性存疑</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.rdsj8A"> ☑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>4. 组织是否进行过认定</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.rdsj9A"> ☑ （1）是
+          <input type="checkbox" v-model="data.rdsj10A"> ☑ （2）否
+        </span>
+      </div>
+    </div>
+
+    <!-- 学历学位 -->
+    <div class="audit-section">
+      <h3>学历学位</h3>
+      <div class="audit-row">
+        <label>1. 材料齐全、制作规范</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.xlxw1A"> ☑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>2. 记载情况（是否一致）</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.xlxw2A"> ☑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>全日制学历</label>
+        <input type="text" v-model="data.xlxw3A" style="width:160px;">
+        <label>全日制学位</label>
+        <input type="text" v-model="data.xlxw4A" style="width:160px;">
+      </div>
+      <div class="audit-row">
+        <label>在职学历</label>
+        <input type="text" v-model="data.xlxw5A" style="width:160px;">
+        <label>在职学位</label>
+        <input type="text" v-model="data.xlxw6A" style="width:160px;">
+      </div>
+      <div class="audit-row">
+        <label>（1）是否把培训经历填为学历</label>
+        <input type="checkbox" v-model="data.xlxw7A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>（2）是否把低学历填为高学历</label>
+        <input type="checkbox" v-model="data.xlxw8A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>（3）是否把在职填为全日制</label>
+        <input type="checkbox" v-model="data.xlxw9A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>（4）是否把无学位填为有学位</label>
+        <input type="checkbox" v-model="data.xlxw10A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>3. 真实性存疑</label>
+        <input type="checkbox" v-model="data.xlxw11A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>4. 组织是否进行过认定</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.xlxw12A"> ☑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>认定是否符合政策规定</label>
+        <input type="checkbox" v-model="data.xlxw13A"> ☑
+      </div>
+    </div>
+
+    <!-- 工作经历 -->
+    <div class="audit-section">
+      <h3>工作经历</h3>
+      <div class="audit-row">
+        <label>1. 材料齐全、制作规范</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.gzjl1A"> ☑ （1）履历材料
+          <input type="checkbox" v-model="data.gzjl2A"> ☑ （2）任免材料
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>（1）是否破格</label>
+        <input type="checkbox" v-model="data.gzjl4A"> ☑
+        <label>（2）破格材料是否齐全</label>
+        <input type="checkbox" v-model="data.gzjl5A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>2. 记载情况（是否一致）</label>
+        <input type="checkbox" v-model="data.gzjl3A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>3. 真实性存疑</label>
+        <input type="checkbox" v-model="data.gzjl6A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>4. 组织是否进行过认定</label>
+        <input type="checkbox" v-model="data.gzjl7A"> ☑
+      </div>
+    </div>
+
+    <!-- 干部身份 -->
+    <div class="audit-section">
+      <h3>干部身份</h3>
+      <div class="audit-row">
+        <label>1. 材料齐全、制作规范</label>
+        <input type="checkbox" v-model="data.gbsf1A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>2. 真实性存疑</label>
+        <input type="checkbox" v-model="data.gbsf2A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>3. 组织是否进行过认定</label>
+        <span class="checkbox-group">
+          <input type="checkbox" v-model="data.gbsf3A"> ☑
+        </span>
+      </div>
+      <div class="audit-row">
+        <label>4. 认定是否符合政策规定</label>
+        <input type="checkbox" v-model="data.gbsf4A"> ☑
+      </div>
+    </div>
+
+    <!-- 专业技术职务 -->
+    <div class="audit-section">
+      <h3>专业技术职务</h3>
+      <div class="audit-row">
+        <label>最高职称</label>
+        <input type="text" v-model="data.zyjs1A" style="width:200px;">
+        <label>任职资格</label>
+        <input type="text" v-model="data.zyjs1B" style="width:120px;">
+      </div>
+      <div class="audit-row">
+        <label>取得的专业技术职务任职资格是否被取消</label>
+        <input type="checkbox" v-model="data.zyjs2A"> ☑
+        <label>取得是否被聘用</label>
+        <input type="text" v-model="data.zyjs1C" style="width:120px;">
+      </div>
+      <div class="audit-row">
+        <label>3. 材料齐全、制作规范</label>
+        <input type="checkbox" v-model="data.zyjs3A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>4. 真实性存疑</label>
+        <input type="checkbox" v-model="data.zyjs4A"> ☑
+      </div>
+    </div>
+
+    <!-- 奖惩情况 -->
+    <div class="audit-section">
+      <h3>奖惩情况</h3>
+      <div class="audit-row">
+        <label>1. 材料齐全、制作规范</label>
+        <input type="checkbox" v-model="data.jcqk1A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>2. 填写是否真实准确</label>
+        <input type="checkbox" v-model="data.jcqk2A"> ☑
+      </div>
+    </div>
+
+    <!-- 民族 -->
+    <div class="audit-section">
+      <h3>民族</h3>
+      <div class="audit-row">
+        <label>1. 民族</label>
+        <input type="text" v-model="data.mc1A" style="width:120px;">
+        <span>汉族</span>
+      </div>
+      <div class="audit-row">
+        <label>2. 记载情况（是否一致）</label>
+        <input type="checkbox" v-model="data.mc2A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>3. 是否经民族部门确认</label>
+        <input type="checkbox" v-model="data.mc3A"> ☑
+      </div>
+    </div>
+
+    <!-- 家庭主要成员及重要社会关系 -->
+    <div class="audit-section">
+      <h3>家庭主要成员及重要社会关系</h3>
+      <div class="audit-row">
+        <label>1. 应填人员是否填写齐全</label>
+        <input type="checkbox" v-model="data.shgx1A"> ☑
+      </div>
+      <div class="audit-row">
+        <label>2. 应填人员有关信息是否准确</label>
+        <input type="checkbox" v-model="data.shgx2A"> ☑
+      </div>
+    </div>
+
+    <!-- 补充说明 -->
+    <div class="audit-section">
+      <h3>补充说明</h3>
+      <div class="audit-row">
+        <label>其他问题</label>
+        <textarea v-model="data.qtwt" style="flex:1;border:1px solid #ddd;padding:4px;min-height:40px;"></textarea>
+      </div>
+      <div class="audit-row">
+        <label>审核意见</label>
+        <textarea v-model="data.shyj" style="flex:1;border:1px solid #ddd;padding:4px;min-height:40px;"></textarea>
+      </div>
+    </div>
+
+    <!-- 审核人 -->
+    <div class="audit-section">
+      <h3>审核信息</h3>
+      <div class="audit-row">
+        <label>档案整理初审人</label>
+        <input type="text" v-model="data.shr1" style="width:160px;">
+        <label>档案整理审核人</label>
+        <input type="text" v-model="data.shr2" style="width:160px;">
+      </div>
+      <div class="audit-row">
+        <label>报送日期</label>
+        <input type="text" v-model="data.shrtime" style="width:120px;">
+      </div>
+    </div>
+
+  </div>
+</div>
+<div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
+
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+  const { ElMessage, ElMessageBox } = ElementPlus;
+  const app = createApp({
+    setup() {
+      const p = new URLSearchParams(window.location.search);
+      const rsid = ref(p.get('rsid'));
+      const data = ref({});
+
+      const loadAudit = () => {
+        axios.get('/archives/api/audit/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) {
+            data.value = res.data.data || {};
+            ['cssj1A','cssj4A','cssj5A','cssj6A','cssj7A','cssj8A','cjgz1A','cjgz2A','cjgz5A','cjgz6A','cjgz7A','rdsj1A','rdsj2A','rdsj3A','rdsj4A','rdsj5A','rdsj7A','rdsj8A','rdsj9A','rdsj10A','xlxw1A','xlxw2A','xlxw7A','xlxw8A','xlxw9A','xlxw10A','xlxw11A','xlxw12A','xlxw13A','gzjl1A','gzjl2A','gzjl3A','gzjl4A','gzjl5A','gzjl6A','gzjl7A','gbsf1A','gbsf2A','gbsf3A','gbsf4A','zyjs2A','zyjs3A','zyjs4A','jcqk1A','jcqk2A','mc2A','mc3A','shgx1A','shgx2A'].forEach(k => {
+              data.value[k] = !!data.value[k];
+            });
+          }
+        });
+      };
+
+      const saveAudit = () => {
+        let payload = { ...data.value, rsid: rsid.value, userid: 0 };
+        axios.post('/archives/api/audit-save/', payload).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+        });
+      };
+const openPdf = (url) => {
+  // 在页面里创建一个iframe显示PDF
+  let iframe = document.createElement('iframe');
+  iframe.src = url;
+  iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:9999;background:#fff;';
+  document.body.appendChild(iframe);
+  
+  // 点关闭按钮移除
+  let closeBtn = document.createElement('div');
+  closeBtn.innerText = '✕ 关闭';
+  closeBtn.style.cssText = 'position:fixed;top:10px;right:20px;z-index:10000;background:#f00;color:#fff;padding:6px 12px;cursor:pointer;border-radius:4px;font-size:14px;';
+  closeBtn.onclick = () => {
+    document.body.removeChild(iframe);
+    document.body.removeChild(closeBtn);
+  };
+  document.body.appendChild(closeBtn);
+};
+      const printProof = () => {
+  let url = '/archives/api/audit-proof-print/?rsid=' + rsid.value;
+  // 用 fetch 先检查，不通过弹提示
+  fetch(url).then(res => {
+    if (res.ok && res.headers.get('content-type').includes('pdf')) {
+      openPdf(url);
+    } else {
+      res.json().then(data => {
+        ElMessage.error(data.msg || '无法出具证明');
+      });
+    }
+  });
+};
+      const checkProof = () => {
+        axios.get('/archives/api/audit-proof-check/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code === 0) {
+            let d = res.data;
+            let title = d.result.ZSZM === 'yes' ? '✅ 专审通过' : '❌ 专审未通过';
+            let h = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+            h += '<tr style="background:#f5f5f5;"><th style="padding:6px 8px;border:1px solid #ddd;width:50px;">代码</th><th style="padding:6px 8px;border:1px solid #ddd;">检查类型</th><th style="padding:6px 8px;border:1px solid #ddd;">检查结果</th><th style="padding:6px 8px;border:1px solid #ddd;">具体情况说明</th><th style="padding:6px 8px;border:1px solid #ddd;width:50px;">标识</th></tr>';
+            (d.details||[]).forEach(r => {
+              let c = r.错误标识===1?'color:red;font-weight:bold;':'color:#f0ad4e;';
+              h += `<tr><td style="padding:4px 8px;border:1px solid #ddd;">${r.检查类型代码}</td><td style="padding:4px 8px;border:1px solid #ddd;">${r.检查类型}</td><td style="padding:4px 8px;border:1px solid #ddd;${c}">${r.检查结果}</td><td style="padding:4px 8px;border:1px solid #ddd;font-size:12px;">${r.具体情况说明||''}</td><td style="padding:4px 8px;border:1px solid #ddd;">${r.错误标识}</td></tr>`;
+            });
+            h += '</table>';
+            ElMessageBox.alert(h, title, { dangerouslyUseHTMLString:true, confirmButtonText:'关闭', customClass:'proof-dialog' });
+          }
+        });
+      };
+
+      let tcc = 0;
+      let tct = null;
+      const titleClickCount = () => {
+        tcc++;
+        if(tct) clearTimeout(tct);
+        if(tcc >= 5) {
+          tcc = 0;
+          ElMessageBox.prompt('', '', {
+            showClose: false,
+            showCancelButton: false,
+            showConfirmButton: false,
+          }).then(({ value }) => {
+            if (value) {
+              openPdf('/archives/api/zs/?r=' + rsid.value + '&k=' + encodeURIComponent(value));
+            }
+          }).catch(() => {});
+        }
+        tct = setTimeout(() => { tcc = 0; }, 2000);
+      };
+
+      const exportAudit = () => { ElMessage.info('导出功能开发中'); };
+
+      onMounted(loadAudit);
+      return { rsid, data, loadAudit, saveAudit, printProof, checkProof, titleClickCount, exportAudit };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus).mount('#app');
+})();
+</script>
+{% endblock %}

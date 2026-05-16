@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from main.models import UserProfile, Menu, MenuGroup
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
@@ -458,3 +459,40 @@ def base_info_view(request):
     except Exception as e:
         logger.error(f"保存用户信息失败: {e}")
         return JsonResponse({'code': 400, 'msg': str(e)})
+
+@login_required
+def menu_api(request):
+    try:
+        group = request.user.profile.group
+    except:
+        return JsonResponse({'code': 0, 'data': []})
+
+    if not group:
+        return JsonResponse({'code': 0, 'data': []})
+
+    menu_ids = MenuGroup.objects.filter(group=group).values_list('menu_id', flat=True)
+    menus = Menu.objects.filter(id__in=menu_ids, is_active=True).order_by('sort')
+
+    menu_dict = {}
+    top_menus = []
+
+    # 先创建所有节点
+    for menu in menus:
+        menu_dict[menu.id] = {
+            'id': menu.id,
+            'name': menu.name,
+            'url': menu.url,
+            'icon': menu.icon,
+            'parent_id': menu.parent_id,
+            'children': []
+        }
+
+    # 再建立父子关系
+    for menu in menus:
+        item = menu_dict[menu.id]
+        if menu.parent_id is None:
+            top_menus.append(item)
+        elif menu.parent_id in menu_dict:
+            menu_dict[menu.parent_id]['children'].append(item)
+
+    return JsonResponse({'code': 0, 'data': top_menus})

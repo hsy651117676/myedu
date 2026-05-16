@@ -1,0 +1,39 @@
+<!-- templates/system/user-yhbh.html -->
+{% extends "layout/base.html" %}
+{% block title %}用户编号对照{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:10px;">USERS 表 - 用户编号对照</h2>
+
+<form method="get" style="margin-bottom:10px;display:flex;gap:8px;">
+  <input type="text" name="keyword" value="{{ keyword }}" placeholder="搜索登录名/姓名/单位" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;width:300px;">
+  <button type="submit" style="padding:6px 16px;background:#409EFF;color:#fff;border:none;border-radius:4px;cursor:pointer;">查询</button>
+  {% if keyword %}
+  <a href="?" style="padding:6px 12px;color:#909399;">清除</a>
+  {% endif %}
+</form>
+
+<table style="border-collapse:collapse;width:100%;font-size:13px;">
+  <thead>
+    <tr style="background:#f5f5f5;">
+      <th style="padding:6px 10px;border:1px solid #ddd;">YHBH</th>
+      <th style="padding:6px 10px;border:1px solid #ddd;">登录名</th>
+      <th style="padding:6px 10px;border:1px solid #ddd;">姓名</th>
+      <th style="padding:6px 10px;border:1px solid #ddd;">单位</th>
+      <th style="padding:6px 10px;border:1px solid #ddd;">电话</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td style="padding:6px 10px;border:1px solid #ddd;"><b>{{ u.YHBH }}</b></td>
+      <td style="padding:6px 10px;border:1px solid #ddd;">{{ u.USERID }}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;">{{ u.YHMC }}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;">{{ u.ZW }}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;">{{ u.DOORSTR }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" style="text-align:center;padding:20px;color:#909399;">无数据</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

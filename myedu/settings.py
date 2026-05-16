@@ -16,13 +16,32 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get(
     'DJANGO_ALLOWED_HOSTS',
-    'localhost,127.0.0.1,218.201.223.229'
+    'localhost,218.201.223.229,127.0.0.1,pzs.das.cn,pzsdas.com,das.edu,192.168.16.100,192.168.17.100,192.168.18.100'
 ).split(',')
-
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
+# ==================== 档案扫描图像配置 ====================
 
+# 扫描图片存放根目录（加密存储）
+SCAN_IMAGE_BASE_DIR = '/mnt/datafile/das_image_file'
+
+# PDF输出根目录
+SCAN_PDF_OUTPUT_DIR = '/mnt/data/das_pdf'
+
+# 支持的图像类型
+SCAN_IMAGE_TYPES = {
+    'YS': '原始图像',
+    'GQ': '高清图像',
+}
+
+# PDF默认设置
+SCAN_PDF_PAGE_SIZE = 'A4'        # A3 / A4 / A5 / B5
+SCAN_PDF_VERTICAL = True         # True纵向 / False横向
+SCAN_PDF_MARGIN_UP = 1           # 上边距（磅）
+SCAN_PDF_MARGIN_DOWN = 1         # 下边距（磅）
+SCAN_PDF_MARGIN_LEFT = 1         # 左边距（磅）
+SCAN_PDF_MARGIN_RIGHT = 1        # 右边距（磅）
 # ==================== 安全配置 ====================
 
 # HTTPS设置
@@ -58,6 +77,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 INSTALLED_APPS = [
     'simpleui',  # 管理后台主题
+    'sslserver',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -118,16 +138,26 @@ DATABASES = {
 
 # 人口数据库配置（外部数据库）
 POPULATION_DB = {
-    "DRIVER": "FreeTDS",
-    "SERVER": os.environ.get('POP_DB_HOST', '192.168.1.100'),
-    "PORT": os.environ.get('POP_DB_PORT', '1433'),
+    "DRIVER": "ODBC Driver 18 for SQL Server",
+    "SERVER": "127.0.0.1",
+    "PORT": "1433",
     "DATABASE": os.environ.get('POP_DB_NAME', 'rs_new'),
     "UID": os.environ.get('POP_DB_USER', 'sa'),
-    "PWD": os.environ.get('POP_DB_PASSWORD', 'Rs_new'),
-    "TDS_Version": "7.2",
-    "Encrypt": "No",
+    "PWD": os.environ.get('POP_DB_PASSWORD', 'PzsjyjDas@3634122!@#'),
+    "Encrypt": "Optional",
+    "TrustServerCertificate": "Yes",
 }
 
+ARCHIVES_DB = {
+    "DRIVER": "ODBC Driver 18 for SQL Server",
+    "SERVER": "127.0.0.1",
+    "PORT": "1433",
+    "DATABASE": "rs_new",
+    "UID": "sa",
+    "PWD": "PzsjyjDas@3634122!@#",
+    "Encrypt": "Optional",
+    "TrustServerCertificate": "Yes",
+}
 # ==================== 密码验证 ====================
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -168,7 +198,7 @@ CACHES = {
                 "max_connections": 100,
                 "retry_on_timeout": True,
             },
-            "PASSWORD": os.environ.get('REDIS_PASSWORD', None),
+            "PASSWORD": "redishshy795416",
             "SOCKET_CONNECT_TIMEOUT": 5,
             "SOCKET_TIMEOUT": 5,
         },
@@ -216,24 +246,20 @@ STATICFILES_DIRS = [
 # 媒体文件配置
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # 静态文件缓存
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # ==================== SimpleUI配置 ====================
-
 SIMPLEUI_HOME_INFO = False
 SIMPLEUI_ANALYSIS = False
 SIMPLEUI_STATIC_OFFLINE = True
 SIMPLEUI_LOADING = False
-
-# SimpleUI自定义配置
 SIMPLEUI_CONFIG = {
     'system_keep': False,
-    'menu_display': ['人口管理', '系统管理', '认证和授权'],
     'dynamic': True,
 }
-
 # SimpleUI图标配置
 SIMPLEUI_ICON = {
     '人口查询': 'fas fa-search',

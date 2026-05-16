@@ -1,9 +1,33 @@
 from django.contrib import admin
-from .models import UserProfile
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+from .models import UserProfile, Menu, UserGroup, MenuGroup
 
-@admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'real_name', 'phone', 'id_card', 'create_time']
-    search_fields = ['real_name', 'phone', 'id_card', 'user__username']
-    list_filter = ['create_time']
-    readonly_fields = ['create_time', 'update_time']
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    fields = ['real_name', 'phone', 'id_card', 'address', 'yhbh']
+
+
+class UserAdmin(BaseUserAdmin):
+    inlines = [UserProfileInline]
+
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+
+
+@admin.register(Menu)
+class MenuAdmin(admin.ModelAdmin):
+    list_display = ['name', 'url', 'parent', 'sort', 'is_active']
+
+
+@admin.register(UserGroup)
+class UserGroupAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code']
+
+
+@admin.register(MenuGroup)
+class MenuGroupAdmin(admin.ModelAdmin):
+    list_display = ['menu', 'group']

@@ -1,0 +1,23 @@
+<div style="margin-bottom:6px;">
+  <el-select v-model="q.unit_id" placeholder="全部" clearable filterable size="small" style="width:100%;" @change="doQuery">
+    <el-option label="全部" value="0"></el-option>
+    <el-option v-for="u in unitList" :key="u.id" :label="u.name" :value="u.id"></el-option>
+  </el-select>
+</div>
+<div style="margin-bottom:6px;">
+  <el-input v-model="q.name" placeholder="输入姓名搜索" size="small" @keyup.enter="doQuery"></el-input>
+</div>
+<div style="margin-bottom:8px;display:flex;gap:6px;">
+  <el-button type="primary" size="small" @click="doQuery">查询</el-button>
+  <el-button size="small" @click="resetQuery">重置</el-button>
+</div>
+<el-table :data="list" border size="small" style="flex:1;" height="100%;" highlight-current-row
+  @row-click="selectPerson" @row-dblclick="selectPersonAndLoad">
+  <el-table-column label="姓名" prop="姓名" width="70"></el-table-column>
+  <el-table-column label="性别" prop="性别" width="45"></el-table-column>
+  <el-table-column label="单位" prop="单位" min-width="150"></el-table-column>
+</el-table>
+<div style="text-align:right;padding-top:4px;">
+  <el-pagination v-model:current-page="page" v-model:page-size="pageSize" :total="total"
+    :page-sizes="[15,30,50]" layout="total, prev, next" @size-change="doQuery" @current-change="doQuery" small></el-pagination>
+</div>

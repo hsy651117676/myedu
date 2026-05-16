@@ -1,0 +1,121 @@
+{% extends "layout/base.html" %}
+{% block title %}日志查询{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; padding:10px; }
+.log-table { width:100%; border-collapse:collapse; font-size:13px; }
+.log-table th, .log-table td { padding:6px 8px; border:1px solid #ddd; text-align:center; }
+.log-table th { background:#f5f5f5; font-weight:bold; position:sticky; top:0; }
+</style>
+
+<div id="app">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+    <span style="font-weight:bold;">查询方式：</span>
+    <el-select v-model="q.controlType" style="width:200px;" size="small">
+      <el-option v-for="t in types" :key="t.value" :label="t.text" :value="t.value"></el-option>
+    </el-select>
+    <span style="font-weight:bold;">姓名：</span>
+    <el-input v-model="q.name" placeholder="姓名" style="width:150px;" size="small"></el-input>
+    <span style="font-weight:bold;">时间：</span>
+    <el-date-picker v-model="q.timeBegin" type="date" value-format="YYYY-MM-DD" placeholder="开始" size="small" style="width:150px;"></el-date-picker>
+    <span>至</span>
+    <el-date-picker v-model="q.timeEnd" type="date" value-format="YYYY-MM-DD" placeholder="结束" size="small" style="width:150px;"></el-date-picker>
+    <el-button type="primary" size="small" @click="doQuery">查询</el-button>
+    <el-button size="small" @click="resetQuery">重置</el-button>
+  </div>
+
+  <div style="flex:1;overflow:auto;">
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>姓名</th>
+          <th>单位</th>
+          <th>类型</th>
+          <th>原值</th>
+          <th>新值</th>
+          <th>用户名</th>
+          <th>用户单位</th>
+          <th>操作时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(r,i) in list" :key="i">
+          <td>[[ r.姓名 ]]</td>
+          <td>[[ r.单位 ]]</td>
+          <td>[[ r.类型 ]]</td>
+          <td>[[ r.原值 ]]</td>
+          <td>[[ r.新值 ]]</td>
+          <td>[[ r.用户名 ]]</td>
+          <td>[[ r.用户单位 ]]</td>
+          <td>[[ r.操作时间 ]]</td>
+        </tr>
+      </tbody>
+    </table>
+    <div v-if="list.length===0" style="text-align:center;color:#909399;padding:40px;">暂无数据</div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;padding-top:10px;">
+    <el-pagination v-model:current-page="page" v-model:page-size="pageSize" :total="total"
+      :page-sizes="[20,50,100]" layout="total, sizes, prev, pager, next" @size-change="doQuery" @current-change="doQuery" small>
+    </el-pagination>
+  </div>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, reactive, onMounted } = Vue;
+  const app = createApp({
+    setup() {
+      const q = reactive({ controlType: '1', name: '', timeBegin: '', timeEnd: '' });
+      const types = ref([]);
+      const list = ref([]);
+      const page = ref(1);
+      const pageSize = ref(20);
+      const total = ref(0);
+
+      const loadTypes = () => {
+        axios.get('/archivesSystem/api/log-types/').then(res => {
+          if (res.data.code === 0) types.value = res.data.data;
+        });
+      };
+
+      const doQuery = () => {
+        axios.get('/archivesSystem/api/log-query/', {
+          params: {
+            controlType: q.controlType,
+            name: q.name,
+            timeBegin: q.timeBegin,
+            timeEnd: q.timeEnd,
+            page: page.value,
+            pageSize: pageSize.value,
+          }
+        }).then(res => {
+          if (res.data.code === 0) {
+            list.value = res.data.data;
+            total.value = res.data.total;
+          }
+        });
+      };
+
+      const resetQuery = () => {
+        q.controlType = '1';
+        q.name = '';
+        q.timeBegin = '';
+        q.timeEnd = '';
+        doQuery();
+      };
+
+      onMounted(() => {
+        loadTypes();
+        doQuery();
+      });
+
+      return { q, types, list, page, pageSize, total, doQuery, resetQuery };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus).mount('#app');
+})();
+</script>
+{% endblock %}
