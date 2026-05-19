@@ -1,184 +1,102 @@
 {% extends "layout/base.html" %}
-
 {% block title %}档案扫描查看{% endblock %}
 
 {% block content %}
-<div id="scanViewerApp" v-cloak style="display:flex;height:calc(100vh - 2px);overflow:hidden;">
+<div id="scanViewerApp" v-cloak style="height:100vh;display:flex;flex-direction:column;overflow:hidden;">
 
-    <!-- ==================== 左侧：树形目录面板 ==================== -->
-    <div :style="{width: leftCollapsed ? '0px' : '280px', minWidth: leftCollapsed ? '0px' : '220px',
-                 borderRight: leftCollapsed ? 'none' : '1px solid #e4e7ed',
-                 transition: 'width 0.3s', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                 background: '#fafafa'}">
+    <!-- ========== 顶部工具栏 ========== -->
+    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;
+                display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:44px;">
 
-        <div style="padding:12px 15px;border-bottom:1px solid #e4e7ed;background:#fff;
-                    display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-            <span style="font-weight:600;font-size:14px;">📁 档案目录</span>
-            <el-button size="small" text @click="leftCollapsed = !leftCollapsed">
-                <el-icon><Fold /></el-icon>
-            </el-button>
-        </div>
+        <span style="font-weight:600;font-size:14px;">📄 档案扫描查看</span>
 
-        <div style="padding:10px 12px;flex-shrink:0;">
-            <el-radio-group v-model="imageType" size="small" @change="onImageTypeChange" style="width:100%;display:flex;">
-                <el-radio-button value="YS" style="flex:1;">原始图像</el-radio-button>
-                <el-radio-button value="GQ" style="flex:1;">高清图像</el-radio-button>
-            </el-radio-group>
-        </div>
+        <span v-if="currentTitle" style="font-weight:600;max-width:500px;overflow:hidden;
+                     text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:#409eff;">
+            | [[ currentTitle ]]
+        </span>
 
-        <div style="flex:1;overflow-y:auto;padding:5px 0;">
-            <template v-for="item in treeData" :key="'t1-'+item.fl">
+        <div style="flex:1;"></div>
 
-                <div @click="onClickL1(item)"
-                     :style="{padding:'7px 15px',cursor:'pointer',fontSize:'13px',
-                              background: currentL1===item.fl ? '#e6f7ff' : 'transparent',
-                              borderRight: currentL1===item.fl ? '3px solid #1890ff' : '3px solid transparent',
-                              fontWeight: currentL1===item.fl ? 'bold' : 'normal'}">
-                    <span v-if="item.fl===4 || item.fl===9" style="margin-right:4px;">
-                        [[ currentL1===item.fl ? '▼' : '▶' ]]
-                    </span>
-                    [[ item.name ]]
-                </div>
+        <span style="font-size:12px;color:#909399;">纸张:</span>
+        <el-select v-model="pageSize" size="small" style="width:80px;">
+            <el-option v-for="s in pageSizeOptions" :key="s" :label="s" :value="s" />
+        </el-select>
 
-                <div v-if="item.fl===4 || item.fl===9" v-show="currentL1===item.fl" style="padding-left:20px;">
-                    <div v-for="sub in (item.fl===4 ? sub4 : sub9)" :key="'t2-'+sub.fl"
-                         @click.stop="onClickL2(sub)"
-                         :style="{padding:'5px 15px',cursor:'pointer',fontSize:'12px',
-                                  background: currentL2===sub.fl ? '#bae7ff' : 'transparent',
-                                  borderRadius:'4px',margin:'1px 0'}">
-                        <span style="margin-right:4px;">[[ currentL2===sub.fl ? '▼' : '▶' ]]</span>
-                        [[ sub.name ]]
-                    </div>
+        <span style="font-size:12px;color:#909399;">方向:</span>
+        <el-select v-model="pageVertical" size="small" style="width:80px;">
+            <el-option v-for="v in pageVerticalOptions" :key="v.value" :label="v.label" :value="v.value" />
+        </el-select>
 
-                    <div v-for="sub in (item.fl===4 ? sub4 : sub9)" :key="'t3wrap-'+sub.fl">
-                        <div v-if="currentL2===sub.fl" style="padding-left:20px;">
-                            <div v-for="arch in archivesList" :key="'t3-'+arch.ARCHID"
-                                 @click.stop="onClickArch(arch)"
-                                 :style="{padding:'4px 12px',cursor:'pointer',fontSize:'12px',
-                                          background: currentArch===arch.ARCHID ? '#91d5ff' : 'transparent',
-                                          borderRadius:'4px',margin:'1px 0'}">
-                                [[ arch.XH ]]. [[ arch.CLTM || '(无题名)' ]]
-                            </div>
-                            <div v-if="archivesList.length===0 && archivesLoaded"
-                                 style="padding:4px 12px;fontSize:12px;color:#999;">
-                                暂无材料
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <el-button size="small" type="warning" plain @click="regeneratePdf"
+                   :loading="pdfStatus==='generating'" :disabled="!currentArch">
+            重新生成
+        </el-button>
 
-                <div v-if="item.fl!==4 && item.fl!==9" v-show="currentL1===item.fl" style="padding-left:20px;">
-                    <div v-for="arch in archivesList" :key="'t3-'+arch.ARCHID"
-                         @click.stop="onClickArch(arch)"
-                         :style="{padding:'4px 12px',cursor:'pointer',fontSize:'12px',
-                                  background: currentArch===arch.ARCHID ? '#91d5ff' : 'transparent',
-                                  borderRadius:'4px',margin:'1px 0'}">
-                        [[ arch.XH ]]. [[ arch.CLTM || '(无题名)' ]]
-                    </div>
-                    <div v-if="archivesList.length===0 && archivesLoaded"
-                         style="padding:4px 12px;fontSize:12px;color:#999;">
-                        暂无材料
-                    </div>
-                </div>
-            </template>
-        </div>
+        <el-button size="small" type="primary" plain @click="downloadPdf" :disabled="pdfStatus!=='ready'">
+            下载
+        </el-button>
+
+        <el-button size="small" type="success" plain @click="printPdf" :disabled="pdfStatus!=='ready'">
+            打印
+        </el-button>
     </div>
 
-    <!-- ==================== 右侧：查看区域 ==================== -->
-    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;min-height:0;">
-        <!-- 工具栏 -->
-        <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;
-            display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:44px;z-index:10;overflow:visible;">
+    <!-- ========== 中部：左中右 ========== -->
+    <div style="flex:1;display:flex;overflow:hidden;">
 
-          <el-button size="small" @click="leftCollapsed = !leftCollapsed">
-              <el-icon><Fold /></el-icon>
-          </el-button>
-
-          <span style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;
-                      white-space:nowrap;font-size:13px;">
-              [[ currentArchiveName || '请选择档案材料' ]]
-          </span>
-
-          <span style="color:#dcdfe6;margin:0 4px;">|</span>
-
-          <span style="font-size:12px;color:#909399;">纸张:</span>
-          <el-select v-model="pageSize" size="small" style="width:75px;" :popper-append-to-body="true">
-    <el-option v-for="s in pageSizeOptions" :key="s" :label="s" :value="s" />
-</el-select>
-
-          <span style="font-size:12px;color:#909399;">方向:</span>
-          <el-select v-model="pageVertical" size="small" style="width:80px;">
-    <el-option v-for="v in pageVerticalOptions" :key="v.value" :label="v.label" :value="v.value" />
-</el-select>
-          <el-button size="small" type="warning" plain @click="regeneratePdf"
-                    :loading="pdfStatus==='generating'" :disabled="!currentArch">
-              重新生成
-          </el-button>
-
-          <el-button size="small" type="primary" plain @click="downloadPdf"
-                    :disabled="pdfStatus!=='ready'">
-              下载
-          </el-button>
-
-          <el-button size="small" type="success" plain @click="printPdf"
-                    :disabled="pdfStatus!=='ready'">
-              打印
-          </el-button>
-        </div>
-        <!-- PDF查看区域 -->
-        <div style="flex:1;overflow:auto;background:#525659;display:flex;
-                    align-items:center;justify-content:center;min-height:0;">
-
-            <div v-if="pdfStatus==='idle'"
-                 style="color:#ccc;font-size:16px;text-align:center;">
-                <div style="font-size:48px;margin-bottom:12px;">📂</div>
-                <div>请选择左侧档案材料查看</div>
-            </div>
-
-            <div v-if="pdfStatus==='checking'" style="color:#fff;text-align:center;">
-                <div style="font-size:32px;margin-bottom:8px;">⏳</div>
-                <div>正在检查扫描状态...</div>
-            </div>
-
-            <div v-if="pdfStatus==='generating'" style="color:#fff;text-align:center;">
-                <div style="font-size:32px;margin-bottom:8px;">⏳</div>
-                <div>正在生成PDF，请稍候...</div>
-                <div style="margin-top:4px;font-size:12px;color:#aaa;">[[ statusText ]]</div>
-            </div>
-
-            <div v-if="pdfStatus==='not_scanned'"
-                 style="color:#e6a23c;font-size:16px;text-align:center;">
-                <div style="font-size:48px;margin-bottom:12px;">🚫</div>
-                <div>未扫描或扫描未上传</div>
-            </div>
-
-            <div v-if="pdfStatus==='error'"
-                 style="color:#f56c6c;font-size:16px;text-align:center;">
-                <div style="font-size:48px;margin-bottom:12px;">❌</div>
-                <div>[[ pdfError ]]</div>
-                <el-button size="small" type="primary" style="margin-top:12px;" @click="retryLoadPdf">
-                    重试
-                </el-button>
-            </div>
-
-            <div v-if="pdfStatus==='loading_pdf'" style="color:#fff;text-align:center;">
-                <div style="font-size:32px;margin-bottom:8px;">⏳</div>
-                <div>加载PDF中...</div>
-            </div>
-
-            <iframe v-show="pdfStatus==='ready'"
-                    :src="pdfUrl"
-                    @load="onPdfIframeLoaded"
-                    sandbox="allow-scripts allow-same-origin"
-                    style="width:100%;height:100%;min-height:600px;border:none;background:#fff;">
-            </iframe>
+        <!-- 左：搜索人员 -->
+        <div class="resize-panel" data-panel="left" style="width:260px;min-width:180px;overflow:hidden;flex-shrink:0;">
+            <iframe src="/components/person-panel-embed/" style="width:100%;height:100%;border:none;"></iframe>
         </div>
 
-        <!-- 底部状态栏 -->
-        <div style="padding:6px 12px;border-top:1px solid #e4e7ed;background:#fafafa;
-                    display:flex;align-items:center;justify-content:space-between;
-                    flex-shrink:0;font-size:12px;">
-            <span :style="{color: statusColor}">[[ statusText ]]</span>
+        <div class="drag-bar" data-target="left" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <!-- 中：材料目录 -->
+        <div class="resize-panel" data-panel="mid" style="width:260px;min-width:160px;overflow:hidden;flex-shrink:0;">
+            <iframe :src="'/components/archive-tree-embed/?rsid=' + (rsid || '')" style="width:100%;height:100%;border:none;"></iframe>
+        </div>
+
+        <div class="drag-bar" data-target="mid" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <!-- 右：PDF -->
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:300px;">
+
+            <div style="flex:1;overflow:auto;background:#525659;display:flex;align-items:center;justify-content:center;min-height:0;">
+
+                <div v-if="pdfStatus==='idle'" style="color:#ccc;font-size:16px;text-align:center;">
+                    <div style="font-size:48px;margin-bottom:12px;">📂</div>
+                    <div>请选择档案材料查看</div>
+                </div>
+                <div v-if="pdfStatus==='checking'" style="color:#fff;text-align:center;">
+                    <div style="font-size:32px;">⏳</div><div>正在检查...</div>
+                </div>
+                <div v-if="pdfStatus==='generating'" style="color:#fff;text-align:center;">
+                    <div style="font-size:32px;">⏳</div><div>正在生成PDF...</div>
+                </div>
+                <div v-if="pdfStatus==='not_scanned'" style="color:#e6a23c;text-align:center;">
+                    <div style="font-size:48px;">🚫</div><div>未扫描</div>
+                </div>
+                <div v-if="pdfStatus==='error'" style="color:#f56c6c;text-align:center;">
+                    <div style="font-size:48px;">❌</div><div>[[ pdfError ]]</div>
+                    <el-button size="small" type="primary" style="margin-top:12px;" @click="retryLoadPdf">重试</el-button>
+                </div>
+                <div v-if="pdfStatus==='loading_pdf'" style="color:#fff;text-align:center;">
+                    <div style="font-size:32px;">⏳</div><div>加载中...</div>
+                </div>
+                <iframe v-show="pdfStatus==='ready'" :src="pdfUrl" @load="onPdfIframeLoaded"
+                        style="width:100%;height:100%;border:none;background:#fff;"></iframe>
+            </div>
+
+            <div style="padding:6px 12px;border-top:1px solid #e4e7ed;background:#fafafa;
+                        display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:12px;">
+                <span :style="{color: statusColor}">[[ statusText ]]</span>
+                <span v-if="rsid" style="color:#606266;">
+                    总目录 <b>[[ statsTotal ]]</b> |
+                    已扫描 <b style="color:#67c23a;">[[ statsScanned ]]</b> |
+                    未扫描 <b style="color:#f56c6c;">[[ statsUnscanned ]]</b> |
+                    扫描率 <b style="color:#409eff;">[[ statsRate ]]%</b>
+                </span>
+            </div>
         </div>
     </div>
 
@@ -192,257 +110,228 @@
 
     const app = createApp({
         delimiters: ['[[', ']]'],
-
         setup() {
-            const leftCollapsed = ref(false);
-            const imageType = ref('YS');
-            const treeData = ref([]);
-            const sub4 = ref([]);
-            const sub9 = ref([]);
-            const currentL1 = ref(null);
-            const currentL2 = ref(null);
-            const archivesList = ref([]);
-            const archivesLoaded = ref(false);
-
             const currentArch = ref(null);
             const currentFl = ref(null);
             const currentArchiveName = ref('');
-
+            const currentTitle = ref('');
             const pageSize = ref('A4');
             const pageVertical = ref('1');
             const pageSizeOptions = ['A3', 'A4', 'A5', 'B5'];
-          const pageVerticalOptions = [
-    { label: '纵向', value: '1' },
-    { label: '横向', value: '0' }
-];
+            const pageVerticalOptions = [
+                { label: '纵向', value: '1' },
+                { label: '横向', value: '0' }
+            ];
             const pdfUrl = ref(null);
             const pdfStatus = ref('idle');
             const pdfError = ref('');
             const statusText = ref('就绪');
             const statusColor = ref('#909399');
+            const rsid = ref('');
+            const personName = ref('');
+            const statsTotal = ref(0);
+            const statsScanned = ref(0);
+            const statsUnscanned = ref(0);
+            const statsRate = ref(0);
 
-            const rsid = ref('{{ rsid|default:"" }}');
+            const pdfBlobCache = {};
 
-            const loadTree = async () => {
-                try {
-                    const res = await axios.get('/archives/image/api/archive-tree/', {
-                        params: { pid: '-1' }
-                    });
-                    if (res.data.code === 0) {
-                        treeData.value = res.data.tree || [];
-                        sub4.value = res.data.sub4 || [];
-                        sub9.value = res.data.sub9 || [];
+            function cacheKey() {
+                return [rsid.value, currentFl.value, currentArch.value].join('_');
+            }
+
+            window.addEventListener('message', (e) => {
+                if (e.data.type === 'person-select') {
+                    const d = e.data.data;
+                    if (d.rsid === rsid.value) return;
+                    rsid.value = d.rsid;
+                    personName.value = d.displayName || d.tname || '';
+                    clearViewer();
+                    loadStats();
+                }
+                if (e.data.type === 'archive-select') {
+                    const d = e.data.data;
+                    currentArch.value = d.archid;
+                    currentFl.value = d.fl;
+                    currentArchiveName.value = d.xh + '、' + d.cltm;
+                    currentTitle.value = [personName.value, d.jbbh + '.' + d.cltm].filter(Boolean).join('_');
+                    const key = cacheKey();
+                    const blob = pdfBlobCache[key];
+                    if (blob) {
+                        pdfStatus.value = 'ready';
+                        const url = URL.createObjectURL(blob);
+                        if (pdfUrl.value) URL.revokeObjectURL(pdfUrl.value);
+                        pdfUrl.value = url;
+                        statusText.value = '从缓存加载';
+                        statusColor.value = '#67c23a';
+                    } else {
+                        loadPdf();
                     }
-                } catch (e) {
-                    console.error('加载树失败', e);
                 }
-            };
+            });
 
-            const onClickL1 = (item) => {
-                if (currentL1.value === item.fl) {
-                    currentL1.value = null;
-                    currentL2.value = null;
-                    archivesList.value = [];
-                    archivesLoaded.value = false;
-                } else {
-                    currentL1.value = item.fl;
-                    currentL2.value = null;
-                    archivesList.value = [];
-                    archivesLoaded.value = false;
-                    if (item.fl !== 4 && item.fl !== 9) {
-                        loadArchives(item.fl);
-                    }
-                }
-            };
-
-            const onClickL2 = (sub) => {
-                if (currentL2.value === sub.fl) {
-                    currentL2.value = null;
-                    archivesList.value = [];
-                    archivesLoaded.value = false;
-                } else {
-                    currentL2.value = sub.fl;
-                    archivesList.value = [];
-                    archivesLoaded.value = false;
-                    loadArchives(sub.fl);
-                }
-            };
-
-            const loadArchives = async (fl) => {
+            const loadStats = async () => {
                 if (!rsid.value) return;
                 try {
-                    const res = await axios.get('/archives/image/api/archive-tree/', {
-                        params: { pid: fl, rsid: rsid.value }
-                    });
+                    const res = await axios.get('/components/scan-stats/', { params: { rsid: rsid.value } });
                     if (res.data.code === 0) {
-                        archivesList.value = res.data.data || [];
-                        archivesLoaded.value = true;
+                        statsTotal.value = res.data.total || 0;
+                        statsScanned.value = res.data.scanned || 0;
+                        statsUnscanned.value = res.data.unscanned || 0;
+                        statsRate.value = res.data.rate || 0;
                     }
-                } catch (e) {
-                    console.error('加载材料列表失败', e);
-                }
-            };
-
-            const onClickArch = (arch) => {
-                currentArch.value = arch.ARCHID;
-                currentFl.value = arch.FL;
-                currentArchiveName.value = (arch.XH || '') + '、' + (arch.CLTM || '(无题名)');
-                loadPdf();
+                } catch (e) { console.error(e); }
             };
 
             const loadPdf = async () => {
                 if (!currentArch.value) return;
-                pdfUrl.value = null;
-                pdfError.value = '';
-                pdfStatus.value = 'checking';
-                statusText.value = '正在检查扫描状态...';
-                statusColor.value = '#909399';
-
+                if (pdfUrl.value) URL.revokeObjectURL(pdfUrl.value);
+                pdfUrl.value = null; pdfError.value = '';
+                pdfStatus.value = 'checking'; statusText.value = '正在检查...'; statusColor.value = '#909399';
                 try {
                     const checkRes = await axios.get('/archives/image/api/scan-check/', {
-                        params: {
-                            image_type: imageType.value,
-                            rsid: rsid.value,
-                            fl: currentFl.value,
-                            archid: currentArch.value
-                        }
+                        params: { image_type: 'YS', rsid: rsid.value, fl: currentFl.value, archid: currentArch.value }
                     });
                     if (!checkRes.data.is_scanned) {
-                        pdfStatus.value = 'not_scanned';
-                        statusText.value = '未扫描或扫描未上传';
-                        statusColor.value = '#e6a23c';
+                        pdfStatus.value = 'not_scanned'; statusText.value = '未扫描'; statusColor.value = '#e6a23c';
                         return;
                     }
                     statusText.value = '已扫描 (' + checkRes.data.image_count + ' 张)';
-                    statusColor.value = '#909399';
                     await generatePdf(false);
                 } catch (e) {
-                    pdfStatus.value = 'error';
-                    pdfError.value = '检查扫描状态失败';
-                    statusText.value = '请求失败';
-                    statusColor.value = '#f56c6c';
+                    pdfStatus.value = 'error'; pdfError.value = '检查失败';
                 }
             };
 
             const retryLoadPdf = () => { loadPdf(); };
 
             const generatePdf = async (force) => {
-                pdfStatus.value = 'generating';
-                statusText.value = '正在生成PDF，请稍候...';
-                statusColor.value = '#909399';
-
+                pdfStatus.value = 'generating'; statusText.value = '生成中...';
                 try {
                     const res = await axios.get('/archives/image/api/scan-generate-pdf/', {
                         params: {
-                            image_type: imageType.value,
-                            rsid: rsid.value,
-                            fl: currentFl.value,
-                            archid: currentArch.value,
-                            page_size: pageSize.value,
-                          vertical: pageVertical.value,
-                            force: force ? '1' : '0'
+                            image_type: 'YS', rsid: rsid.value, fl: currentFl.value, archid: currentArch.value,
+                            page_size: pageSize.value, vertical: pageVertical.value, force: force ? '1' : '0'
                         }
                     });
                     if (res.data.success) {
-                        pdfStatus.value = 'loading_pdf';
-                        statusText.value = '加载PDF中...';
-                        pdfUrl.value = res.data.pdf_url + '&t=' + Date.now();
+                        const apiUrl = res.data.pdf_url;
+                        const key = cacheKey();
+                        fetch(apiUrl).then(r => r.blob()).then(blob => {
+                            pdfBlobCache[key] = blob;
+                            const url = URL.createObjectURL(blob);
+                            pdfUrl.value = url;
+                            pdfStatus.value = 'ready';
+                            statusText.value = '加载完成';
+                            statusColor.value = '#67c23a';
+                        });
                     } else {
-                        pdfStatus.value = 'error';
-                        pdfError.value = res.data.message || '生成PDF失败';
-                        statusText.value = '生成失败';
-                        statusColor.value = '#f56c6c';
+                        pdfStatus.value = 'error'; pdfError.value = res.data.message || '生成失败';
                     }
                 } catch (e) {
-                    pdfStatus.value = 'error';
-                    pdfError.value = '生成PDF失败，请重试';
-                    statusText.value = '失败';
-                    statusColor.value = '#f56c6c';
+                    pdfStatus.value = 'error'; pdfError.value = '生成PDF失败';
                 }
             };
 
-            const onPdfIframeLoaded = () => {
-                pdfStatus.value = 'ready';
-                statusText.value = '加载完成';
-                statusColor.value = '#67c23a';
-            };
-const regeneratePdf = () => {
-    if (!currentArch.value) return;
-    ElementPlus.ElMessageBox.confirm(
-        '重新生成将删除服务器上旧PDF并重新合成，确定继续？',
-        '确认操作',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    ).then(() => {
-        generatePdf(true);
-    }).catch(() => {});
-};
+            const onPdfIframeLoaded = () => {};
 
-            const downloadPdf = () => {
-                if (!pdfUrl.value) return;
-                const link = document.createElement('a');
-                link.href = pdfUrl.value;
-                link.download = (currentArchiveName.value || '档案') + '.pdf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            const regeneratePdf = () => {
+                const key = cacheKey();
+                delete pdfBlobCache[key];
+                if (pdfUrl.value) { URL.revokeObjectURL(pdfUrl.value); pdfUrl.value = null; }
+                generatePdf(true);
             };
-const printPdf = () => {
-    if (!pdfUrl.value) return;
-    const win = window.open(pdfUrl.value, '_blank');
-    if (!win) {
-        ElementPlus.ElMessage.warning('请允许浏览器弹出窗口');
-        return;
+
+
+          const downloadPdf = () => {
+    const fileName = (currentTitle.value || currentArchiveName.value || '档案') + '.pdf';
+    const key = cacheKey();
+    const blob = pdfBlobCache[key];
+
+    if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
-    win.addEventListener('load', () => {
-        win.print();
-    }, { once: true });
 };
-
-            const onImageTypeChange = () => {
-                clearViewer();
+            const printPdf = () => {
+                if (!pdfUrl.value) return;
+                const win = window.open(pdfUrl.value, '_blank');
+                if (win) win.addEventListener('load', () => win.print(), { once: true });
             };
 
             const clearViewer = () => {
-                pdfUrl.value = null;
-                pdfError.value = '';
-                pdfStatus.value = 'idle';
-                statusText.value = '就绪';
-                statusColor.value = '#909399';
-                currentArch.value = null;
-                currentArchiveName.value = '';
+                if (pdfUrl.value) { URL.revokeObjectURL(pdfUrl.value); }
+                pdfUrl.value = null; pdfError.value = ''; pdfStatus.value = 'idle';
+                statusText.value = '就绪'; statusColor.value = '#909399';
+                currentArch.value = null; currentArchiveName.value = ''; currentTitle.value = '';
             };
-
-            onMounted(() => { loadTree(); });
+      const initDragBars = () => {
+          const bars = document.querySelectorAll('.drag-bar');
+          const panels = document.querySelectorAll('.resize-panel');
+          
+          bars.forEach((bar, index) => {
+              bar.addEventListener('mousedown', (e) => {
+                  const panel = panels[index];
+                  if (!panel) return;
+                  
+                  const startX = e.clientX;
+                  const startW = panel.offsetWidth;
+                  
+                  const onMove = (ev) => {
+                      let w = startW + ev.clientX - startX;
+                      if (w < 80) w = 80;
+                      if (w > 600) w = 600;
+                      panel.style.width = w + 'px';
+                      panel.style.minWidth = w + 'px';
+                      panel.style.flexShrink = '0';
+                      panel.style.flexGrow = '0';
+                      // 拖动时禁用 iframe 鼠标事件
+                      panels.forEach(p => {
+                          const iframe = p.querySelector('iframe');
+                          if (iframe) iframe.style.pointerEvents = 'none';
+                      });
+                  };
+                  const onUp = () => {
+                      document.removeEventListener('mousemove', onMove);
+                      document.removeEventListener('mouseup', onUp);
+                      document.body.style.cursor = '';
+                      document.body.style.userSelect = '';
+                      // 恢复 iframe
+                      panels.forEach(p => {
+                          const iframe = p.querySelector('iframe');
+                          if (iframe) iframe.style.pointerEvents = '';
+                      });
+                  };
+                  document.body.style.cursor = 'col-resize';
+                  document.body.style.userSelect = 'none';
+                  document.addEventListener('mousemove', onMove);
+                  document.addEventListener('mouseup', onUp);
+                  e.preventDefault();
+              });
+          });
+      };
+            onMounted(initDragBars);
 
             return {
-                leftCollapsed, imageType,
-                treeData, sub4, sub9, currentL1, currentL2, archivesList, archivesLoaded,
-                currentArch, currentFl, currentArchiveName,
-                pageSize, pageVertical, pageSizeOptions,pageVerticalOptions,
-                pdfUrl, pdfStatus, pdfError, statusText, statusColor,
-                rsid,
-                onClickL1, onClickL2, onClickArch,
-                loadPdf, retryLoadPdf, regeneratePdf, downloadPdf, printPdf,
-                onImageTypeChange, onPdfIframeLoaded
+                currentArchiveName, currentTitle,
+                pageSize, pageVertical, pageSizeOptions, pageVerticalOptions,
+                pdfUrl, pdfStatus, pdfError, statusText, statusColor, rsid,
+                statsTotal, statsScanned, statsUnscanned, statsRate,
+                regeneratePdf, downloadPdf, printPdf,
+                onPdfIframeLoaded, retryLoadPdf
             };
         }
     });
 
-    app.use(ElementPlus);
-    app.mount('#scanViewerApp');
+    app.use(ElementPlus).mount('#scanViewerApp');
 })();
 </script>
 
 <style>
     [v-cloak] { display: none !important; }
-    .el-radio-group { display: flex; width: 100%; }
-    .el-radio-button { flex: 1; }
-    .el-radio-button__inner { width: 100%; text-align: center; }
-    .direction-select-popper { min-width: 100px !important; }
-.direction-select-popper .el-select-dropdown__item { text-align: center; }
 </style>
 {% endblock %}

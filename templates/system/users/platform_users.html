@@ -1,0 +1,94 @@
+{% extends "layout/base.html" %}
+{% block title %}平台用户管理{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.info-table { border-collapse:collapse; width:100%; max-width:500px; font-size:13px; }
+.info-table th, .info-table td { border:1px solid #ddd; padding:6px 10px; }
+.info-table th { background:#f5f7fa; text-align:right; width:80px; }
+.info-table td input, .info-table td select { width:100%; border:1px solid #ddd; padding:4px 6px; font-size:13px; border-radius:2px; }
+.tree-node { padding:3px 8px; cursor:pointer; white-space:nowrap; font-size:13px; }
+.tree-node:hover { background:#e8f0fe; }
+.tree-person { color:#606266; }
+.tree-person.active { background:#d0e4fc; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <span style="font-weight:600;">👤 用户管理</span>
+        <div style="flex:1;"></div>
+        <el-button size="small" type="primary" @click="saveUser" :disabled="!currentUser.id">保存</el-button>
+        <el-button size="small" type="warning" @click="resetPwd" :disabled="!currentUser.id">重置密码</el-button>
+    </div>
+
+    <div style="flex:1;display:flex;overflow:hidden;">
+        <div style="width:220px;border-right:1px solid #e4e7ed;overflow-y:auto;padding:4px;flex-shrink:0;">
+            <div v-for="u in userList" :key="u.id" class="tree-node tree-person"
+                 :class="{active: currentUser.id===u.id}" @click="selectUser(u)">👤 [[ u.username ]]</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:12px;">
+            <div v-if="!currentUser.id" style="color:#ccc;">请选择左侧用户</div>
+            <table v-if="currentUser.id" class="info-table">
+                <tr><th>用户名</th><td>[[ currentUser.username ]]</td></tr>
+                <tr><th>邮箱</th><td>[[ currentUser.email ]]</td></tr>
+                <tr><th>姓名</th><td><input v-model="currentUser.real_name" /></td></tr>
+                <tr><th>用户组</th><td>
+                    <select v-model="currentUser.group_id">
+                        <option value="">无</option>
+                        <option v-for="g in groupList" :key="g.id" :value="g.id">[[ g.name ]]</option>
+                    </select></td></tr>
+                <tr><th>档案编号</th><td><input v-model="currentUser.yhbh" /></td></tr>
+                <tr><th>启用</th><td>
+                    <select v-model="currentUser.is_active">
+                        <option :value="true">是</option><option :value="false">否</option>
+                    </select></td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const userList = ref([]);
+        const groupList = ref([]);
+        const currentUser = ref({});
+
+        const loadUsers = async () => {
+            const r = await axios.get('/api/platform-users/list/');
+            if(r.data.code===0) userList.value = r.data.data||[];
+        };
+        const loadGroups = async () => {
+            const r = await axios.get('/api/platform-groups/list/');
+            if(r.data.code===0) groupList.value = r.data.data||[];
+        };
+        const selectUser = (u) => { currentUser.value = {...u}; };
+
+        const saveUser = async () => {
+            const res = await axios.post('/api/platform-users/save/',{
+                action:'update', id:currentUser.value.id,
+                real_name:currentUser.value.real_name,
+                group_id:currentUser.value.group_id,
+                yhbh:currentUser.value.yhbh,
+                is_active:currentUser.value.is_active
+            });
+            if(res.data.code===0){ ElementPlus.ElMessage.success(res.data.msg); loadUsers(); }
+            else ElementPlus.ElMessage.error(res.data.msg);
+        };
+        const resetPwd = async () => {
+            await ElementPlus.ElMessageBox.confirm("确定重置密码为12345abcde ？",'确认',{type:'warning'});
+            const res = await axios.post('/api/platform-users/save/',{action:'reset_pwd',id:currentUser.value.id});
+            if(res.data.code===0) ElementPlus.ElMessage.success(res.data.msg);
+            else ElementPlus.ElMessage.error(res.data.msg);
+        };
+
+        onMounted(()=>{loadUsers();loadGroups();});
+        return {userList,groupList,currentUser,selectUser,saveUser,resetPwd};
+    }
+});
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}

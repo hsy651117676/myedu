@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-size: 13px; font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .t1 { padding: 6px 10px; cursor: pointer; font-weight: bold; color: #303133; white-space: nowrap; }
+    .t1:hover { background: #e8f0fe; }
+    .t2 { padding: 5px 10px 5px 18px; cursor: pointer; color: #606266; font-size: 12px; white-space: nowrap; }
+    .t2:hover { background: #e8f0fe; }
+    .t2.active { background: #bae7ff; }
+    .t3 { padding: 4px 10px 4px 34px; cursor: pointer; color: #606266; font-size: 12px; white-space: nowrap; }
+    .t3:hover { background: #e8f0fe; }
+    .t3.active { background: #91d5ff; }
+    .t1::before { content: "🗂️ "; }
+    .t2::before { content: "📋 "; }
+    .t3::before { content: "📝 "; }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh;display:flex;flex-direction:column;">
+
+    <div v-if="!rsid" style="flex:1;display:flex;align-items:center;justify-content:center;color:#ccc;">
+      请先选择人员
+    </div>
+
+    <div v-else style="flex:1;overflow-y:auto;padding:4px;">
+      <template v-for="t in treeData" :key="'t1-'+t.fl">
+        <!-- 一级 -->
+        <div class="t1" @click="onClickL1(t)">
+          <span style="font-size:12px;">{{ t.expanded ? '▼' : '▶' }}</span> {{ t.name }}
+        </div>
+
+        <!-- 非4/9：直接显示材料 -->
+        <template v-if="t.fl!==4 && t.fl!==9 && t.expanded">
+          <div v-for="arch in getArchives(t.fl)" :key="'t3-'+arch.ARCHID"
+               class="t3" :class="{ active: currentArch===arch.ARCHID }"
+               @click.stop="onClickArch(arch, t)">
+            {{ arch.XH }}. {{ arch.CLTM || '(无题名)' }}
+          </div>
+          <div v-if="getArchives(t.fl).length===0 && archivesLoaded[t.fl]" style="padding:4px 10px 4px 34px;color:#999;">暂无</div>
+        </template>
+
+        <!-- FL=4：展开二级，每个二级下方显示自己的材料 -->
+        <template v-if="t.fl===4 && t.expanded">
+          <div v-for="s in sub4" :key="'s4-'+s.fl">
+            <div class="t2" :class="{ active: activeL2===s.fl }" @click.stop="onClickL2(s)">{{ s.name }}</div>
+            <div v-if="activeL2===s.fl">
+              <div v-for="arch in getArchives(s.fl)" :key="'t3-'+arch.ARCHID"
+                   class="t3" :class="{ active: currentArch===arch.ARCHID }"
+                   @click.stop="onClickArch(arch, t)">
+                {{ arch.XH }}. {{ arch.CLTM || '(无题名)' }}
+              </div>
+              <div v-if="getArchives(s.fl).length===0 && archivesLoaded[s.fl]" style="padding:4px 10px 4px 34px;color:#999;">暂无</div>
+            </div>
+          </div>
+        </template>
+
+        <!-- FL=9：展开二级，每个二级下方显示自己的材料 -->
+        <template v-if="t.fl===9 && t.expanded">
+          <div v-for="s in sub9" :key="'s9-'+s.fl">
+            <div class="t2" :class="{ active: activeL2===s.fl }" @click.stop="onClickL2(s)">{{ s.name }}</div>
+            <div v-if="activeL2===s.fl">
+              <div v-for="arch in getArchives(s.fl)" :key="'t3-'+arch.ARCHID"
+                   class="t3" :class="{ active: currentArch===arch.ARCHID }"
+                   @click.stop="onClickArch(arch, t)">
+                {{ arch.XH }}. {{ arch.CLTM || '(无题名)' }}
+              </div>
+              <div v-if="getArchives(s.fl).length===0 && archivesLoaded[s.fl]" style="padding:4px 10px 4px 34px;color:#999;">暂无</div>
+            </div>
+          </div>
+        </template>
+      </template>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const params = new URLSearchParams(window.location.search);
+        const rsid = ref(params.get('rsid') || '');
+        const treeData = ref([]);
+        const sub4 = ref([]);
+        const sub9 = ref([]);
+        const activeL2 = ref(null);
+        const archivesMap = reactive({});
+        const archivesLoaded = reactive({});
+        const currentArch = ref(null);
+        const archivesCache = {};
+
+        const checkRsid = () => {
+          const p = new URLSearchParams(window.location.search);
+          const newRsid = p.get('rsid') || '';
+          if (newRsid !== rsid.value) {
+            rsid.value = newRsid;
+            activeL2.value = null;
+            Object.keys(archivesMap).forEach(k => delete archivesMap[k]);
+            Object.keys(archivesLoaded).forEach(k => delete archivesLoaded[k]);
+            treeData.value = []; sub4.value = []; sub9.value = [];
+            currentArch.value = null;
+            if (newRsid) loadTree();
+          }
+        };
+        setInterval(checkRsid, 500);
+
+        const loadTree = async () => {
+          if (!rsid.value) return;
+          try {
+            const res = await axios.get('/components/archive-tree/', {
+              params: { pid: '-1', rsid: rsid.value }
+            });
+            if (res.data.code === 0) {
+              treeData.value = (res.data.tree || []).map(t => ({
+                ...t,
+                expanded: t.fl === 4 || t.fl === 9
+              }));
+              sub4.value = res.data.sub4 || [];
+              sub9.value = res.data.sub9 || [];
+            }
+          } catch (e) { console.error(e); }
+        };
+
+        const loadArchives = async (fl) => {
+          if (!rsid.value) return;
+          const key = rsid.value + '_' + fl;
+          if (archivesCache[key]) {
+            archivesMap[fl] = archivesCache[key];
+            archivesLoaded[fl] = true;
+            return;
+          }
+          try {
+            const res = await axios.get('/components/archive-tree/', {
+              params: { pid: fl, rsid: rsid.value }
+            });
+            if (res.data.code === 0) {
+              const data = res.data.data || [];
+              archivesMap[fl] = data;
+              archivesLoaded[fl] = true;
+              archivesCache[key] = data;
+            }
+          } catch (e) { console.error(e); }
+        };
+
+        const getArchives = (fl) => {
+          return archivesMap[fl] || [];
+        };
+
+        const onClickL1 = (t) => {
+          t.expanded = !t.expanded;
+          if (t.fl !== 4 && t.fl !== 9 && t.expanded) {
+            loadArchives(t.fl);
+          }
+        };
+
+        const onClickL2 = (s) => {
+          if (activeL2.value === s.fl) {
+            activeL2.value = null;
+          } else {
+            activeL2.value = s.fl;
+            loadArchives(s.fl);
+          }
+        };
+
+        const onClickArch = (arch, t) => {
+          currentArch.value = arch.ARCHID;
+          const jbbh = t ? t.name.split('、')[0] : '';
+          window.parent.postMessage({
+            type: 'archive-select',
+            data: {
+              archid: arch.ARCHID,
+              fl: arch.FL,
+              xh: arch.XH,
+              cltm: arch.CLTM || '',
+              jbbh: jbbh
+            }
+          }, '*');
+        };
+
+        if (rsid.value) loadTree();
+
+        return {
+          rsid, treeData, sub4, sub9, activeL2, archivesMap, archivesLoaded, currentArch,
+          getArchives, onClickL1, onClickL2, onClickArch
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

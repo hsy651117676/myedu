@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}系统平台{% endblock %}</title>
-<link rel="stylesheet" href="/static/lib/element-plus.css">
-<script src="/static/lib/vue.global.prod.js"></script>
-<script src="/static/lib/element-plus.min.js"></script>
-<script src="/static/lib/element-plus-icons.min.js"></script>
-<script src="/static/lib/element-plus-zh-cn.min.js"></script>
-<script src="/static/lib/axios.min.js"></script>
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/element-plus.min.js"></script>
+  <script src="/static/lib/element-plus-icons.min.js"></script>
+  <script src="/static/lib/element-plus-zh-cn.min.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
   <script>
     axios.defaults.xsrfCookieName = 'csrftoken';
     axios.defaults.xsrfHeaderName = 'X-CSRFToken';
@@ -23,9 +23,7 @@
       }
     );
   </script>
-  
   <link rel="shortcut icon" href="/static/favicon.ico">
-  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #f5f7fa; min-height: 100vh; font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif; }
@@ -43,7 +41,6 @@
     .el-card { border-radius: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
     .el-button + .el-button { margin-left: 8px; }
   </style>
-  
   {% block extra_head %}{% endblock %}
 </head>
 <body>

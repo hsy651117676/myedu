@@ -1,6 +1,5 @@
 """
 档案图像扫描服务层
-- 业务SQL查询
 - 图片解密
 - PDF合成
 """
@@ -11,17 +10,20 @@ import glob
 import logging
 from reportlab.lib.pagesizes import A4, A5, A3, B5
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 from PIL import Image
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from django.conf import settings
-from main.db_utils import query_dict
-from reportlab.lib.utils import ImageReader
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
 
-# ==================== 常量 ====================
+# ==================== 常量（从配置读取） ====================
+
+IMAGE_TYPES = settings.SCAN_IMAGE_TYPES
+_AES_KEY = settings.SCAN_AES_KEY
 
 PAGE_SIZE_MAP = {
     'A4': A4,
@@ -30,25 +32,13 @@ PAGE_SIZE_MAP = {
     'B5': B5,
 }
 
-IMAGE_TYPES = {
-    'YS': '原始图像',
-    'GQ': '高清图像',
-}
-
-_AES_KEY = b"3yj8jbvx" + b'\x00' * 8
-
 
 # ==================== 业务SQL查询 ====================
 
 def get_latest_uptime(rsid, archid, image_type='YS'):
-    """
-    获取指定档案材料的最新扫描时间
-    取 MAX(uptime)，只要有一张图更新就算过期
-    
-    返回:
-        (uptime: str 或 None, image_count: int)
-        uptime 格式: '20250326163419'
-    """
+    """获取指定档案材料的最新扫描时间"""
+    from main.db_utils import _get_conn
+
     table_name = f"RS_DESCRIPT_{rsid}"
 
     if image_type == 'YS':
@@ -60,13 +50,28 @@ def get_latest_uptime(rsid, archid, image_type='YS'):
                   FROM {table_name}
                   WHERE Archid='{archid}' AND GaoQingLength IS NOT NULL"""
 
-    result = query_dict(sql)
-    if result and result[0]['max_uptime']:
-        raw = str(result[0]['max_uptime'])
-        uptime = raw.replace('-', '').replace(':', '').replace(' ', '')
-        count = result[0]['img_count']
-        return uptime, count
-    return None, 0
+    conn = None
+    try:
+        conn = _get_conn()
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        cursor.close()
+        if row and row[0]:
+            raw = str(row[0])
+            uptime = raw.replace('-', '').replace(':', '').replace(' ', '')
+            count = row[1]
+            return uptime, count
+        return None, 0
+    except Exception as e:
+        logger.error(f"get_latest_uptime error: {e}")
+        return None, 0
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
 
 
 # ==================== PDF辅助 ====================
@@ -84,7 +89,7 @@ def get_pdf_page_size(size_name, vertical=True):
 def decrypt_image(encrypted_path):
     """
     解密FTS加密的图片文件
-    算法: AES-128-ECB, 密钥: "3yj8jbvx" + \x00*8
+    算法: AES-128-ECB
     头部: 8/12/16/20字节，自动检测
     """
     with open(encrypted_path, 'rb') as f:
@@ -117,7 +122,7 @@ def decrypt_image(encrypted_path):
             continue
 
     if plain_bytes is None:
-        raise ValueError(f"解密失败，无法识别文件格式: {encrypted_path}")
+        raise ValueError(f"解密失败: {encrypted_path}")
 
     return Image.open(io.BytesIO(plain_bytes))
 
@@ -125,10 +130,7 @@ def decrypt_image(encrypted_path):
 # ==================== 路径构建 ====================
 
 def build_image_dir(image_type, rsid, fl, archid):
-    """
-    构建图片源目录路径
-    /mnt/data/das_image_file/{YS|GQ}/{rsid_zfill8}/{fl}/{archid}/
-    """
+    """构建图片源目录路径"""
     rsid_padded = str(rsid).zfill(8)
     return os.path.join(
         settings.SCAN_IMAGE_BASE_DIR,
@@ -140,10 +142,7 @@ def build_image_dir(image_type, rsid, fl, archid):
 
 
 def build_pdf_dir(image_type, rsid, fl, archid):
-    """
-    构建PDF存放目录路径
-    /mnt/data/das_pdf/{YS|GQ}/{rsid_zfill8}/{fl}/{archid}/
-    """
+    """构建PDF存放目录路径"""
     rsid_padded = str(rsid).zfill(8)
     return os.path.join(
         settings.SCAN_PDF_OUTPUT_DIR,
@@ -155,41 +154,29 @@ def build_pdf_dir(image_type, rsid, fl, archid):
 
 
 def build_pdf_path(image_type, rsid, fl, archid, uptime):
-    """
-    构建PDF完整路径
-    /mnt/data/das_pdf/{YS|GQ}/{rsid_zfill8}/{fl}/{archid}/{fl}_{uptime}.pdf
-    """
+    """构建PDF完整路径"""
     pdf_dir = build_pdf_dir(image_type, rsid, fl, archid)
     pdf_filename = f"{fl}_{uptime}.pdf"
     return os.path.join(pdf_dir, pdf_filename)
 
 
 def find_existing_pdf(image_type, rsid, fl, archid):
-    """
-    查找该档案材料已有PDF（匹配 {fl}_*.pdf）
-    返回: pdf_path 或 None
-    """
+    """查找已有PDF"""
     pdf_dir = build_pdf_dir(image_type, rsid, fl, archid)
-
     if not os.path.exists(pdf_dir):
         return None
-
     pattern = os.path.join(pdf_dir, f"{fl}_*.pdf")
     matches = sorted(glob.glob(pattern), reverse=True)
-
     return matches[0] if matches else None
 
 
 def clean_old_pdfs(image_type, rsid, fl, archid, keep_uptime):
-    """删除旧PDF，只保留指定 uptime 的"""
+    """删除旧PDF"""
     pdf_dir = build_pdf_dir(image_type, rsid, fl, archid)
-
     if not os.path.exists(pdf_dir):
         return
-
     keep_name = f"{fl}_{keep_uptime}.pdf"
     pattern = os.path.join(pdf_dir, f"{fl}_*.pdf")
-
     for old_pdf in glob.glob(pattern):
         if os.path.basename(old_pdf) != keep_name:
             try:
@@ -199,15 +186,32 @@ def clean_old_pdfs(image_type, rsid, fl, archid, keep_uptime):
 
 
 # ==================== PDF生成 ====================
+
 def images_to_pdf(image_dir, output_pdf_path,
-                  page_size='A4', vertical=True,
-                  margin_up=1, margin_down=1,
-                  margin_left=1, margin_right=1,
-                  dpi=150):
+                  page_size=None, vertical=None,
+                  margin_up=None, margin_down=None,
+                  margin_left=None, margin_right=None,
+                  dpi=None, jpeg_quality=None):
     """
     将目录下所有解密后的图片合成为一个多页PDF
-    dpi: 图片分辨率，越小图片在PDF上越大越清晰
     """
+    if page_size is None:
+        page_size = settings.SCAN_PDF_PAGE_SIZE
+    if vertical is None:
+        vertical = settings.SCAN_PDF_VERTICAL
+    if margin_up is None:
+        margin_up = settings.SCAN_PDF_MARGIN_UP
+    if margin_down is None:
+        margin_down = settings.SCAN_PDF_MARGIN_DOWN
+    if margin_left is None:
+        margin_left = settings.SCAN_PDF_MARGIN_LEFT
+    if margin_right is None:
+        margin_right = settings.SCAN_PDF_MARGIN_RIGHT
+    if dpi is None:
+        dpi = settings.SCAN_PDF_DPI
+    if jpeg_quality is None:
+        jpeg_quality = settings.SCAN_PDF_JPEG_QUALITY
+
     if not os.path.exists(image_dir):
         return False, f"图片目录不存在: {image_dir}"
 
@@ -234,11 +238,9 @@ def images_to_pdf(image_dir, output_pdf_path,
             img = decrypt_image(encrypted_path)
             img_w, img_h = img.size
 
-            # 按 DPI 计算图片物理尺寸（磅）
             img_width_pt = img_w / dpi * 72
             img_height_pt = img_h / dpi * 72
 
-            # 缩放到页面可用区域
             scale = min(usable_width / img_width_pt, usable_height / img_height_pt)
             new_w = img_width_pt * scale
             new_h = img_height_pt * scale
@@ -246,12 +248,11 @@ def images_to_pdf(image_dir, output_pdf_path,
             x = margin_left + (usable_width - new_w) / 2
             y = margin_down + (usable_height - new_h) / 2
 
-            # 转 RGB，JPEG 不支持透明通道
             if img.mode in ('RGBA', 'LA', 'P'):
                 img = img.convert('RGB')
 
             img_buffer = io.BytesIO()
-            img.save(img_buffer, format='JPEG', quality=85, dpi=(dpi, dpi))
+            img.save(img_buffer, format='JPEG', quality=jpeg_quality, dpi=(dpi, dpi))
             img_buffer.seek(0)
 
             c.drawImage(ImageReader(img_buffer), x, y, width=new_w, height=new_h)
@@ -264,22 +265,26 @@ def images_to_pdf(image_dir, output_pdf_path,
     c.save()
     return True, output_pdf_path
 
+
 def get_or_generate_pdf(image_type, rsid, fl, archid,
-                        page_size='A4', vertical=True,
-                        margin_up=1, margin_down=1,
-                        margin_left=1, margin_right=1,
+                        page_size=None, vertical=None,
+                        margin_up=None, margin_down=None,
+                        margin_left=None, margin_right=None,
                         force_regenerate=False):
-    """
-    获取或生成PDF文件
-    
-    逻辑:
-    1. 查 MAX(uptime) → 只要有一张图更新就算过期
-    2. PDF文件名: {fl}_{uptime}.pdf
-    3. 文件存在且不强制 → 直接返回
-    4. 不存在或强制 → 解密所有图生成新PDF，删旧PDF
-    
-    返回: (success: bool, result: str)
-    """
+    """获取或生成PDF文件"""
+
+    if page_size is None:
+        page_size = settings.SCAN_PDF_PAGE_SIZE
+    if vertical is None:
+        vertical = settings.SCAN_PDF_VERTICAL
+
+    cache_key = f"scan_pdf:{image_type}:{rsid}:{fl}:{archid}"
+
+    if not force_regenerate:
+        cached = cache.get(cache_key)
+        if cached and os.path.exists(cached):
+            return True, cached
+
     latest_uptime, image_count = get_latest_uptime(rsid, archid, image_type)
 
     if latest_uptime is None:
@@ -288,13 +293,14 @@ def get_or_generate_pdf(image_type, rsid, fl, archid,
     pdf_path = build_pdf_path(image_type, rsid, fl, archid, latest_uptime)
 
     if os.path.exists(pdf_path) and not force_regenerate:
+        cache.set(cache_key, pdf_path, 1800)
         return True, pdf_path
 
     clean_old_pdfs(image_type, rsid, fl, archid, latest_uptime)
 
     image_dir = build_image_dir(image_type, rsid, fl, archid)
 
-    return images_to_pdf(
+    success, result = images_to_pdf(
         image_dir=image_dir,
         output_pdf_path=pdf_path,
         page_size=page_size,
@@ -305,11 +311,17 @@ def get_or_generate_pdf(image_type, rsid, fl, archid,
         margin_right=margin_right
     )
 
+    if success:
+        cache.set(cache_key, result, 1800)
+
+    return success, result
+
 
 def check_scan_exists(image_type, rsid, fl, archid):
-    """
-    检查是否已扫描
-    返回: (is_scanned: bool, image_count: int)
-    """
-    _, count = get_latest_uptime(rsid, archid, image_type)
-    return count > 0, count
+    """检查是否已扫描"""
+    image_dir = build_image_dir(image_type, rsid, fl, archid)
+    if not os.path.exists(image_dir):
+        return False, 0
+    image_files = [f for f in os.listdir(image_dir)
+                   if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    return len(image_files) > 0, len(image_files)

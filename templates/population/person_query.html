@@ -74,7 +74,7 @@ createApp({
       } catch(e) { return ''; }
     };
     const query = () => {
-      axios.get('/api/person-query/', {params:{...q.value,page:p.value,pageSize:ps.value}}).then(res => {
+      axios.get('/population/api/person-query/', {params:{...q.value,page:p.value,pageSize:ps.value}}).then(res => {
         if(res.data.code===0){
           list.value = res.data.data.map(i=>({...i,Age:calcAge(i.BirthDate,i.DeathDate)}));
           total.value = res.data.total;
@@ -88,7 +88,7 @@ createApp({
     };
     const selPerson = (r) => {
       fList.value = [];
-      axios.get('/api/family-query/', {params:{rsid:r.RSID}}).then(res => {
+      axios.get('/population/api/family-query/', {params:{rsid:r.RSID}}).then(res => {
         if(res.data.code===0) fList.value = res.data.data;
       });
     };
@@ -96,7 +96,7 @@ createApp({
       if(!r.RSID) return ElMessage.warning('该行无RSID，无法查询');
       fLoading.value = true;
       try {
-        const res = await axios.get('/api/family-query/', {params:{rsid:r.RSID}});
+        const res = await axios.get('/population/api/family-query/', {params:{rsid:r.RSID}});
         fList.value = res.data?.code===0 ? res.data.data : [];
       } catch (err) { ElMessage.error('查询失败'); }
       finally { fLoading.value = false; }

@@ -1,0 +1,111 @@
+{% extends "layout/base.html" %}
+{% block title %}组与菜单管理{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.group-table { border-collapse:collapse; width:100%; max-width:600px; font-size:13px; }
+.group-table th, .group-table td { border:1px solid #ddd; padding:6px 8px; text-align:center; }
+.group-table th { background:#f5f7fa; }
+.group-table td input { width:100%; border:1px solid transparent; padding:4px; text-align:center; }
+.group-table td input:focus { border-color:#409eff; outline:none; background:#fff; }
+.menu-tree { font-size:13px; margin-top:10px; }
+.menu-tree label { cursor:pointer; display:block; padding:2px 0; }
+.menu-tree label:hover { background:#f0f0f0; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <span style="font-weight:600;">📋 组与菜单管理</span>
+        <div style="flex:1;"></div>
+        <el-button size="small" type="success" @click="saveGroups">保存组</el-button>
+        <el-button size="small" @click="addGroup">添加组</el-button>
+    </div>
+    <div style="flex:1;display:flex;overflow:hidden;padding:12px;gap:12px;">
+        <div style="flex:1;">
+            <table class="group-table">
+                <thead><tr><th>组名</th><th>代码</th><th>描述</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr v-for="g in groupList" :key="g.id" @click="selectGroup(g)"
+                        :style="{background: selectedGroupId===g.id ? '#e6f7ff' : ''}">
+                        <td><input v-model="g.name" /></td>
+                        <td><input v-model="g.code" /></td>
+                        <td><input v-model="g.description" /></td>
+                        <td><el-button size="small" type="danger" @click.stop="deleteGroup(g)">删除</el-button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="width:300px;border-left:1px solid #e4e7ed;padding-left:12px;" v-if="selectedGroupId">
+            <div style="font-weight:bold;margin-bottom:6px;">菜单权限 - [[ selectedGroupName ]]</div>
+            <div class="menu-tree">
+                <template v-for="m in menuTree" :key="m.id">
+                    <label><input type="checkbox" :value="m.id" v-model="checkedMenus" /> [[ m.name ]]</label>
+                    <div v-if="m.children" style="padding-left:20px;">
+                        <label v-for="c in m.children" :key="c.id">
+                            <input type="checkbox" :value="c.id" v-model="checkedMenus" /> [[ c.name ]]
+                        </label>
+                    </div>
+                </template>
+            </div>
+            <el-button size="small" type="primary" @click="saveMenus" style="margin-top:8px;">保存菜单权限</el-button>
+        </div>
+        <div v-else style="width:300px;color:#ccc;text-align:center;padding-top:50px;">请选择左侧组</div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, onMounted } = Vue;
+const { ElMessage, ElMessageBox } = ElementPlus;
+const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const groupList = ref([]);
+        const selectedGroupId = ref(null);
+        const selectedGroupName = ref('');
+        const menuTree = ref([]);
+        const checkedMenus = ref([]);
+
+        const loadGroups = async () => {
+            const r = await axios.get('/api/platform-groups/list/');
+            if(r.data.code===0) groupList.value = r.data.data||[];
+        };
+        const loadMenuTree = async () => {
+            const r = await axios.get('/api/menu-tree/');
+            if(r.data.code===0) menuTree.value = r.data.data||[];
+        };
+
+        const selectGroup = async (g) => {
+            selectedGroupId.value = g.id; selectedGroupName.value = g.name;
+            const r = await axios.get('/api/group-menus/',{params:{group_id:g.id}});
+            checkedMenus.value = r.data.data||[];
+        };
+
+        const saveGroups = async () => {
+            await axios.post('/api/platform-groups/save/',{groups:groupList.value});
+            ElMessage.success('保存成功'); loadGroups();
+        };
+        const addGroup = () => { groupList.value.push({id:null,name:'',code:'',description:''}); };
+        const deleteGroup = async (g) => {
+            if(!g.id){groupList.value=groupList.value.filter(x=>x!==g);return;}
+            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
+            await axios.post('/api/platform-groups/save/',{action:'delete',id:g.id});
+            ElMessage.success('已删除'); loadGroups();
+        };
+      const saveMenus = async () => {
+    const res = await axios.post('/api/group-menus/save/',{group_id:selectedGroupId.value,menu_ids:checkedMenus.value});
+    if (res.data.code === 0) {
+        ElementPlus.ElMessage.success(res.data.msg);
+        const r = await axios.get('/api/group-menus/',{params:{group_id:selectedGroupId.value}});
+        checkedMenus.value = r.data.data || [];
+    } else {
+        ElementPlus.ElMessage.error(res.data.msg);
+    }
+};
+        onMounted(()=>{loadGroups();loadMenuTree();});
+        return {groupList,selectedGroupId,selectedGroupName,menuTree,checkedMenus,
+                selectGroup,saveGroups,addGroup,deleteGroup,saveMenus};
+    }
+});
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}

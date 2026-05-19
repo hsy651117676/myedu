@@ -24,7 +24,7 @@ LOGOUT_REDIRECT_URL = 'login'
 # ==================== 档案扫描图像配置 ====================
 
 # 扫描图片存放根目录（加密存储）
-SCAN_IMAGE_BASE_DIR = '/mnt/datafile/das_image_file'
+SCAN_IMAGE_BASE_DIR = '/mnt/data/das_images'
 
 # PDF输出根目录
 SCAN_PDF_OUTPUT_DIR = '/mnt/data/das_pdf'
@@ -35,6 +35,9 @@ SCAN_IMAGE_TYPES = {
     'GQ': '高清图像',
 }
 
+# 加密密钥
+SCAN_AES_KEY = b"3yj8jbvx" + b'\x00' * 8
+
 # PDF默认设置
 SCAN_PDF_PAGE_SIZE = 'A4'        # A3 / A4 / A5 / B5
 SCAN_PDF_VERTICAL = True         # True纵向 / False横向
@@ -42,8 +45,10 @@ SCAN_PDF_MARGIN_UP = 1           # 上边距（磅）
 SCAN_PDF_MARGIN_DOWN = 1         # 下边距（磅）
 SCAN_PDF_MARGIN_LEFT = 1         # 左边距（磅）
 SCAN_PDF_MARGIN_RIGHT = 1        # 右边距（磅）
-# ==================== 安全配置 ====================
+SCAN_PDF_DPI = 150               # 输出DPI
+SCAN_PDF_JPEG_QUALITY = 85       # JPEG压缩质量(1-100)
 
+# ==================== 安全配置 ====================
 # HTTPS设置
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -72,7 +77,10 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
-
+AUTHENTICATION_BACKENDS = [
+    'main.backends.ArchiveAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 # ==================== 应用配置 ====================
 
 INSTALLED_APPS = [

@@ -1,0 +1,267 @@
+{% extends "layout/base.html" %}
+{% block title %}机构维护{% endblock %}
+
+{% block content %}
+<div id="app" style="padding:8px;height:100vh;display:flex;flex-direction:column;">
+  <div style="flex:1;display:flex;overflow:hidden;gap:8px;">
+
+    <!-- ========== 左侧：搜索 ========== -->
+    <div style="width:280px;border:1px solid #e4e7ed;display:flex;flex-direction:column;flex-shrink:0;border-radius:4px;">
+      <div style="padding:8px;border-bottom:1px solid #e4e7ed;display:flex;gap:4px;">
+        <input v-model="keyword" placeholder="姓名/拼音" @keyup.enter="doSearch"
+               style="flex:1;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;outline:none;">
+        <el-button size="small" type="primary" @click="doSearch" :loading="searching">搜索</el-button>
+      </div>
+      <div style="flex:1;overflow-y:auto;">
+        <div v-for="p in searchList" :key="p.RSID"
+             @click="selectPerson(p)"
+             :style="{padding:'8px 10px',cursor:'pointer',borderBottom:'1px solid #f0f0f0',
+                      background: selectedRsid===p.RSID ? '#e6f7ff' : ''}">
+          <div style="font-weight:bold;font-size:13px;">[[ p.姓名 ]]</div>
+          <div style="color:#909399;font-size:11px;">[[ p.单位 ]] | [[ p.档案编号 ]]</div>
+        </div>
+        <div v-if="searchList.length===0 && keyword" style="text-align:center;color:#909399;padding:20px;">
+          [[ searching ? '搜索中...' : '未找到人员' ]]
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 右侧：编辑 ========== -->
+    <div style="flex:1;overflow-y:auto;">
+
+      <div v-if="!person.RSID" style="text-align:center;color:#909399;margin-top:100px;">
+        请搜索并选择人员
+      </div>
+
+      <template v-if="person.RSID">
+        <!-- 当前人员信息 -->
+        <el-card style="margin-bottom:8px;">
+          <template #header>
+            <span style="font-weight:bold;">[[ person.姓名 ]] - [[ person.单位 ]]</span>
+          </template>
+          <el-descriptions :column="4" border size="small">
+            <el-descriptions-item label="姓名">[[ person.姓名 ]]</el-descriptions-item>
+            <el-descriptions-item label="档案编号">
+              <el-input v-model="person.档案编号" size="small" style="width:100px;" />
+            </el-descriptions-item>
+            <el-descriptions-item label="柜号">
+              <el-input v-model="person.柜号" size="small" style="width:80px;" />
+            </el-descriptions-item>
+            <el-descriptions-item label="层号">
+              <el-input v-model="person.层号" size="small" style="width:80px;" />
+            </el-descriptions-item>
+          </el-descriptions>
+        </el-card>
+
+        <!-- 4张表 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <!-- 表1：本单位所有人员 -->
+          <el-card>
+            <template #header><span style="font-weight:bold;">本单位人员 ([[ unitPersons.length ]])</span></template>
+            <el-table :data="unitPersons" size="small" border stripe max-height="250">
+              <el-table-column prop="姓名" label="姓名" width="80" />
+              <el-table-column prop="档案编号" label="编号" width="80" />
+              <el-table-column prop="柜号" label="柜号" width="60" />
+              <el-table-column prop="层号" label="层号" width="60" />
+            </el-table>
+          </el-card>
+
+          <!-- 表2：同姓人员（本单位） -->
+          <el-card>
+            <template #header><span style="font-weight:bold;">同姓人员 ([[ sameNameList.length ]])</span></template>
+            <el-table :data="sameNameList" size="small" border stripe max-height="250">
+              <el-table-column prop="姓名" label="姓名" width="80" />
+              <el-table-column prop="档案编号" label="编号" width="80" />
+              <el-table-column prop="柜号" label="柜号" width="60" />
+              <el-table-column prop="层号" label="层号" width="60" />
+            </el-table>
+          </el-card>
+
+          <!-- 表3：姓氏编码表 -->
+          <el-card>
+            <template #header><span style="font-weight:bold;">姓氏编码</span></template>
+            <el-table :data="xsbmList" size="small" border stripe max-height="250">
+              <el-table-column prop="xs" label="姓氏" width="60" />
+              <el-table-column prop="id" label="ID" width="80" />
+            </el-table>
+          </el-card>
+
+          <!-- 表4：相邻姓氏编码 -->
+          <el-card>
+            <template #header><span style="font-weight:bold;">相邻姓氏</span></template>
+            <el-table :data="nearXsbmList" size="small" border stripe max-height="250">
+              <el-table-column prop="xs" label="姓氏" width="60" />
+              <el-table-column prop="id" label="ID" width="80" />
+            </el-table>
+          </el-card>
+        </div>
+
+        <!-- 调转单位 -->
+        <el-card style="margin-bottom:8px;">
+          <template #header><span style="font-weight:bold;">调转到新单位</span></template>
+          <div style="display:flex;gap:8px;">
+            <!-- 组织树 -->
+            <div style="width:350px;border:1px solid #e4e7ed;max-height:300px;overflow-y:auto;padding:4px;border-radius:4px;">
+              <div v-for="node in treeData" :key="node.tid">
+                <div @click="toggleTreeNode(node)"
+                     :style="{padding:'3px 6px',cursor:'pointer',fontWeight:node.pid===-1?'bold':'normal',
+                              background: selectedNodeTid===node.tid ? '#e6f7ff' : ''}">
+                  <span v-if="node.pid!==0" style="font-size:11px;">[[ node.expanded ? '▼' : '▶' ]]</span>
+                  [[ node.tname ]]
+                </div>
+                <template v-if="node.expanded && node.children">
+                  <div v-for="child in node.children" :key="child.tid">
+                    <div @click="toggleTreeNode(child)" @click.stop="selectTreeNode(child)"
+                         :style="{padding:'3px 6px 3px 20px',cursor:'pointer',
+                                  background: selectedNodeTid===child.tid ? '#bae7ff' : ''}">
+                      <span v-if="child.pid!==0" style="font-size:11px;">[[ child.expanded ? '▼' : '▶' ]]</span>
+                      [[ child.tname ]]
+                    </div>
+                    <template v-if="child.expanded && child.children">
+                      <div v-for="gc in child.children" :key="gc.tid"
+                           @click.stop="selectTreeNode(gc)"
+                           :style="{padding:'3px 6px 3px 35px',cursor:'pointer',
+                                    background: selectedNodeTid===gc.tid ? '#91d5ff' : ''}">
+                        [[ gc.tname ]]
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div style="margin-bottom:8px;font-size:13px;">
+                目标单位：<b>[[ selectedNodeTname || '未选择' ]]</b>
+              </div>
+              <el-button type="primary" @click="saveAndTransfer" :loading="saving"
+                         :disabled="!selectedNodeTid">
+                保存并调整到该单位
+              </el-button>
+            </div>
+          </div>
+        </el-card>
+      </template>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref } = Vue;
+const { ElMessage, ElMessageBox } = ElementPlus;
+
+const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup() {
+        const keyword = ref('');
+        const searching = ref(false);
+        const searchList = ref([]);
+        const selectedRsid = ref('');
+        const person = ref({});
+        const unitPersons = ref([]);
+        const sameNameList = ref([]);
+        const xsbmList = ref([]);
+        const nearXsbmList = ref([]);
+        const treeData = ref([]);
+        const selectedNodeTid = ref('');
+        const selectedNodeTname = ref('');
+        const saving = ref(false);
+
+        const doSearch = async () => {
+            const kw = keyword.value.trim();
+            if (!kw) return;
+            searching.value = true;
+            try {
+                const res = await axios.get('/business/organization/api/search/', { params: { keyword: kw } });
+                searchList.value = res.data.data || [];
+            } catch (e) {
+                console.error('搜索失败', e);
+            } finally {
+                searching.value = false;
+            }
+        };
+
+        const selectPerson = async (p) => {
+            selectedRsid.value = p.RSID;
+            try {
+                const res = await axios.get('/business/organization/api/detail/', { params: { rsid: p.RSID } });
+                if (res.data.code === 0) {
+                    person.value = res.data.data.person || {};
+                    unitPersons.value = res.data.data.unitPersons || [];
+                    sameNameList.value = res.data.data.sameNameList || [];
+                    xsbmList.value = res.data.data.xsbmList || [];
+                    nearXsbmList.value = res.data.data.nearXsbmList || [];
+                }
+                // 加载树
+                const treeRes = await axios.get('/business/organization/api/tree/');
+                if (treeRes.data.code === 0) {
+                    treeData.value = treeRes.data.data.map(n => ({...n, expanded: false, children: []}));
+                }
+                selectedNodeTid.value = '';
+                selectedNodeTname.value = '';
+            } catch (e) {
+                console.error('加载详情失败', e);
+            }
+        };
+
+        const toggleTreeNode = async (node) => {
+            if (node.expanded) { node.expanded = false; return; }
+            if (node.children && node.children.length > 0) {
+                node.expanded = true;
+                return;
+            }
+            try {
+                const res = await axios.get('/business/organization/api/tree-children/', { params: { tid: node.tid } });
+                if (res.data.code === 0) {
+                    node.children = res.data.data.map(c => ({...c, expanded: false, children: []}));
+                    node.expanded = true;
+                }
+            } catch (e) {
+                console.error('加载子节点失败', e);
+            }
+        };
+
+        const selectTreeNode = (node) => {
+            selectedNodeTid.value = node.tid;
+            selectedNodeTname.value = node.tname;
+        };
+
+        const saveAndTransfer = async () => {
+            try {
+                await ElMessageBox.confirm(
+                    `确定将 ${person.value.姓名} 调转到 ${selectedNodeTname.value} 并保存吗？`,
+                    '确认操作', { type: 'warning' }
+                );
+            } catch { return; }
+
+            saving.value = true;
+            try {
+                const res = await axios.post('/business/organization/api/save-and-transfer/', {
+                    rsid: person.value.RSID,
+                    rybh: person.value.档案编号 || '',
+                    gh: person.value.柜号 || '',
+                    ch: person.value.层号 || '',
+                    newBm: selectedNodeTid.value
+                });
+                ElMessage[res.data.code === 0 ? 'success' : 'error'](res.data.msg);
+                if (res.data.code === 0) {
+                    selectPerson({ RSID: person.value.RSID });
+                }
+            } catch (e) {
+                ElMessage.error('操作失败');
+            } finally {
+                saving.value = false;
+            }
+        };
+
+        return {
+            keyword, searching, searchList, selectedRsid,
+            person, unitPersons, sameNameList, xsbmList, nearXsbmList,
+            treeData, selectedNodeTid, selectedNodeTname, saving,
+            doSearch, selectPerson, toggleTreeNode, selectTreeNode, saveAndTransfer
+        };
+    }
+});
+
+app.use(ElementPlus).mount('#app');
+</script>
+{% endblock %}

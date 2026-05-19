@@ -6,6 +6,8 @@ from main.db_utils import _get_conn
 import json
 import logging
 import base64
+from main.decorators import archive_perm_required
+#@archive_perm_required
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,7 @@ def _get_yhbh(request):
 
 
 @login_required
+@archive_perm_required
 def person_cadre_view(request):
     return render(request, "archives/person_cadre.html")
 

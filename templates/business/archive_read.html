@@ -1,0 +1,318 @@
+{% extends "layout/base.html" %}
+{% block title %}档案查阅{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.info-table { border-collapse:collapse; width:max-content; min-width:100%; font-size:12px; }
+.info-table th, .info-table td { border:1px solid #ddd; padding:3px 6px; text-align:center; white-space:nowrap; }
+.info-table th { background:#f5f7fa; position:sticky; top:0; z-index:1; }
+.form-table { border-collapse:collapse; width:100%; font-size:13px; }
+.form-table th, .form-table td { border:1px solid #ddd; padding:4px 8px; }
+.form-table th { background:#f5f7fa; text-align:right; width:80px; }
+.form-table td input { width:100%; border:1px solid #ddd; padding:4px 6px; font-size:13px; border-radius:2px; }
+.form-table td .suggest-wrap { position:relative; }
+.suggest-list { position:absolute; top:100%; left:0; right:0; max-height:150px; overflow-y:auto; background:#fff; border:1px solid #409eff; z-index:99; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+.suggest-list div { padding:4px 8px; cursor:pointer; font-size:12px; }
+.suggest-list div:hover { background:#e6f7ff; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+.drag-bar-h { height:4px; background:#e4e7ed; cursor:row-resize; flex-shrink:0; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+
+    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;flex-shrink:0;">
+        <span style="font-weight:600;">📋 档案查阅</span>
+    </div>
+
+    <div style="flex:1;display:flex;overflow:hidden;">
+
+        <!-- ========== 左 ========== -->
+        <div id="leftPanel" class="resize-panel" style="width:50%;min-width:300px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;">
+
+            <div id="leftTop" class="resize-panel-v" style="height:40%;min-height:180px;display:flex;flex-direction:column;overflow:hidden;">
+                <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;font-weight:bold;flex-shrink:0;">当前查阅表</div>
+                <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;">
+                    <el-button size="small" type="primary" @click="newRecord">新增查阅</el-button>
+                    <el-button size="small" type="success" @click="saveRecord">保存</el-button>
+                    <el-button size="small" type="danger" @click="deleteRecord" :disabled="!form.id">删除</el-button>
+                    <el-button size="small" @click="printRecord">打印</el-button>
+                </div>
+                <div style="flex:1;overflow:auto;padding:8px;">
+          <table class="form-table" style="max-width:700px;">
+    <tr><th>查阅人</th><td><input v-model="form.cyr" /></td><th>查阅单位</th>
+        <td><el-autocomplete v-model="form.cydw" :fetch-suggestions="(q,cb)=>fetchSuggest('CYDW',q,cb)" placeholder="查阅单位" size="small" style="width:100%;" /></td></tr>
+    <tr><th>批准人</th>
+        <td><el-autocomplete v-model="form.pzr" :fetch-suggestions="(q,cb)=>fetchSuggest('PZR',q,cb)" placeholder="批准人" size="small" style="width:100%;" /></td>
+        <th>查阅理由</th>
+        <td><el-autocomplete v-model="form.cyly" :fetch-suggestions="(q,cb)=>fetchSuggest('CYLY',q,cb)" placeholder="查阅理由" size="small" style="width:100%;" /></td></tr>
+    <tr><th>经办人</th>
+        <td><el-autocomplete v-model="form.jbr" :fetch-suggestions="(q,cb)=>fetchSuggest('JBR',q,cb)" placeholder="经办人" size="small" style="width:100%;" /></td>
+        <th>备注</th><td><input v-model="form.bz" /></td></tr>
+    <tr><th>摘抄范围</th><td><input v-model="form.zcfw" /></td><th>摘抄人</th><td><input v-model="form.zcr" /></td></tr>
+    <tr><th>被查阅人数</th><td>[[ personList.length ]]</td><th>查阅时间</th><td><input v-model="form.lcrq" /></td></tr>
+</table>
+                </div>
+            </div>
+
+            <div class="drag-bar-h" data-target="leftTop" style="height:4px;background:#e4e7ed;cursor:row-resize;flex-shrink:0;"></div>
+
+            <div id="leftBottom" style="flex:1;min-height:150px;display:flex;flex-direction:column;overflow:hidden;">
+                <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                    <span style="font-weight:bold;">被查阅人列表</span>
+                    <el-button size="small" @click="addPerson">添加</el-button>
+                    <el-button size="small" @click="removeCheckedPersons" :disabled="checkedPersons.length===0">删除选中</el-button>
+                </div>
+                <div style="flex:1;overflow:auto;">
+                    <table class="info-table">
+                        <thead><tr>
+                            <th><input type="checkbox" @change="toggleAllPersons" :checked="allPersonsChecked" /></th>
+                            <th>姓名</th><th>性别</th><th>出生年月</th><th>参工时间</th><th>民族</th>
+                            <th>档案编号</th><th>政治面貌</th><th>入党时间</th><th>单位及职务</th>
+                            <th>任现职时间</th><th>身份证号</th><th>全日制学历</th><th>全日制学位</th>
+                            <th>全日制院校</th><th>全日制专业</th><th>在职学历</th><th>在职学位</th>
+                            <th>在职院校</th><th>在职专业</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr v-for="(p,i) in personList" :key="i" :style="{background: p._checked ? '#e6f7ff' : ''}">
+                                <td><input type="checkbox" v-model="p._checked" /></td>
+                                <td>[[ p.姓名 ]]</td><td>[[ p.性别 ]]</td><td>[[ p.出生年月 ]]</td>
+                                <td>[[ p.参加工作时间 ]]</td><td>[[ p.民族 ]]</td><td>[[ p.档案编号 ]]</td>
+                                <td>[[ p.政治面貌 ]]</td><td>[[ p.入党时间 ]]</td><td>[[ p.单位及职务 ]]</td>
+                                <td>[[ p.任现职时间 ]]</td><td>[[ p.身份证号 ]]</td><td>[[ p.全日制学历 ]]</td>
+                                <td>[[ p.全日制学位 ]]</td><td>[[ p.全日制院校 ]]</td><td>[[ p.全日制专业 ]]</td>
+                                <td>[[ p.在职学历 ]]</td><td>[[ p.在职学位 ]]</td><td>[[ p.在职院校 ]]</td>
+                                <td>[[ p.在职专业 ]]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="drag-bar" data-target="left" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <!-- ========== 右 ========== -->
+        <div id="rightPanel" class="resize-panel" style="flex:1;min-width:300px;display:flex;flex-direction:column;overflow:hidden;padding:8px;">
+            <div style="font-weight:bold;margin-bottom:8px;flex-shrink:0;">历史查阅表</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;flex-shrink:0;">
+                <input v-model="q.cydw" placeholder="查阅单位" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+                <input v-model="q.cyly" placeholder="查阅理由" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+                <input v-model="q.cyr" placeholder="查阅人" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+                <input v-model="q.lcrqBegin" placeholder="时间起" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+                <input v-model="q.lcrqEnd" placeholder="时间止" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+                <input v-model="q.bcyrxm" placeholder="被查阅人" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+                <el-button size="small" @click="loadHistory(1)">查询</el-button>
+            </div>
+            <div style="flex:1;overflow:auto;">
+                <table class="info-table">
+                    <thead><tr><th>ID</th><th>查阅人</th><th>单位</th><th>理由</th><th>时间</th><th>经办人</th><th>被查阅人数</th><th>被查阅人</th></tr></thead>
+                    <tbody>
+                        <tr v-for="r in historyList" :key="r.ID" @click="selectHistory(r)"
+                            :style="{background: form.id===r.ID ? '#e6f7ff' : ''}">
+                            <td>[[ r.ID ]]</td><td>[[ r.cyr ]]</td><td>[[ r.cydw ]]</td>
+                            <td>[[ r.cyly ]]</td><td>[[ r.lcrq ]]</td><td>[[ r.jbr ]]</td>
+                            <td>[[ r.xh ]]</td><td>[[ r.bcyrxm ]]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-if="historyTotal>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+                <el-pagination small background layout="total, sizes, prev, pager, next"
+                    :page-sizes="[20,30,50,100]" :page-size="pageSize" :total="historyTotal"
+                    :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, reactive, computed, onMounted } = Vue;
+const { ElMessage, ElMessageBox } = ElementPlus;
+
+const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const form = ref({});
+        const personList = ref([]);
+        const historyList = ref([]);
+        const historyTotal = ref(0);
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+        const q = reactive({ cydw:'', cyly:'', cyr:'', lcrqBegin:'', lcrqEnd:'', bcyrxm:'' });
+
+        // 下拉提示
+        const suggestData = reactive({ CYDW:[], PZR:[], CYLY:[], JBR:[] });
+        const loadSuggest = async (field) => {
+            if (suggestData[field].length) return;
+            const res = await axios.get('/business/api/look/suggest/', { params: { field } });
+            if (res.data.code===0) suggestData[field] = res.data.data||[];
+        };
+        const fetchSuggest = (field, queryString, cb) => {
+            loadSuggest(field);
+            const list = suggestData[field] || [];
+            const results = queryString
+                ? list.filter(x => x.toLowerCase().includes(queryString.toLowerCase())).map(x=>({value:x}))
+                : list.map(x=>({value:x}));
+            cb(results);
+        };
+
+        // 被查阅人
+        const checkedPersons = computed(() => personList.value.filter(p=>p._checked));
+        const allPersonsChecked = computed(() => personList.value.length>0 && personList.value.every(p=>p._checked));
+        const toggleAllPersons = (e) => { personList.value.forEach(p=>p._checked=e.target.checked); };
+
+        const newRecord = () => {
+            form.value = { lcrq: new Date().toISOString().slice(0,10).replace(/-/g,'') };
+            personList.value = [];
+        };
+
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'person-select') {
+                const p = e.data.data;
+                if (!personList.value.find(x=>x.RSID==p.rsid)) {
+                    personList.value.push({ RSID: p.rsid, 姓名: p.displayName||p.tname, _checked: false });
+                    loadPersons();
+                }
+            }
+        });
+
+        const addPerson = () => { window.open('/components/person-panel-embed/', '_blank', 'width=300,height=600'); };
+        const removeCheckedPersons = () => { personList.value = personList.value.filter(p=>!p._checked); };
+
+        const loadPersons = async () => {
+            const rsids = personList.value.map(p=>p.RSID).join(',');
+            if (!rsids) return;
+            const res = await axios.get('/business/api/look/persons/', { params: { rsids } });
+            if (res.data.code===0) {
+                const data = res.data.data||[];
+                personList.value = personList.value.map(p => {
+                    const full = data.find(d=>String(d.RSID)===String(p.RSID));
+                    return full ? { ...p, ...full, _checked: p._checked } : p;
+                });
+            }
+        };
+
+        const saveRecord = async () => {
+            if (personList.value.length < 1) { ElMessage.warning('被查阅人至少1人'); return; }
+            if (!form.value.cydw) { ElMessage.warning('查阅单位不能为空'); return; }
+            if (!form.value.pzr) { ElMessage.warning('批准人不能为空'); return; }
+            if (!form.value.cyly) { ElMessage.warning('查阅理由不能为空'); return; }
+            if (!form.value.jbr) { ElMessage.warning('经办人不能为空'); return; }
+
+            const res = await axios.post('/business/api/look/save/', {
+                action: 'save', id: form.value.id || '',
+                xh: personList.value.length,
+                pzr: form.value.pzr||'', cydw: form.value.cydw||'',
+                cyly: form.value.cyly||'', bcyrrsid: personList.value.map(p=>p.RSID).join(','),
+                lcrq: form.value.lcrq||'', cyr: form.value.cyr||'',
+                zcfw: form.value.zcfw||'', zcr: form.value.zcr||'',
+                jbr: form.value.jbr||'', bz: form.value.bz||'',
+                bcyrxm: personList.value.map(p=>p.姓名).join(',')
+            });
+            if (res.data.code===0) { ElMessage.success('保存成功'); loadHistory(currentPage.value); }
+            else ElMessage.error(res.data.msg);
+        };
+
+        const deleteRecord = async () => {
+            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
+            await axios.post('/business/api/look/save/', { action:'delete', id: form.value.id });
+            ElMessage.success('已删除'); newRecord(); loadHistory(1);
+        };
+
+        const printRecord = () => { ElMessage.info('打印功能开发中'); };
+
+        const selectHistory = (r) => {
+            form.value = { ...r };
+            personList.value = r.bcyrrsid ? r.bcyrrsid.split(',').map((id,i)=>({RSID:id,姓名:(r.bcyrxm||'').split(',')[i]||'',_checked:false})) : [];
+            loadPersons();
+        };
+
+        const loadHistory = async (page) => {
+            const params = { page: page||1, pageSize: pageSize.value };
+            if (q.cydw) params.cydw = q.cydw;
+            if (q.cyly) params.cyly = q.cyly;
+            if (q.cyr) params.cyr = q.cyr;
+            if (q.bcyrxm) params.bcyrxm = q.bcyrxm;
+            const res = await axios.get('/business/api/look/list/', { params });
+            if (res.data.code===0) { historyList.value=res.data.data||[]; historyTotal.value=res.data.total||0; currentPage.value=page||1; }
+        };
+
+        const onPageChange = (p) => loadHistory(p);
+        const onSizeChange = (s) => { pageSize.value=s; loadHistory(1); };
+
+        // 拖动条
+        const initDragBars = () => {
+            document.querySelectorAll('.drag-bar').forEach(bar => {
+                bar.addEventListener('mousedown', (e) => {
+                    const panel = document.getElementById(bar.dataset.target+'Panel');
+                    if (!panel) return;
+                    const startX = e.clientX, startW = panel.offsetWidth;
+                    document.querySelectorAll('.resize-panel').forEach(p => {
+                        const iframe = p.querySelector('iframe');
+                        if (iframe) iframe.style.pointerEvents = 'none';
+                    });
+                    const onMove = (ev) => {
+                        let w = startW + ev.clientX - startX;
+                        if (w < 250) w = 250;
+                        if (w > 900) w = 900;
+                        panel.style.width = w + 'px';
+                        panel.style.minWidth = w + 'px';
+                        panel.style.flexShrink = '0'; panel.style.flexGrow = '0';
+                    };
+                    const onUp = () => {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                        document.querySelectorAll('.resize-panel').forEach(p => {
+                            const iframe = p.querySelector('iframe');
+                            if (iframe) iframe.style.pointerEvents = '';
+                        });
+                    };
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                });
+            });
+            document.querySelectorAll('.drag-bar-h').forEach(bar => {
+                bar.addEventListener('mousedown', (e) => {
+                    const panel = document.getElementById(bar.dataset.target);
+                    if (!panel) return;
+                    const startY = e.clientY, startH = panel.offsetHeight;
+                    const onMove = (ev) => {
+                        let h = startH + ev.clientY - startY;
+                        if (h < 120) h = 120;
+                        if (h > 500) h = 500;
+                        panel.style.height = h + 'px';
+                        panel.style.minHeight = h + 'px';
+                        panel.style.flexShrink = '0';
+                    };
+                    const onUp = () => {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.style.cursor = '';
+                    };
+                    document.body.style.cursor = 'row-resize';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                });
+            });
+        };
+
+        onMounted(() => { loadHistory(1); newRecord(); initDragBars(); });
+
+        return {
+            form, personList, checkedPersons, allPersonsChecked, toggleAllPersons,
+            historyList, historyTotal, currentPage, pageSize, q,
+            fetchSuggest,
+            newRecord, addPerson, removeCheckedPersons, saveRecord, deleteRecord, printRecord,
+            selectHistory, loadHistory, onPageChange, onSizeChange
+        };
+    }
+});
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}

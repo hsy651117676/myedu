@@ -16,6 +16,8 @@ from urllib.parse import quote
 import xlrd
 from xlutils.copy import copy
 from main.db_utils import _get_conn
+from main.decorators import archive_perm_required
+#@archive_perm_required
 
 def fmt6(s):
     if s and len(s) >= 6:
@@ -41,6 +43,7 @@ def db():
 
 
 @login_required
+@archive_perm_required
 def person_salary_view(request):
     return render(request, 'archives/person_salary.html')
 

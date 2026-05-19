@@ -10,6 +10,8 @@ import pyodbc
 from contextlib import contextmanager
 from main.field_maps import RS_INFO_MAP, to_frontend, to_backend
 from main.db_utils import _get_conn
+from main.decorators import archive_perm_required
+#@archive_perm_required
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +39,10 @@ def db():
 
 # ==================== 权限 ====================
 
-
 def _get_yhbh(request):
+    archive_user = request.session.get('archive_user', {})
+    if archive_user.get('yhbh'):
+        return archive_user['yhbh']
     try:
         return request.user.profile.yhbh
     except:
@@ -53,222 +57,9 @@ def _check_perm(request):
 
 
 @login_required
+@archive_perm_required
 def person_view(request):
-    if not _check_perm(request):
-        return render(request, "archives/no_permission.html")
     return render(request, "archives/person.html")
-
-
-# ==================== 树 ====================
-
-
-@login_required
-def tree_root_api(request):
-    cache_key = "archives_tree_root_v2"
-    data = cache.get(cache_key)
-    if data:
-        return JsonResponse({"code": 0, "data": data})
-    try:
-        with db() as c:
-            c.execute(
-                "SELECT TID, TNAME, PID, '' AS RSID, 0 AS isPerson, '' AS sex FROM BMGL WHERE PID = -1 ORDER BY DABH"
-            )
-            rows = c.fetchall()
-            data = [
-                {
-                    "tid": str(r[0]),
-                    "tname": r[1],
-                    "pid": str(r[2]),
-                    "rsid": "",
-                    "isPerson": False,
-                    "sex": "",
-                }
-                for r in rows
-            ]
-        cache.set(cache_key, data, 60)
-        return JsonResponse({"code": 0, "data": data})
-    except Exception as e:
-        return JsonResponse({"code": 500, "msg": str(e)})
-
-
-@login_required
-def tree_children_api(request):
-    tid = request.GET.get("tid", "")
-    if not tid:
-        return JsonResponse({"code": 400, "msg": "缺少tid"})
-
-    cache_key = f"archives_tree_children_{tid}_v2"
-    data = cache.get(cache_key)
-    if data:
-        return JsonResponse({"code": 0, "data": data})
-
-    try:
-        with db() as c:
-            c.execute("SELECT COUNT(*) FROM BMGL WHERE PID = ?", (tid,))
-            has_children = c.fetchone()[0] > 0
-            if has_children:
-                c.execute(
-                    """
-                    SELECT TID, TNAME, PID,
-                           CASE WHEN PID='0' THEN RSID ELSE '' END AS RSID,
-                           CASE WHEN PID='0' THEN 1 ELSE 0 END AS isPerson, sex
-                    FROM BMGL WHERE PID=? OR (TID=? AND PID='0')
-                    ORDER BY DABH, TID
-                """,
-                    (tid, tid),
-                )
-            else:
-                c.execute(
-                    "SELECT TID, TNAME, PID, RSID, 1 AS isPerson, sex FROM BMGL WHERE PID='0' AND TID=? ORDER BY DABH",
-                    (tid,),
-                )
-            rows = c.fetchall()
-            data = [
-                {
-                    "tid": str(r[0]),
-                    "tname": r[1],
-                    "pid": str(r[2]),
-                    "rsid": str(r[3]) if r[3] else "",
-                    "isPerson": bool(r[4]),
-                    "sex": r[5] if r[5] else "",
-                }
-                for r in rows
-            ]
-        cache.set(cache_key, data, 60)
-        return JsonResponse({"code": 0, "data": data})
-    except Exception as e:
-        return JsonResponse({"code": 500, "msg": str(e)})
-
-
-# ==================== 搜索人员 ====================
-
-
-@login_required
-def person_search_api(request):
-    """
-    搜索人员：支持姓名、拼音全拼、拼音首字母。
-    返回格式符合前端 person.html 要求。
-    """
-    keyword = request.GET.get("keyword", "").strip()
-    if not keyword:
-        return JsonResponse({"code": 400, "msg": "缺少关键词"})
-
-    # 限制最大返回条数，防止性能问题
-    MAX_RESULTS = 200
-
-    # 判断是否为纯字母（拼音搜索）
-    is_pinyin = keyword.isalpha()
-
-    # 参数化查询，防止注入
-    sql = """
-        SELECT 
-            r.RSID,
-            r.XM AS 姓名,
-            r.XMPY,
-            r.STRXMPY,
-            COALESCE(d.BMMC, '未分配单位') AS 单位名称
-        FROM RS_INFO r
-        LEFT JOIN USERS_DEPARTMENT ud ON r.RSID = ud.RSID
-        LEFT JOIN DEPART d ON ud.DEPARTMENTID = d.BM
-        WHERE 1=1
-    """
-    params = []
-
-    if is_pinyin:
-        # 拼音搜索：匹配全拼或首字母
-        sql += """ AND (r.XMPY LIKE ? OR r.STRXMPY LIKE ?) """
-        params.extend([f"%{keyword}%", f"%{keyword}%"])
-    else:
-        # 汉字姓名搜索
-        sql += """ AND r.XM LIKE ? """
-        params.append(f"%{keyword}%")
-
-    # 限制数量
-    sql += f" ORDER BY r.RYBH OFFSET 0 ROWS FETCH NEXT {MAX_RESULTS} ROWS ONLY"
-
-    try:
-        with db() as cursor:
-            cursor.execute(sql, params)
-            cols = [col[0] for col in cursor.description]
-            rows = [dict(zip(cols, row)) for row in cursor.fetchall()]
-
-        # 转换为前端期望格式
-        results = []
-        for row in rows:
-            display_name = row.get("姓名", "未知姓名")
-            unit_name = row.get("单位名称", "未知单位")
-            match_type = ""
-            if is_pinyin:
-                match_type = "拼音匹配"
-            results.append(
-                {
-                    "rsid": str(row["RSID"]),
-                    "displayName": display_name,
-                    "unitName": unit_name,
-                    "matchType": match_type,
-                }
-            )
-
-        return JsonResponse({"code": 0, "data": results, "total": len(results)})
-    except Exception as e:
-        logger.error(f"搜索失败: {e}")
-        return JsonResponse({"code": 500, "msg": f"搜索失败: {str(e)}"})
-
-
-@login_required
-def person_list_api(request):
-    unit_id = request.GET.get("unit_id", "0")
-    name = request.GET.get("name", "").strip()
-    page = int(request.GET.get("page", 1))
-    page_size = int(request.GET.get("pageSize", 30))
-
-    conn = None
-    try:
-        conn = _get_conn()
-        cursor = conn.cursor()
-
-        where = "1=1"
-        params = []
-        if unit_id and unit_id != "0":
-            where += " AND d.DEPARTMENTID = ?"
-            params.append(int(unit_id))
-        if name:
-            where += " AND b.XM LIKE ?"
-            params.append(f"%{name}%")
-
-        # 总数
-        cursor.execute(
-            f"SELECT COUNT(*) FROM USERS_DEPARTMENT d JOIN RS_INFO b ON d.RSID=b.RSID WHERE {where}",
-            params,
-        )
-        total = cursor.fetchone()[0]
-
-        # 分页
-        cursor.execute(
-            f"""
-            SELECT b.RSID AS rsid, b.XM AS 姓名, b.XB AS 性别, c.BMMC AS 单位,
-                   b.RYBH AS 档案编号, y.GH AS 柜号, y.CH AS 层号
-            FROM USERS_DEPARTMENT d
-            JOIN RS_INFO b ON d.RSID=b.RSID
-            LEFT JOIN DEPART c ON d.DEPARTMENTID=c.BM
-            LEFT JOIN YW_INFO y ON b.RSID=y.RSID
-            WHERE {where}
-            ORDER BY b.RYBH
-            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
-        """,
-            params + [(page - 1) * page_size, page_size],
-        )
-
-        cols = [col[0] for col in cursor.description]
-        rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
-        cursor.close()
-
-        return JsonResponse({"code": 0, "data": rows, "total": total})
-    except Exception as e:
-        return JsonResponse({"code": 500, "msg": str(e)})
-    finally:
-        if conn:
-            conn.close()
 
 
 # ==================== 单位列表 ====================
@@ -466,10 +257,12 @@ def person_save_api(request):
 
 
 @login_required
+@archive_perm_required
 def person_basic_view(request):
     return render(request, "archives/person_basic.html")
 
 
 @login_required
+@archive_perm_required
 def person_salary_view(request):
     return render(request, "archives/person_salary.html")

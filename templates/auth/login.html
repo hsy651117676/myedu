@@ -96,6 +96,11 @@
       </el-form-item>
 
       <el-form-item>
+        <el-checkbox v-model="form.isArchiveUser" style="font-size:13px;">
+          档案系统用户登录
+        </el-checkbox>
+      </el-form-item>
+      <el-form-item>
         <el-button 
           type="primary" 
           native-type="submit" 
@@ -128,7 +133,8 @@ const app = createApp({
     const form = reactive({
       username: '',
       password: '',
-      captcha: ''
+      captcha: '',
+      isArchiveUser: true,
     });
 const showCertWarning = ref(false);
 
@@ -187,6 +193,7 @@ checkCert();
         const csrfToken = getCSRFToken();
         if (csrfToken) {
           formData.append('csrfmiddlewaretoken', csrfToken);
+          formData.append('is_archive_user', form.isArchiveUser ? '1' : '0');
         }
         
         const response = await fetch('/login/', {
@@ -239,3 +246,4 @@ app.config.compilerOptions.delimiters = ['[[', ']]'];
 app.use(ElementPlus).mount('#app');
 </script>
 {% endblock %}
+

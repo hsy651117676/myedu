@@ -12,9 +12,12 @@ from xlutils.copy import copy
 from urllib.parse import quote
 import openpyxl
 from main.db_utils import _get_conn
+from main.decorators import archive_perm_required
+#@archive_perm_required
 
 
 @login_required
+@archive_perm_required
 def person_position_view(request):
     return render(request, "archives/person_position.html")
 

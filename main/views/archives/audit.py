@@ -14,6 +14,8 @@ import openpyxl
 from urllib.parse import quote
 from main.db_utils import _get_conn
 from django.http import HttpResponse
+from main.decorators import archive_perm_required
+#@archive_perm_required
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,13 @@ def _get_yhbh(request):
 
 
 @login_required
+@archive_perm_required
 def person_audit_view(request):
     return render(request, 'archives/person_audit.html')
 
 
 @login_required
+@archive_perm_required
 def audit_data_api(request):
     rsid = request.GET.get('rsid', '')
     if not rsid:
@@ -212,25 +216,25 @@ def _generate_proof_pdf(rsid, proof_type, yhbh):
     width, height = A4
 
     # 标题
-    c.setFont('Chinese', 18)
-    c.drawCentredString(width/2, height-50, "干部人事档案专项审核证明")
+    c.setFont('Chinese', 22)
+    c.drawCentredString(width/2, height-120, "干部人事档案专项审核证明")
 
     # 正文（首行缩进2字符）
     style = ParagraphStyle(
         'ChineseStyle',
         fontName='Chinese',
-        fontSize=12,
+        fontSize=16,
         leading=24,
         firstLineIndent=24,  # 首行缩进2字符
         alignment=4,  # 两端对齐
     )
     text = data.get('paragraph', '').replace('\n', '<br/>')
     p = Paragraph(text, style)
-    p.wrapOn(c, width-160, height-280)
+    p.wrapOn(c, width-160, height-160)
     p.drawOn(c, 80, height-380)
 
     # 落款（右对齐）
-    c.setFont('Chinese', 12)
+    c.setFont('Chinese', 16)
     today = datetime.now().strftime('%Y年%m月%d日')
     c.drawRightString(width-120, 200, "盘州市教育局档案室")
     c.drawRightString(width-120, 175, today)

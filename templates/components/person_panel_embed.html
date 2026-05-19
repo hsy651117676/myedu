@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/element-plus.min.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-size: 13px; font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .tree-node { padding: 3px 6px; cursor: pointer; white-space: nowrap; }
+    .tree-node:hover { background: #e8f0fe; }
+    .tree-unit { font-weight: bold; }
+    .tree-person { color: #606266; }
+    .tree-person.active { background: #d0e4fc; }
+    .search-item { padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+    .search-item:hover { background: #e8f0fe; }
+    .search-item.active { background: #d0e4fc; }
+    .pagination-bar { padding: 6px; text-align: center; border-top: 1px solid #e4e7ed; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh;display:flex;flex-direction:column;">
+
+    <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;display:flex;gap:4px;flex-shrink:0;">
+        <input v-model="keyword" placeholder="姓名/拼音" @keyup.enter="doSearch(1)"
+       style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;outline:none;">
+      <el-button size="small" type="primary" @click="doSearch(1)" :loading="searching">搜索</el-button>
+      <el-button v-if="showSearch" size="small" @click="backToTree">返回</el-button>
+    </div>
+
+    <div v-show="!showSearch" style="flex:1;overflow-y:auto;padding:4px;">
+      <template v-for="node in treeData" :key="node.tid">
+        <div v-if="!node.isPerson" class="tree-node tree-unit" @click.stop="toggleNode(node)">
+          <span style="font-size:11px;" v-text="node.expanded ? '▼' : '▶'"></span> 🏢 {{ node.tname }}
+        </div>
+        <template v-if="node.expanded && node.children">
+          <div v-for="child in node.children" :key="child.tid">
+            <div v-if="!child.isPerson" class="tree-node tree-unit" style="padding-left:18px;" @click.stop="toggleNode(child)">
+              <span style="font-size:11px;" v-text="child.expanded ? '▼' : '▶'"></span> 🏫 {{ child.tname }}
+            </div>
+            <template v-if="child.expanded && child.children">
+              <div v-for="gc in child.children" :key="gc.tid"
+                   class="tree-node tree-person" style="padding-left:32px;"
+                   :class="{ active: currentRsid===gc.rsid }"
+                   @click.stop="selectPerson(gc)">
+                {{ gc.sex === '男' ? '💁‍♂️' : gc.sex === '女' ? '🙋‍♀️' : '👤' }} {{ gc.tname }}
+              </div>
+            </template>
+            <div v-if="child.isPerson"
+                 class="tree-node tree-person" style="padding-left:18px;"
+                 :class="{ active: currentRsid===child.rsid }"
+                 @click.stop="selectPerson(child)">
+              {{ child.sex === '男' ? '💁‍♂️' : child.sex === '女' ? '🙋‍♀️' : '👤' }} {{ child.tname }}
+            </div>
+          </div>
+        </template>
+        <div v-if="node.isPerson"
+             class="tree-node tree-person"
+             :class="{ active: currentRsid===node.rsid }"
+             @click.stop="selectPerson(node)">
+          {{ node.sex === '男' ? '💁‍♂️' : node.sex === '女' ? '🙋‍♀️' : '👤' }} {{ node.tname }}
+        </div>
+      </template>
+    </div>
+
+    <div v-show="showSearch" style="flex:1;overflow-y:auto;padding:4px;">
+      <div v-for="p in searchList" :key="p.rsid" class="search-item"
+           :class="{ active: currentRsid===p.rsid }"
+           @click="selectSearch(p)">
+        <div style="font-weight:bold;">{{ p.displayName }}</div>
+        <div style="color:#909399;font-size:11px;">{{ p.unitName }}</div>
+      </div>
+      <div v-if="searchList.length===0 && !searching" style="text-align:center;color:#909399;padding:20px;">未找到人员</div>
+      <div v-if="searching" style="text-align:center;padding:20px;">搜索中...</div>
+    </div>
+
+    <div v-if="showSearch && searchTotal > 0" class="pagination-bar">
+      <el-pagination small background layout="total, sizes, prev, pager, next"
+        :page-sizes="[20, 30, 50, 100]" :page-size="searchPageSize"
+        :total="searchTotal" :current-page="searchPage"
+        @size-change="onSizeChange" @current-change="onPageChange">
+      </el-pagination>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const keyword = ref('');
+        const searching = ref(false);
+        const showSearch = ref(false);
+        const searchList = ref([]);
+        const searchPage = ref(1);
+        const searchPageSize = ref(30);
+        const searchTotal = ref(0);
+        const lastKeyword = ref('');
+        const treeData = ref([]);
+        const currentRsid = ref('');
+
+        const loadTree = async () => {
+          try {
+            const res = await axios.get('/components/tree/');
+            if (res.data.code === 0) {
+              treeData.value = res.data.data.map(n => ({
+                tid: n.TID, tname: n.TNAME, pid: n.PID,
+                rsid: String(n.RSID), sex: n.SEX || '',
+                expanded: false, children: [],
+                isPerson: n.RSID !== 0 && n.RSID !== '0' && n.RSID !== ''
+              }));
+            }
+          } catch (e) { console.error(e); }
+        };
+
+        const toggleNode = async (node) => {
+          if (node.expanded) { node.expanded = false; return; }
+          if (node.children && node.children.length > 0) { node.expanded = true; return; }
+          try {
+            const res = await axios.get('/components/tree-children/', { params: { tid: node.tid } });
+            if (res.data.code === 0) {
+              node.children = res.data.data.map(c => ({
+                tid: c.TID, tname: c.TNAME, pid: c.PID,
+                rsid: String(c.RSID), sex: c.SEX || '',
+                expanded: false, children: [],
+                isPerson: c.RSID !== 0 && c.RSID !== '0' && c.RSID !== ''
+              }));
+              node.expanded = true;
+            }
+          } catch (e) { console.error(e); }
+        };
+
+        const selectPerson = (node) => {
+          currentRsid.value = node.rsid;
+          window.parent.postMessage({
+            type: 'person-select',
+            data: { rsid: node.rsid, tname: node.tname, displayName: node.tname }
+          }, '*');
+        };
+
+        const doSearch = async (page) => {
+          const kw = keyword.value.trim();
+          if (!kw) return;
+          const p = page || 1;
+          if (kw !== lastKeyword.value) {
+            lastKeyword.value = kw; searchPage.value = 1; searchList.value = []; showSearch.value = true;
+          }
+          searching.value = true;
+          try {
+            const res = await axios.get('/components/person-search/', {
+              params: { keyword: kw, page: p, pageSize: searchPageSize.value }
+            });
+            searchList.value = res.data.data || [];
+            searchTotal.value = res.data.total || 0;
+            searchPage.value = p;
+          } finally { searching.value = false; }
+        };
+
+        const onPageChange = (page) => { doSearch(page); };
+        const onSizeChange = (size) => { searchPageSize.value = size; doSearch(1); };
+
+        const selectSearch = (p) => {
+          currentRsid.value = p.rsid;
+          window.parent.postMessage({
+            type: 'person-select',
+            data: { rsid: p.rsid, tname: p.displayName, displayName: p.displayName }
+          }, '*');
+        };
+
+        const backToTree = () => { showSearch.value = false; };
+
+        onMounted(loadTree);
+
+        return {
+          keyword, searching, showSearch,
+          searchList, searchPage, searchPageSize, searchTotal,
+          treeData, currentRsid,
+          toggleNode, selectPerson,
+          doSearch, selectSearch, onPageChange, onSizeChange, backToTree
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

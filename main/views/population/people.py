@@ -47,17 +47,17 @@ def get_db():
 
 @login_required
 def person_query(request):
-    return render(request, 'people/person_query.html')
+    return render(request, 'population/person_query.html')
 
 
 @login_required
 def person_manage(request):
-    return render(request, 'people/person_manage.html')
+    return render(request, 'population/person_manage.html')
 
 
 @login_required
 def data_change(request):
-    return render(request, 'people/data_change.html')
+    return render(request, 'population/data_change.html')
 
 
 # ==================== API视图 ====================

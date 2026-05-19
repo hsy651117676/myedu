@@ -119,13 +119,13 @@ createApp({
     const loadFamilyList = (rsid) => {
       if(!rsid) return
       fLoading.value = true
-      axios.get('/api/family-query/', {params:{rsid}}).then(res => {
+      axios.get('/population/api/family-query/', {params:{rsid}}).then(res => {
         fLoading.value = false
         res.data.code === 0 && (fList.value = res.data.data, currentMainRSID.value = rsid)
       }).catch(() => fLoading.value = false)
     }
     const query = () => {
-      axios.get('/api/person-query/', {params:{...q.value, page:p.value, pageSize:ps.value}}).then(res=>{
+      axios.get('/population/api/person-query/', {params:{...q.value, page:p.value, pageSize:ps.value}}).then(res=>{
         res.data.code === 0 && (list.value = res.data.data.map(i=>({...i, Age:calcAge(i.BirthDate,i.DeathDate)})), total.value = res.data.total, fList.value = [])
       })
     }
@@ -135,7 +135,7 @@ createApp({
     const selFamily = (row) => { row.RSID && (loadFamilyList(row.RSID), fillForm(row, 1)) }
     const saveData = () => {
       if(!selectedRow.value?.RSID) return ElMessage.warning("请选择人员")
-      axios.post('/api/person-save/', { RSID: selectedRow.value.RSID, ...form.value }).then(res=>{
+      axios.post('/population/api/person-save/', { RSID: selectedRow.value.RSID, ...form.value }).then(res=>{
         if(res.data.code === 0){
           ElMessage.success(res.data.msg)
           selectedRow.value && Object.assign(selectedRow.value, {...form.value, Age:calcAge(form.value.BirthDate, form.value.DeathDate)})

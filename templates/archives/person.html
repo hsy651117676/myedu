@@ -1,131 +1,70 @@
 {% extends "layout/base.html" %}
-{% block title %}人员维护{% endblock %}
+{% block title %}档案人员维护{% endblock %}
 
 {% block content %}
 <style>
-.tree-node { padding:3px 4px; cursor:pointer; white-space:nowrap; font-size:13px; }
-.tree-node:hover { background:#e8f0fe; }
-.tree-unit { font-weight:bold; color:#303133; }
-.tree-person { color:#606266; }
-.tree-person.active { background:#d0e4fc; }
-.el-tabs__content { flex:1; overflow:hidden; }
-.el-tab-pane { height:100%; overflow-y:auto; }
-.search-item { padding:6px 8px; cursor:pointer; border-bottom:1px solid #f0f0f0; }
-.search-item:hover { background:#e8f0fe; }
-.search-item.active { background:#d0e4fc; }
+.el-tabs { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.el-tabs__content { flex: 1; overflow: hidden; }
+.el-tab-pane { height: 100%; overflow: hidden; }
 </style>
 
 <div id="app" style="padding:8px;height:100vh;display:flex;flex-direction:column;">
   <div style="flex:1;display:flex;overflow:hidden;">
 
-    <!-- ========== 左侧面板 ========== -->
-    <div id="leftPanel" style="width:280px;border:1px solid #e4e7ed;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;">
-
-      <!-- 搜索栏 -->
-      <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;display:flex;gap:4px;">
-        <el-input 
-          v-model="keyword" 
-          placeholder="搜索姓名/拼音/手机号" 
-          size="small" 
-          clearable 
-          @keyup.enter="doSearch" 
-          style="flex:1;">
-        </el-input>
-        <el-button size="small" type="primary" @click="doSearch" :loading="searching">搜索</el-button>
-        <el-button v-if="showSearch" size="small" @click="clearSearchAndBack">返回</el-button>
-      </div>
-
-      <!-- 组织树 -->
-      <div v-show="!showSearch" style="flex:1;overflow-y:auto;padding:4px;">
-        <template v-for="node in treeData" :key="node.tid">
-          <div v-if="!node.isPerson" class="tree-node tree-unit" @click.stop="toggleUnit(node)">
-            <span style="font-size:12px;">[[ node.expanded ? '▼' : '▶' ]]</span> [[ node.tname ]]
-          </div>
-          <template v-if="!node.isPerson && node.expanded && node.children">
-            <div v-for="child in node.children" :key="child.tid">
-              <div v-if="!child.isPerson" class="tree-node tree-unit" style="padding-left:18px;" @click.stop="toggleUnit(child)">
-                <span style="font-size:12px;">[[ child.expanded ? '▼' : '▶' ]]</span> [[ child.tname ]]
-              </div>
-              <template v-if="!child.isPerson && child.expanded && child.children">
-                <div v-for="gc in child.children" :key="gc.tid"
-                     class="tree-node tree-person" style="padding-left:32px;"
-                     :class="{ active: currentPerson.rsid == gc.rsid }"
-                     @click.stop="selectTreeNode(gc)">
-                  [[ gc.sex == '男' ? '👨' : gc.sex == '女' ? '👩' : '👤' ]] [[ gc.tname ]]
-                </div>
-              </template>
-              <div v-if="child.isPerson"
-                   class="tree-node tree-person" style="padding-left:18px;"
-                   :class="{ active: currentPerson.rsid == child.rsid }"
-                   @click.stop="selectTreeNode(child)">
-                [[ child.sex == '男' ? '👨' : child.sex == '女' ? '👩' : '👤' ]] [[ child.tname ]]
-              </div>
-            </div>
-          </template>
-          <div v-if="node.isPerson"
-               class="tree-node tree-person"
-               :class="{ active: currentPerson.rsid == node.rsid }"
-               @click.stop="selectTreeNode(node)">
-            [[ node.sex == '男' ? '👨' : node.sex == '女' ? '👩' : '👤' ]] [[ node.tname ]]
-          </div>
-        </template>
-      </div>
-
-      <!-- 搜索结果 -->
-      <div v-show="showSearch" style="flex:1;overflow-y:auto;padding:4px;">
-        <div v-for="r in searchList" :key="r.rsid" class="search-item"
-             :class="{ active: currentPerson.rsid == r.rsid }"
-             @click="selectSearch(r)">
-          <div style="font-weight:bold;">[[ r.displayName ]]</div>
-          <div style="color:#909399;font-size:11px;">[[ r.unitName ]]</div>
-          <div v-if="r.matchType" style="color:#409eff;font-size:10px;">[[ r.matchType ]]</div>
-        </div>
-        <div v-if="!searching && searchList.length===0 && keyword" style="text-align:center;color:#909399;padding:20px;">
-          未找到相关人员，试试输入完整姓名或拼音
-        </div>
-        <div v-if="searching" style="text-align:center;padding:20px;">搜索中...</div>
-      </div>
+    <!-- 左侧面板 -->
+    <div id="leftPanel" style="width:280px;border:1px solid #e4e7ed;flex-shrink:0;overflow:hidden;">
+      <iframe src="/components/person-panel-embed/" style="width:100%;height:100%;border:none;"></iframe>
     </div>
 
     <!-- 拖动条 -->
     <div id="dragBar" style="width:6px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;margin:0 2px;"></div>
 
-    <!-- ========== 右侧标签页 ========== -->
-    <div id="rightPanel" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <!-- 右侧 -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
       <div style="margin-bottom:4px;font-weight:bold;font-size:14px;flex-shrink:0;">
         [[ currentPerson.tname || currentPerson.displayName || '请选择人员' ]]
         <span v-if="currentPerson.rsid" style="color:#909399;font-size:12px;">RSID:[[ currentPerson.rsid ]]</span>
       </div>
       <el-tabs v-model="activeTab" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-        <el-tab-pane label="基本信息" name="basic" style="height:100%;">
-          <iframe v-if="activeTab==='basic' && currentPerson.rsid" :key="'basic-'+currentPerson.rsid" :src="'/archives/person-basic/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="基本信息" name="basic">
+          <iframe v-if="activeTab==='basic' && currentPerson.rsid" :src="'/archives/person-basic/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="工资表9-1-1" name="salary" style="height:100%;">
-          <iframe v-if="activeTab==='salary' && currentPerson.rsid" :key="'salary-'+currentPerson.rsid" :src="'/archives/person-salary/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="工资表9-1-1" name="salary">
+          <iframe v-if="activeTab==='salary' && currentPerson.rsid" :src="'/archives/person-salary/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="职务变动9-2-1" name="position" style="height:100%;">
-          <iframe v-if="activeTab==='position' && currentPerson.rsid" :key="'position-'+currentPerson.rsid" :src="'/archives/person-position/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="职务变动9-2-1" name="position">
+          <iframe v-if="activeTab==='position' && currentPerson.rsid" :src="'/archives/person-position/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="档案专审情况" name="audit" style="height:100%;">
-          <iframe v-if="activeTab==='audit' && currentPerson.rsid" :key="'audit-'+currentPerson.rsid" :src="'/archives/person-audit/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="档案专审情况" name="audit">
+          <iframe v-if="activeTab==='audit' && currentPerson.rsid" :src="'/archives/person-audit/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="认定表" name="identify" style="height:100%;">
-          <iframe v-if="activeTab==='identify' && currentPerson.rsid" :key="'identify-'+currentPerson.rsid" :src="'/archives/person-identify/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="认定表" name="identify">
+          <iframe v-if="activeTab==='identify' && currentPerson.rsid" :src="'/archives/person-identify/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="任前联审" name="preaudit" style="height:100%;">
-          <iframe v-if="activeTab==='preaudit' && currentPerson.rsid" :key="'preaudit-'+currentPerson.rsid" :src="'/archives/person-preaudit/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="任前联审" name="preaudit">
+          <iframe v-if="activeTab==='preaudit' && currentPerson.rsid" :src="'/archives/person-preaudit/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="干部任免表" name="cadre" style="height:100%;">
-          <iframe v-if="activeTab==='cadre' && currentPerson.rsid" :key="'cadre-'+currentPerson.rsid" :src="'/archives/person-cadre/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="干部任免表" name="cadre">
+          <iframe v-if="activeTab==='cadre' && currentPerson.rsid" :src="'/archives/person-cadre/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="档案目录" name="directory" style="height:100%;">
-          <iframe v-if="activeTab==='directory' && currentPerson.rsid" :key="'dir-'+currentPerson.rsid" :src="'/archives/person-directory/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="档案目录" name="directory">
+          <iframe v-if="activeTab==='directory' && currentPerson.rsid" :src="'/archives/person-directory/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="补充信息" name="supplement" style="height:100%;">
-          <iframe v-if="activeTab==='supplement' && currentPerson.rsid" :key="'supp-'+currentPerson.rsid" :src="'/archives/person-supplement/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="补充信息" name="supplement">
+          <iframe v-if="activeTab==='supplement' && currentPerson.rsid" :src="'/archives/person-supplement/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
-        <el-tab-pane label="家庭成员" name="family" style="height:100%;">
-          <iframe v-if="activeTab==='family' && currentPerson.rsid" :key="'fam-'+currentPerson.rsid" :src="'/archives/person-family/?rsid='+currentPerson.rsid" style="width:100%;height:100%;border:none;"></iframe>
+        <el-tab-pane label="家庭成员" name="family">
+          <iframe v-if="activeTab==='family' && currentPerson.rsid" :src="'/archives/person-family/?rsid='+currentPerson.rsid"
+                  style="width:100%;height:100%;border:none;display:block;"></iframe>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -133,223 +72,57 @@
 </div>
 
 <script>
-const { createApp, ref, onMounted, watch, nextTick } = Vue;
+  const { createApp, ref, onMounted } = Vue;
 
 const app = createApp({
+  delimiters: ['[[', ']]'],
   setup() {
-    const keyword = ref('');
-    const showSearch = ref(false);
-    const searching = ref(false);
-    const searchList = ref([]);
-    const treeData = ref([]);
     const currentPerson = ref({});
     const activeTab = ref('basic');
-    const detail = ref({});
-    // 修复 salary 相关响应式变量未定义问题
-    const salaryList = ref([]);
-    const oldList = ref([]);
-    const data93 = ref([]);
 
-    // 加载组织树
-    const loadTree = () => {
-      axios.get('/archives/api/tree/').then(res => {
-        if (res.data.code === 0) {
-          treeData.value = res.data.data.map(n => ({...n, expanded: false, children: []}));
-        } else {
-          ElementPlus.ElMessage.error('加载组织树失败：' + (res.data.msg || '未知错误'));
-        }
-      }).catch(err => {
-        console.error('加载组织树出错', err);
-        ElementPlus.ElMessage.error('网络错误，无法加载组织树');
-      });
-    };
-
-    // 展开/收起单位节点
-    const toggleUnit = (node) => {
-      if (node.expanded) { 
-        node.expanded = false; 
-        return; 
-      }
-      axios.get('/archives/api/tree-children/', { params: { tid: node.tid } }).then(res => {
-        if (res.data.code === 0) {
-          node.children = res.data.data.map(c => ({...c, expanded: false, children: []}));
-          node.expanded = true;
-        } else {
-          ElementPlus.ElMessage.warning('加载子节点失败：' + res.data.msg);
-        }
-      }).catch(err => {
-        ElementPlus.ElMessage.error('加载子节点出错');
-      });
-    };
-
-    // 从树节点选择人员
-    const selectTreeNode = (node) => { 
-      currentPerson.value = node; 
-      detail.value = {}; 
-      loadActiveTabData(node.rsid); 
-      // 如果搜索结果面板开着，自动关闭更符合直觉
-      if (showSearch.value) {
-        showSearch.value = false;
-        keyword.value = '';
-      }
-    };
-
-    // 搜索人员（支持姓名、拼音、手机号）
-    const doSearch = async () => {
-      let kw = keyword.value.trim();
-      if (!kw) {
-        ElementPlus.ElMessage.warning('请输入搜索关键词');
-        return;
-      }
-      
-      searching.value = true;
-      showSearch.value = true;
-      searchList.value = [];
-      
-      try {
-        const response = await axios.get('/archives/api/person-search/', { 
-          params: { keyword: kw } 
-        });
-        
-        if (response.data.code === 0) {
-          let results = response.data.data || [];
-          // 增强搜索结果字段兼容性，统一转换为 displayName 和 unitName
-          results = results.map(item => ({
-            ...item,
-            displayName: item.姓名 || item.name || item.fullname || item.tname || '未知姓名',
-            unitName: item.单位 || item.unit || item.dept_name || item.org_name || '未知单位',
-            rsid: item.rsid,
-            matchType: item.match_type || (item.拼音匹配 ? '拼音匹配' : '')
-          }));
-          searchList.value = results;
-          
-          if (results.length === 0) {
-            // 如果后端无结果，且关键词包含字母，提示建议使用汉字
-            if (/[a-zA-Z]/.test(kw)) {
-              ElementPlus.ElMessage.info('未找到匹配人员，您可尝试输入完整姓名进行搜索');
-            } else {
-              ElementPlus.ElMessage.info('未找到相关人员');
-            }
-          } else {
-            ElementPlus.ElMessage.success(`找到 ${results.length} 条记录`);
-          }
-        } else {
-          ElementPlus.ElMessage.error('搜索失败：' + (response.data.msg || '未知错误'));
-          searchList.value = [];
-        }
-      } catch (error) {
-        console.error('搜索出错', error);
-        ElementPlus.ElMessage.error('搜索请求失败，请检查网络');
-        searchList.value = [];
-      } finally {
-        searching.value = false;
-      }
-    };
-
-    // 从搜索结果中选择人员
-    const selectSearch = (row) => {
-      currentPerson.value = row;
-      detail.value = {};
-      // 尝试在树中高亮（但不强制展开树，避免性能问题）
-      loadActiveTabData(row.rsid);
-      // 不清空搜索面板，方便继续查看其他结果，但用户可以点返回
-      // 为了更好的体验，将选中的人员滚动到视图内（搜索结果列表本身高亮）
-      nextTick(() => {
-        const activeElement = document.querySelector('.search-item.active');
-        if (activeElement) {
-          activeElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        }
-      });
-    };
-    
-    // 清除搜索并返回树视图
-    const clearSearchAndBack = () => {
-      showSearch.value = false;
-      keyword.value = '';
-      searchList.value = [];
-      searching.value = false;
-    };
-
-    // 加载当前标签页所需数据（备用，主要靠 iframe）
-    const loadActiveTabData = (rsid) => {
-      if (!rsid) return;
-      // 仅当基本信息标签页时，可额外加载详情（目前iframe已处理，此方法保留兼容）
-      if (activeTab.value === 'basic') {
-        axios.get('/archives/api/person-detail/', { params: { rsid } }).then(res => {
-          if (res.data.code === 0) detail.value = res.data.data;
-        }).catch(err => console.error('加载详情失败', err));
-      }
-      // 工资等其他标签页数据由iframe自行处理，无需额外操作
-    };
-
-    // 监听标签页切换，可重新加载当前人员的数据（但不影响iframe内容）
-    watch(activeTab, (tab) => {
-      const rsid = currentPerson.value.rsid;
-      if (!rsid) return;
-      loadActiveTabData(rsid);
-    });
-
-    // 监听当前人员变化，更新标题和标签页内容（iframe已通过key刷新）
-    watch(currentPerson, (newVal, oldVal) => {
-      if (newVal.rsid && newVal.rsid !== oldVal?.rsid) {
-        // 可选：重新加载活动标签页数据，iframe会自动刷新因为key变化
-        loadActiveTabData(newVal.rsid);
+    window.addEventListener('message', (e) => {
+      if (e.data.type === 'person-select') {
+        currentPerson.value = e.data.data;
       }
     });
 
     onMounted(() => {
-      loadTree();
-      
-      // 左侧面板拖动宽度调整
       const bar = document.getElementById('dragBar');
       const left = document.getElementById('leftPanel');
       let startX, startWidth;
-      
-      const onMove = (e) => {
-        let w = startWidth + e.clientX - startX;
-        if (w < 200) w = 200;
-        if (w > 500) w = 500;
-        left.style.width = w + 'px';
-      };
-      
-      const onUp = () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      
       bar.addEventListener('mousedown', (e) => {
         startX = e.clientX;
         startWidth = left.offsetWidth;
+        const iframe = left.querySelector('iframe');
+        if (iframe) iframe.style.pointerEvents = 'none';
+
+        const onMove = (ev) => {
+          let w = startWidth + ev.clientX - startX;
+          if (w < 200) w = 200;
+          if (w > 500) w = 500;
+          left.style.width = w + 'px';
+          left.style.minWidth = w + 'px';
+          left.style.flexShrink = '0';
+        };
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          if (iframe) iframe.style.pointerEvents = '';
+        };
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
         e.preventDefault();
       });
     });
 
-    return {
-      keyword,
-      showSearch,
-      searching,
-      searchList,
-      treeData,
-      currentPerson,
-      activeTab,
-      detail,
-      salaryList,
-      oldList,
-      data93,
-      loadTree,
-      toggleUnit,
-      selectTreeNode,
-      doSearch,
-      selectSearch,
-      clearSearchAndBack,
-      loadActiveTabData,
-    };
+    return { currentPerson, activeTab };
   }
 });
 
-app.config.compilerOptions.delimiters = ['[[', ']]'];
 app.use(ElementPlus).mount('#app');
 </script>
 {% endblock %}

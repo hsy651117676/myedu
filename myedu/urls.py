@@ -5,7 +5,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from main.views.system import user_yhbh_view
+from main.system_admin.views import user_yhbh_view
+from main.system_admin.views import placeholder
 
 urlpatterns = [
     path('admin/', admin.site.urls),

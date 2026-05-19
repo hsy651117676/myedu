@@ -93,7 +93,7 @@ createApp({
 
     // 查询
     const doQuery = () => {
-      axios.get('/api/person-query/', {
+      axios.get('/population/api/person-query/', {
         params: { ...queryForm.value, page: page.value, pageSize: pageSize.value }
       }).then(res => {
         if (res.data.code === 0) {
@@ -117,7 +117,7 @@ createApp({
     // 保存
     const saveKeyData = () => {
       if (!form.value.RSID) return ElMessage.warning("请先选择人员");
-      axios.post('/api/key-data-update/', {
+      axios.post('/population/api/key-data-update/', {
         RSID: form.value.RSID,
         Name: form.value.Name,
         IDCard: form.value.IDCard

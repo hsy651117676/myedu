@@ -4,45 +4,41 @@
 {% block content %}
 <div id="app" style="display:flex;flex-direction:column;height:100vh;">
   <header style="height:40px;background:#1f2d3d;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:100;">
-    <div class="logo" style="font-size:18px;font-weight:bold;">系统管理平台</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span @click="isCollapse=!isCollapse" style="cursor:pointer;font-size:16px;width:60px;">☰</span>
+      <span style="font-size:18px;font-weight:bold;">盘州市教育局人事档案管理信息系统</span>
+    </div>
     <div class="user-info">
       <el-dropdown trigger="click" @command="handleCommand">
-        <span style="cursor:pointer;color: white;">
-          <i class="el-icon-user"></i> {{ real_name }}
-          <i class="el-icon-arrow-down el-icon--right"></i>
-        </span>
+        <span style="cursor:pointer;color:white;">当前用户：👤 {{ request.user.profile.real_name|default:request.user.username }} ▾</span>
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item command="profile">基本信息</el-dropdown-item>
             <el-dropdown-item command="password">修改密码</el-dropdown-item>
-            <el-dropdown-item command="admin">后台管理</el-dropdown-item>
             <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
     </div>
   </header>
-
   <div class="main-container" style="display:flex;flex:1;overflow:hidden;">
-    <div class="sidebar" id="sidebar" style="width:200px;background:#2f4050;display:flex;flex-direction:column;overflow:hidden;transition:width 0.3s;">
-      <div style="text-align:center;padding:10px 0;background:#2f4050;border-bottom:1px solid #384b5f;flex-shrink:0;">
-        <el-button type="text" style="color:#fff;width:100%;" @click="toggleCollapse">
-          <span v-if="isCollapse">☰</span>
-          <span v-else>主菜单 <i class="el-icon-d-arrow-left" style="float:right;"></i></span>
-        </el-button>
-      </div>
+    <div class="sidebar" id="sidebar" style="width:150px;background:#2f4050;display:flex;flex-direction:column;overflow:hidden;" :style="{width: isCollapse ? '0px' : '150px', minWidth: isCollapse ? '0px' : '150px', transition: 'width 0.3s'}">
       <div style="flex:1;overflow-y:auto;overflow-x:hidden;">
-        <el-menu :default-active="activeTab" background-color="#2f4050" text-color="#bfcbd9" active-text-color="#409EFF" :collapse="isCollapse" style="border:none;" @select="handleMenuSelect">
-          <template v-for="menu in menus" :key="menu.id">
-            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.id.toString()">
-              <template #title>
-                <span>[[ menu.name ]]</span>
-              </template>
-              <el-menu-item v-for="child in menu.children" :key="child.id" :index="child.url">[[ child.name ]]</el-menu-item>
-            </el-sub-menu>
-            <el-menu-item v-else :index="menu.url">[[ menu.name ]]</el-menu-item>
-          </template>
-        </el-menu>
+        <el-menu :key="menuKey" :default-openeds="openeds" background-color="#304156" text-color="#bfcbd9"
+         active-text-color="red" active-background-color="#1890ff" style="border:none;font-size:13px;"
+         @open="onMenuOpen" @close="onMenuClose" @select="handleMenuSelect">
+  <template v-for="menu in menus" :key="menu.id">
+    <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.id.toString()">
+      <template #title><span style="font-size:14px;font-weight:bold;">[[ menu.name ]]</span></template>
+      <el-menu-item v-for="child in menu.children" :key="child.id" :index="child.url">
+  <span style="font-size:13px;" :style="{fontWeight: activeTab === child.url ? 'bold' : 'normal'}">[[ child.name ]]</span>
+</el-menu-item>
+    </el-sub-menu>
+    <el-menu-item v-else :index="menu.url">
+      <span style="font-size:13px;">[[ menu.name ]]</span>
+    </el-menu-item>
+  </template>
+</el-menu>
       </div>
     </div>
 
@@ -52,14 +48,10 @@
       </el-tabs>
       <div style="flex:1;overflow:hidden;background:#fff;">
         <iframe v-for="item in tabs" :key="item.name" :src="item.url" v-show="activeTab === item.name" style="width:100%;height:100%;border:none;"
-          sandbox="allow-same-origin allow-forms allow-scripts allow-popups allow-top-navigation-by-user-activation allow-downloads"></iframe>
+          sandbox="allow-same-origin allow-forms allow-scripts allow-popups allow-downloads"></iframe>
       </div>
     </div>
   </div>
-
-  <footer style="height:25px;background:#1f2d3d;color:#bfcbd9;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
-    © 2025 系统管理平台 - 版权所有
-  </footer>
 
   <div class="context-menu" v-show="showMenu" @click.stop :style="{left:menuX+'px',top:menuY+'px'}"
        style="position:fixed;background:#fff;border:1px solid #e4e7ed;border-radius:4px;padding:5px 0;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,0.1);min-width:120px;">
@@ -80,16 +72,18 @@ const { ElMessageBox } = ElementPlus;
 
 const app = createApp({
   setup() {
-    const isCollapse = ref(false);
     const activeTab = ref('/welcome/');
     const showMenu = ref(false);
     const menuX = ref(0);
     const menuY = ref(0);
     const rightClickedTab = ref('');
     const menus = ref([]);
-const tabs = ref([
-  { title: '欢迎页', name: '/welcome/', url: '/static/welcome.html' }
-]);
+    const openeds = ref([]);
+    const menuKey = ref(0);
+    const isCollapse = ref(false);
+    const tabs = ref([
+      { title: '欢迎页', name: '/welcome/', url: '/static/welcome.html' }
+    ]);
 
     const findTitle = (url, list) => {
       if (!list || list.length === 0) return url;
@@ -105,46 +99,32 @@ const tabs = ref([
 
     const loadMenus = async () => {
       try {
-        const res = await axios.get('/api/menu/');
-        if (res.data.code === 0) {
-          menus.value = res.data.data;
-        }
-      } catch (e) {
-        console.error('加载菜单失败', e);
-      }
+        const res = await axios.get('/menus/');
+        if (res.data.code === 0) menus.value = res.data.data;
+      } catch (e) {}
     };
-
-    onMounted(() => loadMenus());
-
-    const toggleCollapse = () => {
-      isCollapse.value = !isCollapse.value;
-      document.getElementById('sidebar').style.width = isCollapse.value ? '20px' : '200px';
-    };
+    onMounted(() => { loadMenus(); loadUser(); });
+    const onMenuOpen = (index) => { openeds.value = [index.toString()]; menuKey.value++; };
+    const onMenuClose = () => {};
 
     const handleMenuSelect = (index) => {
       openTab(index);
     };
-const handleCommand = (cmd) => {
-  if (cmd === 'profile') openTab('/base-info/');
-  else if (cmd === 'password') openTab('/change-pwd/');
-  else if (cmd === 'admin') window.open('/admin/', '_blank');
-  else if (cmd === 'logout') {
-    ElMessageBox.confirm('确定要退出吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      window.location.href = '/logout/';
-    }).catch(() => {});
-  }
-};
+
+    const handleCommand = (cmd) => {
+      if (cmd === 'profile') openTab('/base-info/');
+      else if (cmd === 'password') openTab('/change-pwd/');
+      else if (cmd === 'logout') {
+        ElMessageBox.confirm('确定要退出吗？', '提示', { type: 'warning' }).then(() => {
+          window.location.href = '/logout/';
+        });
+      }
+    };
 
     const openTab = (url) => {
       const title = findTitle(url, menus.value);
       const exists = tabs.value.find(t => t.name === url);
-      if (!exists) {
-        tabs.value.push({ title: title, name: url, url: url });
-      }
+      if (!exists) tabs.value.push({ title, name: url, url });
       activeTab.value = url;
     };
 
@@ -152,24 +132,18 @@ const handleCommand = (cmd) => {
       const i = tabs.value.findIndex(t => t.name === name);
       if (i === -1) return;
       tabs.value.splice(i, 1);
-      if (activeTab.value === name) {
-        activeTab.value = tabs.value[Math.max(0, i - 1)].name;
-      }
+      if (activeTab.value === name) activeTab.value = tabs.value[Math.max(0, i - 1)].name;
     };
 
     const showContextMenu = (e) => {
       e.stopPropagation();
-      menuX.value = e.clientX;
-      menuY.value = e.clientY;
-      showMenu.value = true;
+      menuX.value = e.clientX; menuY.value = e.clientY; showMenu.value = true;
       const target = e.target.closest('.el-tabs__item');
       if (target) {
         const tabName = target.getAttribute('id')?.replace('tab-', '');
         if (tabName) rightClickedTab.value = tabName;
       }
-      setTimeout(() => {
-        document.addEventListener('click', () => { showMenu.value = false; }, { once: true });
-      }, 0);
+      setTimeout(() => document.addEventListener('click', () => showMenu.value = false, { once: true }), 0);
     };
 
     const closeCurrent = () => { removeTab(rightClickedTab.value); showMenu.value = false; };
@@ -184,11 +158,11 @@ const handleCommand = (cmd) => {
       if (i < tabs.value.length - 1) tabs.value = tabs.value.slice(0, i + 1);
       showMenu.value = false;
     };
-
     return {
-      isCollapse, tabs, activeTab, showMenu, menuX, menuY, menus,
-      toggleCollapse, handleMenuSelect, handleCommand,
-      openTab, removeTab, showContextMenu, closeCurrent, closeAll, closeLeft, closeRight
+      activeTab, showMenu, menuX, menuY, menus, openeds,tabs,
+      onMenuOpen, onMenuClose, handleMenuSelect, handleCommand,
+      openTab, removeTab, showContextMenu, closeCurrent, closeAll, closeLeft, closeRight,
+      menuKey, isCollapse
     };
   }
 });

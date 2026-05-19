@@ -1,0 +1,87 @@
+{% extends "layout/base.html" %}
+{% block title %}日志查询{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.log-table { border-collapse:collapse; width:100%; font-size:12px; }
+.log-table th, .log-table td { border:1px solid #ddd; padding:4px 6px; text-align:center; white-space:nowrap; }
+.log-table th { background:#f5f7fa; position:sticky; top:0; z-index:1; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;padding:12px;">
+    <div style="font-weight:600;margin-bottom:10px;flex-shrink:0;">📋 日志查询</div>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;">
+        <span>日志类型:</span>
+        <select v-model="controlType" style="height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+            <option v-for="t in logTypes" :key="t.value" :value="t.value">[[ t.label ]]</option>
+        </select>
+        <span>时间起:</span>
+        <input type="text" v-model="timeBegin" placeholder="2025-01-01" style="width:120px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+        <span>时间止:</span>
+        <input type="text" v-model="timeEnd" placeholder="2025-12-31" style="width:120px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+        <el-button size="small" type="primary" @click="doQuery(1)">查询</el-button>
+    </div>
+
+    <div style="flex:1;overflow:auto;">
+        <table class="log-table">
+            <thead><tr>
+                <th>RSID</th><th>姓名</th><th>单位</th><th>类型</th>
+                <th>原值</th><th>新值</th><th>用户名</th><th>用户单位</th>
+                <th>联系方式</th><th>操作时间</th>
+            </tr></thead>
+            <tbody>
+                <tr v-for="r in list" :key="r.RowNum">
+                    <td>[[ r.RSID ]]</td><td>[[ r.姓名 ]]</td><td>[[ r.单位 ]]</td>
+                    <td>[[ r.类型 ]]</td><td>[[ r.原值 ]]</td><td>[[ r.新值 ]]</td>
+                    <td>[[ r.用户名 ]]</td><td>[[ r.用户单位 ]]</td>
+                    <td>[[ r.联系方式 ]]</td><td>[[ r.操作时间 ]]</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div v-if="total>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+        <el-pagination small background layout="total, sizes, prev, pager, next"
+            :page-sizes="[20,30,50,100]" :page-size="pageSize" :total="total"
+            :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+    </div>
+</div>
+
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const logTypes = ref([]);
+        const controlType = ref(1);
+        const timeBegin = ref('');
+        const timeEnd = ref('');
+        const list = ref([]);
+        const total = ref(0);
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+
+        const loadTypes = async () => {
+            const r = await axios.get('/archivesSystem/api/log/types/');
+            if (r.data.code===0) logTypes.value = r.data.data||[];
+        };
+
+        const doQuery = async (page) => {
+            const params = { controlType: controlType.value, page: page||1, pageSize: pageSize.value };
+            if (timeBegin.value) params.timeBegin = timeBegin.value;
+            if (timeEnd.value) params.timeEnd = timeEnd.value;
+            const r = await axios.get('/archivesSystem/api/log/query/', { params });
+            if (r.data.code===0) { list.value=r.data.data||[]; total.value=r.data.total||0; currentPage.value=page||1; }
+        };
+
+        const onPageChange = (p) => doQuery(p);
+        const onSizeChange = (s) => { pageSize.value=s; doQuery(1); };
+
+        onMounted(()=>{ loadTypes(); doQuery(1); });
+        return { logTypes, controlType, timeBegin, timeEnd, list, total, currentPage, pageSize, doQuery, onPageChange, onSizeChange };
+    }
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}

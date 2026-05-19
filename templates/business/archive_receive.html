@@ -1,0 +1,268 @@
+{% extends "layout/base.html" %}
+{% block title %}档案接收{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.info-table { border-collapse:collapse; width:max-content; min-width:100%; font-size:12px; }
+.info-table th, .info-table td { border:1px solid #ddd; padding:3px 6px; text-align:center; white-space:nowrap; }
+.info-table th { background:#f5f7fa; position:sticky; top:0; z-index:1; }
+.form-table { border-collapse:collapse; width:100%; font-size:13px; }
+.form-table th, .form-table td { border:1px solid #ddd; padding:4px 8px; }
+.form-table th { background:#f5f7fa; text-align:right; width:90px; }
+.form-table td input { width:100%; border:1px solid #ddd; padding:4px 6px; font-size:13px; border-radius:2px; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+.drag-bar-h { height:4px; background:#e4e7ed; cursor:row-resize; flex-shrink:0; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;flex-shrink:0;">
+        <span style="font-weight:600;">📋 档案接收</span>
+    </div>
+
+    <div style="flex:1;display:flex;overflow:hidden;">
+        <!-- 左 -->
+        <div id="leftPanel" class="resize-panel" style="width:50%;min-width:300px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;">
+            <div id="leftTop" class="resize-panel-v" style="height:40%;min-height:180px;display:flex;flex-direction:column;overflow:hidden;">
+                <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;font-weight:bold;flex-shrink:0;">当前接收表</div>
+                <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;">
+                    <el-button size="small" type="primary" @click="newRecord">新增接收</el-button>
+                    <el-button size="small" type="success" @click="saveRecord">保存</el-button>
+                    <el-button size="small" type="danger" @click="deleteRecord" :disabled="!form.id">删除</el-button>
+                    <el-button size="small" @click="printRecord">打印</el-button>
+                </div>
+                <div style="flex:1;overflow:auto;padding:8px;">
+                    <table class="form-table" style="max-width:750px;">
+                        <tr><th>收件时间</th><td><input v-model="form.receiveDate" /></td><th>收件文号</th><td><input v-model="form.documentNo" /></td></tr>
+                        <tr><th>接收人</th><td><input v-model="form.receiver" /></td><th>来件部门</th><td><input v-model="form.fromUnit" /></td></tr>
+                        <tr><th>档案编号</th><td><input v-model="form.archiveNo" /></td><th>正本</th><td><input v-model="form.original" /></td></tr>
+                        <tr><th>副本</th><td><input v-model="form.copy" /></td><th>柜号</th><td><input v-model="form.cabinetNo" /></td></tr>
+                        <tr><th>层号</th><td><input v-model="form.layerNo" /></td><th>序号</th><td><input v-model="form.sequenceNo" /></td></tr>
+                        <tr><th>送交人</th><td><input v-model="form.sender" /></td><th>送交日期</th><td><input v-model="form.senderDate" /></td></tr>
+                        <tr><th>回执日期</th><td><input v-model="form.returnDate" /></td><th>入库日期</th><td><input v-model="form.storageDate" /></td></tr>
+                        <tr><th>入库审批人</th><td><input v-model="form.storageApprover" /></td><th>案卷种类</th><td><input v-model="form.archiveType" /></td></tr>
+                        <tr><th>备注</th><td><input v-model="form.remark" /></td><th>被接收人数</th><td>[[ personList.length ]]</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="drag-bar-h" data-target="leftTop" style="height:4px;background:#e4e7ed;cursor:row-resize;flex-shrink:0;"></div>
+
+            <div id="leftBottom" style="flex:1;min-height:150px;display:flex;flex-direction:column;overflow:hidden;">
+                <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                    <span style="font-weight:bold;">被接收人</span>
+                    <el-button size="small" @click="addPerson">添加</el-button>
+                    <el-button size="small" @click="removeCheckedPersons" :disabled="checkedPersons.length===0">删除选中</el-button>
+                </div>
+                <div style="flex:1;overflow:auto;">
+                    <table class="info-table">
+                        <thead><tr>
+                            <th><input type="checkbox" @change="toggleAllPersons" :checked="allPersonsChecked" /></th>
+                            <th>姓名</th><th>性别</th><th>出生年月</th><th>参工时间</th><th>民族</th>
+                            <th>档案编号</th><th>政治面貌</th><th>入党时间</th><th>单位及职务</th>
+                            <th>任现职时间</th><th>身份证号</th><th>全日制学历</th><th>全日制学位</th>
+                            <th>全日制院校</th><th>全日制专业</th><th>在职学历</th><th>在职学位</th>
+                            <th>在职院校</th><th>在职专业</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr v-for="(p,i) in personList" :key="i" :style="{background: p._checked ? '#e6f7ff' : ''}">
+                                <td><input type="checkbox" v-model="p._checked" /></td>
+                                <td>[[ p.姓名 ]]</td><td>[[ p.性别 ]]</td><td>[[ p.出生年月 ]]</td>
+                                <td>[[ p.参加工作时间 ]]</td><td>[[ p.民族 ]]</td><td>[[ p.档案编号 ]]</td>
+                                <td>[[ p.政治面貌 ]]</td><td>[[ p.入党时间 ]]</td><td>[[ p.单位及职务 ]]</td>
+                                <td>[[ p.任现职时间 ]]</td><td>[[ p.身份证号 ]]</td><td>[[ p.全日制学历 ]]</td>
+                                <td>[[ p.全日制学位 ]]</td><td>[[ p.全日制院校 ]]</td><td>[[ p.全日制专业 ]]</td>
+                                <td>[[ p.在职学历 ]]</td><td>[[ p.在职学位 ]]</td><td>[[ p.在职院校 ]]</td>
+                                <td>[[ p.在职专业 ]]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="drag-bar" data-target="left" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <!-- 右 -->
+        <div id="rightPanel" class="resize-panel" style="flex:1;min-width:300px;display:flex;flex-direction:column;overflow:hidden;padding:8px;">
+            <div style="font-weight:bold;margin-bottom:8px;flex-shrink:0;">历史接收表</div>
+            <div style="flex:1;overflow:auto;">
+                <table class="info-table">
+                    <thead><tr><th>ID</th><th>收件时间</th><th>文号</th><th>来件部门</th><th>接收人</th><th>被接收人</th><th>送交人</th><th>档案编号</th></tr></thead>
+                    <tbody>
+                        <tr v-for="r in historyList" :key="r.ID" @click="selectHistory(r)"
+                            :style="{background: form.id===r.ID ? '#e6f7ff' : ''}">
+                            <td>[[ r.ID ]]</td><td>[[ r.receiveDate ]]</td><td>[[ r.documentNo ]]</td>
+                            <td>[[ r.fromUnit ]]</td><td>[[ r.receiver ]]</td><td>[[ r.personName ]]</td>
+                            <td>[[ r.sender ]]</td><td>[[ r.archiveNo ]]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-if="historyTotal>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+                <el-pagination small background layout="total, sizes, prev, pager, next"
+                    :page-sizes="[20,30,50,100]" :page-size="pageSize" :total="historyTotal"
+                    :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+const { ElMessage, ElMessageBox } = ElementPlus;
+
+const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const form = ref({});
+        const personList = ref([]);
+        const historyList = ref([]);
+        const historyTotal = ref(0);
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+
+        const checkedPersons = computed(() => personList.value.filter(p=>p._checked));
+        const allPersonsChecked = computed(() => personList.value.length>0 && personList.value.every(p=>p._checked));
+        const toggleAllPersons = (e) => { personList.value.forEach(p=>p._checked=e.target.checked); };
+
+        const newRecord = () => {
+            form.value = { receiveDate: new Date().toISOString().slice(0,10).replace(/-/g,'') };
+            personList.value = [];
+        };
+
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'person-select') {
+                const p = e.data.data;
+                if (!personList.value.find(x=>x.RSID==p.rsid)) {
+                    personList.value.push({ RSID: p.rsid, 姓名: p.displayName||p.tname, _checked: false });
+                    loadPersons();
+                }
+            }
+        });
+
+        const addPerson = () => { window.open('/components/person-panel-embed/', '_blank', 'width=300,height=600'); };
+        const removeCheckedPersons = () => { personList.value = personList.value.filter(p=>!p._checked); };
+
+        const loadPersons = async () => {
+            const rsids = personList.value.map(p=>p.RSID).join(',');
+            if (!rsids) return;
+            const res = await axios.get('/business/api/receive/persons/', { params: { rsids } });
+            if (res.data.code===0) {
+                const data = res.data.data||[];
+                personList.value = personList.value.map(p => {
+                    const full = data.find(d=>String(d.RSID)===String(p.RSID));
+                    return full ? { ...p, ...full, _checked: p._checked } : p;
+                });
+            }
+        };
+
+        const saveRecord = async () => {
+            if (personList.value.length < 1) { ElMessage.warning('被接收人至少1人'); return; }
+            const res = await axios.post('/business/api/receive/save/', {
+                action: 'save', id: form.value.id || '',
+                receiveDate: form.value.receiveDate||'', documentNo: form.value.documentNo||'',
+                receiver: form.value.receiver||'', fromUnit: form.value.fromUnit||'',
+                archiveNo: form.value.archiveNo||'', original: form.value.original||'',
+                copy: form.value.copy||'', cabinetNo: form.value.cabinetNo||'',
+                layerNo: form.value.layerNo||'', sequenceNo: form.value.sequenceNo||'',
+                sender: form.value.sender||'', senderDate: form.value.senderDate||'',
+                returnDate: form.value.returnDate||'', storageDate: form.value.storageDate||'',
+                storageApprover: form.value.storageApprover||'', archiveType: form.value.archiveType||'',
+                remark: form.value.remark||'',
+                personRsid: personList.value.map(p=>p.RSID).join(','),
+                personName: personList.value.map(p=>p.姓名).join(','),
+                personCount: personList.value.length
+            });
+            if (res.data.code===0) { ElMessage.success('保存成功'); loadHistory(currentPage.value); }
+            else ElMessage.error(res.data.msg);
+        };
+
+        const deleteRecord = async () => {
+            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
+            await axios.post('/business/api/receive/save/', { action:'delete', id: form.value.id });
+            ElMessage.success('已删除'); newRecord(); loadHistory(1);
+        };
+        const printRecord = () => { ElMessage.info('打印功能开发中'); };
+
+        const selectHistory = (r) => {
+            form.value = { ...r };
+            personList.value = r.personRsid ? r.personRsid.split(',').map((id,i)=>({RSID:id,姓名:(r.personName||'').split(',')[i]||'',_checked:false})) : [];
+            loadPersons();
+        };
+
+        const loadHistory = async (page) => {
+            const res = await axios.get('/business/api/receive/list/', { params: { page: page||1, pageSize: pageSize.value } });
+            if (res.data.code===0) { historyList.value=res.data.data||[]; historyTotal.value=res.data.total||0; currentPage.value=page||1; }
+        };
+
+        const onPageChange = (p) => loadHistory(p);
+        const onSizeChange = (s) => { pageSize.value=s; loadHistory(1); };
+
+        const initDragBars = () => {
+            document.querySelectorAll('.drag-bar').forEach(bar => {
+                bar.addEventListener('mousedown', (e) => {
+                    const panel = document.getElementById(bar.dataset.target+'Panel');
+                    if (!panel) return;
+                    const startX = e.clientX, startW = panel.offsetWidth;
+                    document.querySelectorAll('.resize-panel').forEach(p => {
+                        const iframe = p.querySelector('iframe');
+                        if (iframe) iframe.style.pointerEvents = 'none';
+                    });
+                    const onMove = (ev) => {
+                        let w = startW + ev.clientX - startX;
+                        if (w < 250) w = 250; if (w > 900) w = 900;
+                        panel.style.width = w + 'px'; panel.style.minWidth = w + 'px';
+                        panel.style.flexShrink = '0'; panel.style.flexGrow = '0';
+                    };
+                    const onUp = () => {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.style.cursor = ''; document.body.style.userSelect = '';
+                        document.querySelectorAll('.resize-panel').forEach(p => {
+                            const iframe = p.querySelector('iframe');
+                            if (iframe) iframe.style.pointerEvents = '';
+                        });
+                    };
+                    document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                });
+            });
+            document.querySelectorAll('.drag-bar-h').forEach(bar => {
+                bar.addEventListener('mousedown', (e) => {
+                    const panel = document.getElementById(bar.dataset.target);
+                    if (!panel) return;
+                    const startY = e.clientY, startH = panel.offsetHeight;
+                    const onMove = (ev) => {
+                        let h = startH + ev.clientY - startY;
+                        if (h < 120) h = 120; if (h > 500) h = 500;
+                        panel.style.height = h + 'px'; panel.style.minHeight = h + 'px';
+                        panel.style.flexShrink = '0';
+                    };
+                    const onUp = () => {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.style.cursor = '';
+                    };
+                    document.body.style.cursor = 'row-resize';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                });
+            });
+        };
+
+        onMounted(() => { loadHistory(1); newRecord(); initDragBars(); });
+
+        return {
+            form, personList, checkedPersons, allPersonsChecked, toggleAllPersons,
+            historyList, historyTotal, currentPage, pageSize,
+            newRecord, addPerson, removeCheckedPersons, saveRecord, deleteRecord, printRecord,
+            selectHistory, loadHistory, onPageChange, onSizeChange
+        };
+    }
+});
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}

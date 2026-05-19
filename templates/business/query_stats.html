@@ -1,0 +1,83 @@
+{% extends "layout/base.html" %}
+{% block title %}查询统计{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.stats-table { border-collapse:collapse; width:100%; font-size:12px; }
+.stats-table th, .stats-table td { border:1px solid #ddd; padding:4px 8px; text-align:center; white-space:nowrap; }
+.stats-table th { background:#f5f7fa; position:sticky; top:0; z-index:1; }
+.table-wrap { flex:1; overflow:auto; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;padding:12px;">
+    <div style="font-weight:600;margin-bottom:10px;flex-shrink:0;">📊 查询统计</div>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;">
+        <span>统计方式:</span>
+        <el-select v-model="method" size="small" style="width:150px;">
+            <el-option v-for="m in methods" :key="m.value" :label="m.label" :value="m.value" />
+        </el-select>
+        <span>统计表:</span>
+        <el-select v-model="tables" size="small" multiple style="width:300px;">
+            <el-option v-for="t in tableOptions" :key="t.value" :label="t.label" :value="t.value" />
+        </el-select>
+        <el-button size="small" type="primary" @click="doQuery">查询</el-button>
+        <el-button size="small" @click="exportExcel">导出Excel</el-button>
+    </div>
+
+    <div class="table-wrap">
+        <div v-for="r in results" :key="r.table" style="margin-bottom:20px;">
+            <div style="font-weight:bold;margin-bottom:6px;">[[ r.name ]]</div>
+            <table class="stats-table">
+                <thead><tr><th v-for="c in r.columns" :key="c">[[ c ]]</th></tr></thead>
+                <tbody>
+                    <tr v-for="(row,i) in r.data" :key="i">
+                        <td v-for="c in r.columns" :key="c">[[ row[c] ]]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-if="results.length===0" style="text-align:center;color:#ccc;padding:40px;">请选择条件后查询</div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref } = Vue;
+
+createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const method = ref('year');
+        const tables = ref([]);
+        const results = ref([]);
+
+        const methods = [
+            {value:'year',label:'按年度统计'},{value:'month',label:'按月份统计'},
+            {value:'reason',label:'按理由统计'},{value:'unit',label:'按单位统计'},
+            {value:'summary',label:'综合方式统计'}
+        ];
+        const tableOptions = [
+            {value:'look',label:'查阅'},{value:'borrow',label:'借阅'},
+            {value:'transfer',label:'转递'},{value:'receive',label:'接收'}
+        ];
+
+        const doQuery = async () => {
+            const res = await axios.get('/business/api/stats/', {
+                params: { method: method.value, tables: tables.value },
+                paramsSerializer: params => {
+                    const search = new URLSearchParams();
+                    (params.tables||[]).forEach(t => search.append('tables', t));
+                    search.append('method', params.method);
+                    return search.toString();
+                }
+            });
+            if (res.data.code===0) results.value = res.data.data||[];
+        };
+
+        const exportExcel = () => { ElementPlus.ElMessage.info('导出功能开发中'); };
+
+        return { method, tables, results, methods, tableOptions, doQuery, exportExcel };
+    }
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}
