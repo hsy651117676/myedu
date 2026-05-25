@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>在线日记</title>
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif; overflow:hidden; background:#f5f7fa; }
+    .drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+    .drag-bar:hover { background:#c0c4cc; }
+    .diary-item { padding:8px 12px; cursor:pointer; border-bottom:1px solid #f0f0f0; }
+    .diary-item:hover { background:#e8f0fe; }
+    .diary-item.active { background:#d0e4fc; }
+    .diary-item .title { font-weight:bold; font-size:13px; }
+    .diary-item .date { font-size:11px; color:#909399; }
+    #editorArea { width:100%; height:100%; border:none; outline:none; resize:none; font-family:monospace; font-size:13px; padding:10px; line-height:1.6; }
+    #previewArea { padding:10px; overflow-y:auto; font-size:13px; line-height:1.6; }
+    #previewArea h1 { font-size:20px; margin-bottom:8px; }
+    #previewArea h2 { font-size:17px; margin-bottom:6px; }
+    #previewArea h3 { font-size:15px; margin-bottom:4px; }
+    #previewArea p { margin-bottom:8px; }
+    #previewArea code { background:#f5f5f5; padding:2px 6px; border-radius:3px; font-size:12px; }
+    #previewArea pre { background:#f5f5f5; padding:10px; border-radius:4px; overflow-x:auto; }
+    #previewArea pre code { padding:0; background:none; }
+  </style>
+</head>
+<body>
+
+<div style="height:100vh;display:flex;flex-direction:column;overflow:hidden;">
+
+  <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <span style="font-weight:600;">📝 在线日记</span>
+    <div style="flex:1;"></div>
+    <button type="button" onclick="newDiary()" style="padding:5px 12px;background:#409EFF;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">+ 新建日记</button>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <div id="leftPanel" class="resize-panel" style="width:20%;min-width:150px;border-right:1px solid #e4e7ed;overflow-y:auto;">
+      <div id="diaryList"></div>
+    </div>
+
+    <div class="drag-bar" data-target="leftPanel"></div>
+
+    <div id="midPanel" class="resize-panel" style="width:50%;min-width:250px;border-right:1px solid #e4e7ed;display:flex;flex-direction:column;">
+      <div id="editorHeader" style="padding:6px 10px;border-bottom:1px solid #e4e7ed;display:none;align-items:center;gap:8px;">
+        <input id="titleInput" style="flex:1;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:13px;" placeholder="标题">
+        <button type="button" id="saveBtn" style="padding:5px 12px;background:#409EFF;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">保存</button>
+        <button type="button" id="deleteBtn" style="padding:5px 12px;background:#F56C6C;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;display:none;">删除</button>
+      </div>
+      <div style="flex:1;overflow:hidden;position:relative;">
+        <textarea id="editorArea" placeholder="选择或新建日记" style="display:block;"></textarea>
+        <div id="editorPlaceholder" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#909399;pointer-events:none;">选择或新建日记</div>
+      </div>
+    </div>
+
+    <div class="drag-bar" data-target="midPanel"></div>
+
+    <div id="rightPanel" class="resize-panel" style="flex:1;min-width:200px;overflow-y:auto;">
+      <div id="previewArea" style="display:none;"></div>
+      <div id="previewPlaceholder" style="text-align:center;color:#909399;padding:40px;">预览区域</div>
+    </div>
+  </div>
+</div>
+
+<script>
+console.log('=== 日记应用初始化开始 ===');
+
+var currentId = null;
+var currentTitle = '';
+var currentContent = '';
+
+// Markdown 渲染函数
+function renderMarkdown(text) {
+  try {
+    if (typeof marked !== 'undefined' && marked.parse) {
+      return marked.parse(text);
+    }
+  } catch(e) {
+    console.warn('Markdown渲染失败:', e);
+  }
+  // 降级处理：纯文本显示
+  return '<pre style="white-space:pre-wrap;font-family:inherit;">' + 
+         text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + 
+         '</pre>';
+}
+
+// 加载日记列表
+async function loadList() {
+  console.log('loadList: 开始加载日记列表');
+  try {
+    var r = await axios.get('/tools/api/diary/list/');
+    console.log('loadList: 收到响应', r.data);
+    var list = document.getElementById('diaryList');
+    list.innerHTML = '';
+    if (r.data.code === 0) {
+      if (r.data.data.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:#909399;padding:20px;">暂无日记</div>';
+        return;
+      }
+      r.data.data.forEach(function(d) {
+        var div = document.createElement('div');
+        div.className = 'diary-item' + (currentId === d.id ? ' active' : '');
+        div.innerHTML = '<div class="title">' + d.title.replace(/</g,'&lt;') + '</div><div class="date">' + d.updated_at + '</div>';
+        div.onclick = function() { 
+          console.log('点击日记项, id:', d.id);
+          openDiary(d.id); 
+        };
+        list.appendChild(div);
+      });
+    }
+  } catch(e) { 
+    console.error('加载列表出错:', e); 
+  }
+}
+
+// 打开日记
+async function openDiary(id) {
+  console.log('openDiary: 开始打开日记, id:', id);
+  try {
+    var r = await axios.get('/tools/api/diary/detail/', { params: { id: id } });
+    console.log('openDiary: 收到响应', r.data);
+    
+    if (r.data.code !== 0) {
+      console.error('openDiary: 接口返回错误', r.data);
+      alert('获取日记详情失败');
+      return;
+    }
+
+    currentId = r.data.data.id;
+    currentTitle = r.data.data.title;
+    currentContent = r.data.data.content;
+    
+    console.log('openDiary: 设置 currentId =', currentId);
+
+    // 更新编辑器
+    document.getElementById('titleInput').value = currentTitle;
+    document.getElementById('editorArea').value = currentContent;
+    document.getElementById('editorArea').style.display = 'block';
+    document.getElementById('editorPlaceholder').style.display = 'none';
+    document.getElementById('editorHeader').style.display = 'flex';
+    
+    // 显示删除按钮
+    var deleteBtn = document.getElementById('deleteBtn');
+    deleteBtn.style.display = 'inline-block';
+    console.log('openDiary: 删除按钮已显示');
+
+    // 更新预览
+    var html = renderMarkdown(currentContent || '');
+    document.getElementById('previewArea').innerHTML = html;
+    document.getElementById('previewArea').style.display = 'block';
+    document.getElementById('previewPlaceholder').style.display = 'none';
+
+    // 刷新列表高亮
+    loadList();
+  } catch(e) {
+    console.error('打开日记出错:', e);
+    alert('打开日记失败: ' + e.message);
+  }
+}
+
+// 新建日记
+function newDiary() {
+  console.log('newDiary: 新建日记');
+  currentId = null;
+  currentTitle = '';
+  currentContent = '';
+  
+  document.getElementById('titleInput').value = '';
+  document.getElementById('editorArea').value = '';
+  document.getElementById('editorArea').style.display = 'block';
+  document.getElementById('editorPlaceholder').style.display = 'none';
+  document.getElementById('editorHeader').style.display = 'flex';
+  
+  // 隐藏删除按钮
+  var deleteBtn = document.getElementById('deleteBtn');
+  deleteBtn.style.display = 'none';
+  console.log('newDiary: 删除按钮已隐藏');
+
+  // 清空预览
+  document.getElementById('previewArea').innerHTML = '';
+  document.getElementById('previewArea').style.display = 'none';
+  document.getElementById('previewPlaceholder').style.display = 'block';
+  
+  // 刷新列表
+  loadList();
+}
+
+// 编辑器实时预览
+document.getElementById('editorArea').addEventListener('input', function() {
+  currentContent = this.value;
+  var preview = document.getElementById('previewArea');
+  var placeholder = document.getElementById('previewPlaceholder');
+  if (currentContent.trim()) {
+    preview.innerHTML = renderMarkdown(currentContent);
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+  } else {
+    preview.innerHTML = '';
+    preview.style.display = 'none';
+    placeholder.style.display = 'block';
+  }
+});
+
+// 保存日记
+async function saveDiary() {
+  console.log('saveDiary: 开始保存');
+  var title = document.getElementById('titleInput').value.trim() || '无标题';
+  var content = document.getElementById('editorArea').value;
+  
+  console.log('saveDiary: 发送请求', { id: currentId, title: title });
+  
+  try {
+    var r = await axios.post('/tools/api/diary/save/', {
+      id: currentId || null,
+      title: title,
+      content: content
+    });
+    console.log('saveDiary: 收到响应', r.data);
+    
+    if (r.data.code === 0) {
+      currentId = r.data.id;
+      currentTitle = title;
+      
+      console.log('saveDiary: 保存成功, currentId =', currentId);
+      
+      // 保存成功后显示删除按钮
+      var deleteBtn = document.getElementById('deleteBtn');
+      deleteBtn.style.display = 'inline-block';
+      
+      alert('保存成功');
+      loadList();
+    } else {
+      console.error('saveDiary: 保存失败', r.data);
+      alert('保存失败: ' + r.data.msg);
+    }
+  } catch(e) {
+    console.error('saveDiary: 保存出错', e);
+    alert('保存失败: ' + e.message);
+  }
+}
+
+// 删除日记
+async function deleteDiary() {
+  console.log('=== deleteDiary 开始执行 ===');
+  console.log('currentId:', currentId);
+  
+  if (!currentId) {
+    console.log('currentId 为空，无法删除');
+    alert('没有选中的日记');
+    return;
+  }
+  
+  // 确认删除
+  console.log('弹出确认对话框');
+  if (!confirm('确定删除该日记？此操作不可恢复！')) {
+    console.log('用户取消了删除');
+    return;
+  }
+  
+  console.log('用户确认删除，准备发送请求, id:', currentId);
+  
+  try {
+    var r = await axios.post('/tools/api/diary/delete/', { id: currentId });
+    console.log('删除请求响应:', r.data);
+    
+    if (r.data.code === 0) {
+      console.log('删除成功，清理界面');
+      
+      // 重置状态
+      currentId = null;
+      currentTitle = '';
+      currentContent = '';
+      
+      // 清空编辑器
+      document.getElementById('titleInput').value = '';
+      document.getElementById('editorArea').value = '';
+      document.getElementById('editorArea').style.display = 'none';
+      document.getElementById('editorPlaceholder').style.display = 'flex';
+      document.getElementById('editorHeader').style.display = 'none';
+      
+      // 隐藏删除按钮
+      document.getElementById('deleteBtn').style.display = 'none';
+      
+      // 清空预览
+      document.getElementById('previewArea').innerHTML = '';
+      document.getElementById('previewArea').style.display = 'none';
+      document.getElementById('previewPlaceholder').style.display = 'block';
+      
+      alert('删除成功');
+      loadList();
+    } else {
+      console.error('删除失败:', r.data);
+      alert('删除失败: ' + (r.data.msg || '未知错误'));
+    }
+  } catch(e) {
+    console.error('删除请求异常:', e);
+    alert('删除失败: ' + e.message);
+  }
+}
+
+// 事件绑定
+console.log('开始绑定事件...');
+
+// 保存按钮
+var saveBtn = document.getElementById('saveBtn');
+if (saveBtn) {
+  saveBtn.onclick = function(e) {
+    e.preventDefault();
+    console.log('保存按钮被点击');
+    saveDiary();
+  };
+  console.log('保存按钮事件绑定成功');
+}
+
+// 删除按钮
+var deleteBtn = document.getElementById('deleteBtn');
+if (deleteBtn) {
+  deleteBtn.onclick = function(e) {
+    console.log('=== 删除按钮被点击 ===');
+    e.preventDefault();
+    e.stopPropagation();
+    deleteDiary();
+  };
+  console.log('删除按钮事件绑定成功');
+}
+
+// 拖拽功能
+setTimeout(function() {
+  console.log('初始化拖拽功能...');
+  document.querySelectorAll('.drag-bar').forEach(function(bar) {
+    bar.addEventListener('mousedown', function(e) {
+      var panel = document.getElementById(bar.dataset.target);
+      if (!panel) return;
+      var startX = e.clientX, startW = panel.offsetWidth;
+      function onMove(ev) {
+        var w = startW + ev.clientX - startX;
+        if (w < 120) w = 120;
+        panel.style.width = w + 'px';
+      }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+  console.log('拖拽功能初始化完成');
+}, 200);
+
+// 页面加载完成后加载列表
+console.log('开始加载日记列表');
+loadList();
+
+console.log('=== 日记应用初始化完成 ===');
+</script>
+</body>
+</html>

@@ -12,7 +12,8 @@ from . import family as family_views
 from . import directory as directory_views
 from . import cadre as cadre_views
 from . import log_query as log_views
-from . import auto_names
+from . import streamer
+from . import directory_print
 
 urlpatterns = [
     # ==================== 人员维护 ====================
@@ -31,6 +32,7 @@ urlpatterns = [
     path("api/salary-export/", salary_views.salary_export_api, name="salary-export"),
     path("api/salary-bzfind/", salary_views.salary_bzfind_api, name="salary-bzfind"),
     path("api/salary-dcfind/", salary_views.salary_dcfind_api, name="salary-dcfind"),
+    path("api/salary-print/", salary_views.salary_print_api, name="salary-print"),
 
     # ==================== 职务变动 ====================
     path("person-position/", position_views.person_position_view, name="person-position"),
@@ -76,7 +78,9 @@ urlpatterns = [
     path("api/directory-tree/", directory_views.directory_tree_api, name="directory-tree"),
     path("api/directory-list/", directory_views.directory_list_api, name="directory-list"),
     path("api/directory-save/", directory_views.directory_save_api, name="directory-save"),
-    path("api/directory-print/", directory_views.directory_print_api, name="directory-print"),
+    path("directory-print/", directory_print.print_page, name="directory-print"),
+    path("api/directory-print-pdf/", directory_print.print_pdf_api, name="directory-print-pdf"),
+    path("api/directory-print-export/", directory_print.print_export_api, name="directory-print-export"),
 
     # ==================== 干部任免表 ====================
     path("person-cadre/", cadre_views.person_cadre_view, name="person-cadre"),
@@ -92,13 +96,16 @@ urlpatterns = [
     path("api/log-types/", log_views.log_types_api, name="log-types"),
     path("api/log-query/", log_views.log_query_api, name="log-query-api"),
 
-    #=======================材料名称自动补齐===============
-    path("auto-names/", auto_names.archives_auto_view, name="archives-auto"),
-    path("api/auto-names/list/", auto_names.archives_auto_list_api, name="archives-auto-list"),
-    path("api/auto-names/save/", auto_names.archives_auto_save_api, name="archives-auto-save"),
-    path("api/auto-names/fl/", auto_names.archives_auto_fl_api, name="archives-auto-fl"),
-    path("api/auto-names/export/", auto_names.archives_auto_export_api, name="archives-auto-export"),
 
     # ==================== 扫描查看 ====================
     path('image/', include('main.views.archives.image.urls')),
+
+    # ==================== 档案标签打印 ====================
+    path("streamer/", streamer.page, name="streamer"),
+    path("api/streamer/units/", streamer.unit_list_api, name="streamer-units"),
+    path("api/streamer/table/", streamer.table_api, name="streamer-table"),
+    path("api/streamer/save/", streamer.save_api, name="streamer-save"),
+    path("api/streamer/print-streamer/", streamer.print_streamer_api, name="streamer-print"),
+    path("api/streamer/print-label/", streamer.print_label_api, name="streamer-label"),
+    path("api/streamer/print-cabinet/", streamer.print_cabinet_api, name="streamer-cabinet"),
 ]

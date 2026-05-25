@@ -89,9 +89,9 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                 <table class="info-table">
                     <thead><tr><th>ID</th><th>收件时间</th><th>文号</th><th>来件部门</th><th>接收人</th><th>被接收人</th><th>送交人</th><th>档案编号</th></tr></thead>
                     <tbody>
-                        <tr v-for="r in historyList" :key="r.ID" @click="selectHistory(r)"
-                            :style="{background: form.id===r.ID ? '#e6f7ff' : ''}">
-                            <td>[[ r.ID ]]</td><td>[[ r.receiveDate ]]</td><td>[[ r.documentNo ]]</td>
+                        <tr v-for="r in historyList" :key="r.id" @click="selectHistory(r)"
+                            :style="{background: form.id===r.id ? '#e6f7ff' : ''}">
+                            <td>[[ r.id ]]</td><td>[[ r.receiveDate ]]</td><td>[[ r.documentNo ]]</td>
                             <td>[[ r.fromUnit ]]</td><td>[[ r.receiver ]]</td><td>[[ r.personName ]]</td>
                             <td>[[ r.sender ]]</td><td>[[ r.archiveNo ]]</td>
                         </tr>
@@ -105,6 +105,10 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
             </div>
         </div>
     </div>
+
+    <el-dialog v-model="showPersonPanel" title="选择被接收人" width="320px" :close-on-click-modal="false">
+        <iframe src="/components/person-panel-embed/" style="width:100%;height:500px;border:none;"></iframe>
+    </el-dialog>
 </div>
 
 <script>
@@ -120,6 +124,7 @@ const app = createApp({
         const historyTotal = ref(0);
         const currentPage = ref(1);
         const pageSize = ref(20);
+        const showPersonPanel = ref(false);
 
         const checkedPersons = computed(() => personList.value.filter(p=>p._checked));
         const allPersonsChecked = computed(() => personList.value.length>0 && personList.value.every(p=>p._checked));
@@ -131,16 +136,17 @@ const app = createApp({
         };
 
         window.addEventListener('message', (e) => {
-            if (e.data.type === 'person-select') {
+            if (e.data && e.data.type === 'person-select') {
                 const p = e.data.data;
-                if (!personList.value.find(x=>x.RSID==p.rsid)) {
+                if (!personList.value.find(x=>String(x.RSID)===String(p.rsid))) {
                     personList.value.push({ RSID: p.rsid, 姓名: p.displayName||p.tname, _checked: false });
                     loadPersons();
                 }
+                showPersonPanel.value = false;
             }
         });
 
-        const addPerson = () => { window.open('/components/person-panel-embed/', '_blank', 'width=300,height=600'); };
+        const addPerson = () => { showPersonPanel.value = true; };
         const removeCheckedPersons = () => { personList.value = personList.value.filter(p=>!p._checked); };
 
         const loadPersons = async () => {
@@ -159,7 +165,8 @@ const app = createApp({
         const saveRecord = async () => {
             if (personList.value.length < 1) { ElMessage.warning('被接收人至少1人'); return; }
             const res = await axios.post('/business/api/receive/save/', {
-                action: 'save', id: form.value.id || '',
+                action: 'save',
+                id: form.value.id || '',
                 receiveDate: form.value.receiveDate||'', documentNo: form.value.documentNo||'',
                 receiver: form.value.receiver||'', fromUnit: form.value.fromUnit||'',
                 archiveNo: form.value.archiveNo||'', original: form.value.original||'',
@@ -173,26 +180,75 @@ const app = createApp({
                 personName: personList.value.map(p=>p.姓名).join(','),
                 personCount: personList.value.length
             });
-            if (res.data.code===0) { ElMessage.success('保存成功'); loadHistory(currentPage.value); }
-            else ElMessage.error(res.data.msg);
+            if (res.data.code===0) {
+                ElMessage.success(form.value.id ? '修改成功' : '新增成功');
+                loadHistory(currentPage.value);
+            } else {
+                ElMessage.error(res.data.msg);
+            }
         };
 
         const deleteRecord = async () => {
-            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
-            await axios.post('/business/api/receive/save/', { action:'delete', id: form.value.id });
-            ElMessage.success('已删除'); newRecord(); loadHistory(1);
+            if (!form.value.id) {
+                ElMessage.warning('请先选择一条记录');
+                return;
+            }
+            try {
+                await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
+            } catch(e) { return; }
+            const res = await axios.post('/business/api/receive/save/', {
+                action: 'delete',
+                id: form.value.id
+            });
+            if (res.data.code===0) {
+                ElMessage.success('已删除');
+                newRecord();
+                loadHistory(1);
+            } else {
+                ElMessage.error(res.data.msg || '删除失败');
+            }
         };
+
         const printRecord = () => { ElMessage.info('打印功能开发中'); };
 
         const selectHistory = (r) => {
-            form.value = { ...r };
-            personList.value = r.personRsid ? r.personRsid.split(',').map((id,i)=>({RSID:id,姓名:(r.personName||'').split(',')[i]||'',_checked:false})) : [];
-            loadPersons();
+            form.value.id = r.id || '';
+            form.value.receiveDate = r.receiveDate || '';
+            form.value.documentNo = r.documentNo || '';
+            form.value.receiver = r.receiver || '';
+            form.value.fromUnit = r.fromUnit || '';
+            form.value.archiveNo = r.archiveNo || '';
+            form.value.original = r.original || '';
+            form.value.copy = r.copy || '';
+            form.value.cabinetNo = r.cabinetNo || '';
+            form.value.layerNo = r.layerNo || '';
+            form.value.sequenceNo = r.sequenceNo || '';
+            form.value.sender = r.sender || '';
+            form.value.senderDate = r.senderDate || '';
+            form.value.returnDate = r.returnDate || '';
+            form.value.storageDate = r.storageDate || '';
+            form.value.storageApprover = r.storageApprover || '';
+            form.value.archiveType = r.archiveType || '';
+            form.value.remark = r.remark || '';
+            if (r.personRsid) {
+                const ids = r.personRsid.split(',').filter(function(x){return x.trim()!==''});
+                const names = (r.personName || '').split(',');
+                personList.value = ids.map(function(id, i){
+                    return { RSID: id, 姓名: names[i] || '', _checked: false };
+                });
+                loadPersons();
+            } else {
+                personList.value = [];
+            }
         };
 
         const loadHistory = async (page) => {
             const res = await axios.get('/business/api/receive/list/', { params: { page: page||1, pageSize: pageSize.value } });
-            if (res.data.code===0) { historyList.value=res.data.data||[]; historyTotal.value=res.data.total||0; currentPage.value=page||1; }
+            if (res.data.code===0) {
+                historyList.value = res.data.data||[];
+                historyTotal.value = res.data.total||0;
+                currentPage.value = page||1;
+            }
         };
 
         const onPageChange = (p) => loadHistory(p);
@@ -258,6 +314,7 @@ const app = createApp({
         return {
             form, personList, checkedPersons, allPersonsChecked, toggleAllPersons,
             historyList, historyTotal, currentPage, pageSize,
+            showPersonPanel,
             newRecord, addPerson, removeCheckedPersons, saveRecord, deleteRecord, printRecord,
             selectHistory, loadHistory, onPageChange, onSizeChange
         };

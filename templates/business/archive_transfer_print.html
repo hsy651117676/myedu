@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>档案转递打印</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:SimSun,"宋体",sans-serif; font-size:14pt; padding:20px 30px; background:#f5f7fa; }
+    .page { width:210mm; margin:0 auto; padding:15mm 12mm; background:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.1); }
+    .toolbar { display:flex; justify-content:flex-end; gap:8px; margin-bottom:12px; position:sticky; top:0; z-index:10; }
+    .toolbar button { padding:6px 16px; cursor:pointer; font-size:12pt; border:1px solid #409EFF; background:#409EFF; color:#fff; border-radius:4px; }
+    h1 { text-align:center; font-size:20pt; font-weight:bold; margin:0 0 6px 0; }
+    h2 { text-align:center; font-size:20pt; font-weight:bold; margin:10px 0 6px 0; }
+    .file-no { text-align:center; font-size:14pt; margin:0 0 6px 0; }
+    table { border-collapse:collapse; width:100%; }
+    td { border:1px solid #000; padding:6px 8px; font-size:14pt; vertical-align:middle; text-align:center; }
+    .sep { text-align:center; font-size:14pt; margin:6px 0; letter-spacing:4px; }
+    .content { border:1px solid #000; padding:8px; margin:6px 0; font-size:14pt; line-height:1.8; text-align:left; }
+    .right { text-align:right; font-size:14pt; margin:4px 0; }
+    .return-title { text-align:center; font-weight:bold; font-size:16pt; margin:8px 0; }
+    .footer { font-size:12pt; margin-top:12px; line-height:1.6; }
+    .c1 { width:15%; } .c2 { width:42%; } .c3 { width:28%; } .c4 { width:15%; }
+    @media print {
+      body { background:#fff; padding:0; }
+      .page { box-shadow:none; padding:0; width:auto; }
+      .toolbar { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="window.open('/business/transfer/print/excel/?id={{ rid }}')">导出Excel</button>
+  <button onclick="window.open('/business/transfer/print/pdf/?id={{ rid }}')">导出PDF</button>
+  <button onclick="window.print()">打印</button>
+</div>
+
+<div class="page">
+
+  <h1>干部档案传递存根</h1>
+  <div class="file-no">{{ zdwh }}</div>
+  <table>
+    <tr>
+      <td class="c1">姓名：{{ fb }}</td>
+      <td class="c2">工作单位：{{ person_job }}</td>
+      <td class="c3">调往何单位：{{ zwdw }}</td>
+      <td class="c4">档案卷数<br>壹卷</td>
+    </tr>
+  </table>
+  <div class="sep">…………………………………………………………………………………………</div>
+
+  <h2>干部档案传递通知单</h2>
+  <div class="file-no">{{ zdwh }}</div>
+  <div style="font-size:14pt;">{{ zwdw }}：</div>
+  <div class="content">
+    {{ fb }}等同志的档案材料转出，请按档案内所列目录清点查收，并将回执退回。
+  </div>
+  <div class="right">盘州市教育局档案室</div>
+  <div class="right">{{ zdsj_display }}</div>
+
+  <div class="sep">…………………………………………………………………………………………</div>
+
+  <table>
+    <tr>
+      <td class="c1">姓名：{{ fb }}</td>
+      <td class="c2">工作单位：{{ person_job }}</td>
+      <td class="c3">调往何单位：{{ zwdw }}</td>
+      <td class="c4">档案卷数<br>壹卷</td>
+    </tr>
+  </table>
+  <div class="sep">…………………………………………………………………………………………</div>
+
+  <div style="font-size:14pt;margin:4px 0;">盘州市教育局：</div>
+  <div class="return-title">回&emsp;执</div>
+  <div class="content" style="font-size:12pt;line-height:2;">
+    &emsp;&emsp;你处&emsp;&emsp;年&emsp;月&emsp;日转来的第&emsp;&emsp;号干部档案转递通知单中所列的&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;等&emsp;&emsp;名同志档案共&emsp;&emsp;卷，我处已于&emsp;&emsp;年&emsp;月&emsp;日收到，经清点无误，现将回执退回，请查收。
+  </div>
+  <div style="margin:8px 0;">
+    <span>收件人签字：</span>
+    <span style="margin-left:40px;">收件单位（盖章）</span>
+    <span style="margin-left:60px;">年&emsp;月&emsp;日</span>
+  </div>
+  <div class="footer">
+    回执邮寄地址：贵州省六盘水市盘州市红果街道盘西新城纵五路教育局大楼517档案室<br>
+    联系电话：0858-3634122
+  </div>
+
+</div>
+</body>
+</html>

@@ -24,10 +24,10 @@ LOGOUT_REDIRECT_URL = 'login'
 # ==================== 档案扫描图像配置 ====================
 
 # 扫描图片存放根目录（加密存储）
-SCAN_IMAGE_BASE_DIR = '/mnt/data/das_images'
+SCAN_IMAGE_BASE_DIR = '/mnt/bigdata/das_images'
 
 # PDF输出根目录
-SCAN_PDF_OUTPUT_DIR = '/mnt/data/das_pdf'
+SCAN_PDF_OUTPUT_DIR = '/mnt/bigdata/das_pdf'
 
 # 支持的图像类型
 SCAN_IMAGE_TYPES = {
@@ -101,9 +101,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'main.middleware.LoginJumpMiddleware',  # 如需iframe跳转则取消注释
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'main.middleware.LoginJumpMiddleware',  # 如需iframe跳转则取消注释
 ]
 
 ROOT_URLCONF = 'myedu.urls'

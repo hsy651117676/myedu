@@ -70,9 +70,12 @@ def directory_list_api(request):
         cursor = conn.cursor()
         cursor.execute(
             """
-            SELECT ARCHID, RSID, XH, CLTM, FYEAR, FMONTH, FDAY, YS, BZ, FL
-            FROM RS_ARCHINFO WHERE RSID=? AND FL=? ORDER BY XH
-        """,
+            SELECT a.ARCHID, a.RSID, a.XH, a.CLTM, a.FYEAR, a.FMONTH, a.FDAY, a.YS, a.BZ, a.FL,
+                b.JBBH + '-' + CAST(a.XH AS VARCHAR(5)) AS 编号
+            FROM RS_ARCHINFO a
+            LEFT JOIN CATETREE b ON a.FL = b.FL
+            WHERE a.RSID=? AND a.FL=? ORDER BY a.XH
+            """,
             (int(rsid), int(fl)),
         )
         cols = [col[0] for col in cursor.description]
@@ -84,7 +87,6 @@ def directory_list_api(request):
     finally:
         if conn:
             conn.close()
-
 
 @login_required
 @csrf_exempt
@@ -109,7 +111,6 @@ def directory_save_api(request):
         conn = _get_conn()
         cursor = conn.cursor()
 
-        # 如果有批量操作
         if batch:
             for item in batch:
                 action = item.get("action", "UPDATE")
@@ -144,6 +145,32 @@ def directory_save_api(request):
                             "UPDATE RS_ARCHINFO SET XH=XH-1 WHERE RSID=? AND FL=? AND XH>?",
                             (int(rsid), fl, xh),
                         )
+                elif action == "NEWROW":
+                    fl = int(row.get("FL", 0))
+                    cursor.execute(
+                        "SELECT ISNULL(MAX(XH),0) FROM RS_ARCHINFO WHERE RSID=? AND FL=?",
+                        (int(rsid), fl),
+                    )
+                    xh = cursor.fetchone()[0] + 1
+                    cursor.execute(
+                        "INSERT INTO RS_ARCHINFO (RSID, XH, FL, CLTM, FYEAR, FMONTH, FDAY, YS, BZ, ADDTIME) VALUES (?,?,?,?,?,?,?,?,?,GETDATE())",
+                        (
+                            int(rsid),
+                            xh,
+                            fl,
+                            row.get("CLTM", ""),
+                            row.get("FYEAR", ""),
+                            row.get("FMONTH", ""),
+                            row.get("FDAY", ""),
+                            row.get("YS", ""),
+                            row.get("BZ", ""),
+                        ),
+                    )
+                elif action == "CHANGENUM":
+                    cursor.execute(
+                        "UPDATE RS_ARCHINFO SET XH=? WHERE ARCHID=?",
+                        (int(row.get("XH", 1)), row.get("ARCHID")),
+                    )
         elif single_action:
             if single_action == "UPDATE":
                 cursor.execute(
@@ -197,11 +224,25 @@ def directory_save_api(request):
                     (int(rsid), xh + 1, fl),
                 )
             elif single_action == "NEWROW":
-                xh = int(single_row.get("XH", 1))
-                fl = int(single_row.get("FL", 1))
+                fl = int(single_row.get("FL", 0))
                 cursor.execute(
-                    "INSERT INTO RS_ARCHINFO (RSID, XH, FL, CLTM, ADDTIME) VALUES (?,?,?,?,GETDATE())",
-                    (int(rsid), xh, fl, single_row.get("CLTM", "")),
+                    "SELECT ISNULL(MAX(XH),0) FROM RS_ARCHINFO WHERE RSID=? AND FL=?",
+                    (int(rsid), fl),
+                )
+                xh = cursor.fetchone()[0] + 1
+                cursor.execute(
+                    "INSERT INTO RS_ARCHINFO (RSID, XH, FL, CLTM, FYEAR, FMONTH, FDAY, YS, BZ, ADDTIME) VALUES (?,?,?,?,?,?,?,?,?,GETDATE())",
+                    (
+                        int(rsid),
+                        xh,
+                        fl,
+                        single_row.get("CLTM", ""),
+                        single_row.get("FYEAR", ""),
+                        single_row.get("FMONTH", ""),
+                        single_row.get("FDAY", ""),
+                        single_row.get("YS", ""),
+                        single_row.get("BZ", ""),
+                    ),
                 )
             elif single_action == "CHANGENUM":
                 cursor.execute(
@@ -219,33 +260,3 @@ def directory_save_api(request):
         if conn:
             conn.close()
 
-
-@login_required
-def directory_print_api(request):
-    """打印档案目录"""
-    rsid = request.GET.get("rsid", "")
-    if not rsid:
-        return JsonResponse({"code": 400})
-
-    conn = None
-    try:
-        conn = _get_conn()
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT JBBH + '-' + CAST(XH AS VARCHAR(5)) AS 编号, CLTM AS 材料名称,
-                   FYEAR AS 年, FMONTH AS 月, FDAY AS 日, YS AS 页数, BZ AS 备注
-            FROM RS_ARCHINFO a LEFT JOIN CATETREE b ON a.FL = b.FL
-            WHERE a.RSID = ? ORDER BY a.FL, a.XH
-        """,
-            (int(rsid),),
-        )
-        cols = [col[0] for col in cursor.description]
-        rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
-        cursor.close()
-        return JsonResponse({"code": 0, "data": rows})
-    except Exception as e:
-        return JsonResponse({"code": 500, "msg": str(e)})
-    finally:
-        if conn:
-            conn.close()

@@ -7,10 +7,19 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 .dir-tree { width:250px; border-right:1px solid #ddd; overflow-y:auto; padding:8px; }
 .dir-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 .dir-table { border-collapse:collapse; width:100%; font-size:13px; }
-.dir-table th, .dir-table td { padding:2px 4px; border:1px solid #ddd; text-align:center; }
+.dir-table th, .dir-table td { padding:6px 4px; border:1px solid #ddd; text-align:center; }
 .dir-table th { background:#f5f5f5; position:sticky; top:0; z-index:1; }
 .dir-table td input { width:100%; border:none; padding:2px; background:transparent; font-size:12px; text-align:center; }
 .dir-table td input:focus { background:#fff; }
+.dir-table tr[draggable="true"] { cursor:move; }
+.dir-table tr.drag-over { background:#ffe58f !important; }
+.dir-table tr.drag-source { opacity:0.4; background:#bae7ff !important; }
+.new-row td { background:#fffbe6; }
+.new-row td input { background:transparent; }
+.dir-table tr.row-selected { background:#b8d6ff; }
+.dir-table tr.row-editing { background:#fffbe6; }
+.dir-table tr.row-editing.row-selected { background:#e6f0d0; }
+.dir-table td.cell-active { outline:2px solid #409EFF; outline-offset:-2px; background:#fff; }
 </style>
 
 <div id="app" v-if="rsid">
@@ -42,55 +51,55 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;">
       <span style="font-weight:bold;color:#409EFF;">[[ currentName || '档案目录' ]]</span>
       <el-button size="small" @click="saveAll">保存</el-button>
-      <el-button size="small" @click="refreshData">刷新显示所有档案目录</el-button>
-      <el-button size="small" @click="printDirectory">档案目录打印</el-button>
+      <el-button size="small" @click="refreshData">刷新</el-button>
+      <el-button size="small" @click="printDirectory">打印</el-button>
+      <el-button v-if="!sortMode" size="small" @click="enterSortMode">调整编号</el-button>
+      <el-button v-if="sortMode" size="small" type="warning" @click="saveSort">保存顺序</el-button>
+      <el-button v-if="sortMode" size="small" @click="cancelSort">取消</el-button>
     </div>
 
     <div style="flex:1;overflow:auto;">
       <table class="dir-table" :key="tableKey">
-        <thead>
-          <tr>
-            <th style="width:80px;">编号</th>
-            <th>材料名称</th>
-            <th style="width:50px;">年</th>
-            <th style="width:40px;">月</th>
-            <th style="width:40px;">日</th>
-            <th style="width:50px;">页数</th>
-            <th style="width:100px;">备注</th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th style="width:80px;">编号</th><th>材料名称</th>
+          <th style="width:50px;">年</th><th style="width:40px;">月</th><th style="width:40px;">日</th>
+          <th style="width:50px;">页数</th><th style="width:100px;">备注</th>
+        </tr></thead>
         <tbody @contextmenu.prevent="showContextMenu">
-          <tr v-for="(r,i) in archList" :key="i"
-              :style="{ background: r._selected ? '#b8d6ff' : '#fff' }"
-              @click="selectRow(i)">
-            <td>[[ currentFL ]] - [[ r.XH ]]</td>
+          <tr v-for="(r,i) in archList" :key="i" :draggable="sortMode"
+              @dragstart="onDragStart(i,$event)" @dragover="onDragOver(i,$event)" @dragleave="onDragLeave" @drop="onDrop(i)" @dragend="onDragEnd"
+              :class="[r._dragOver?'drag-over':'', dragIndex===i?'drag-source':'', r._selected?'row-selected':'', editCell.row===i?'row-editing':'']"
+              @click="!sortMode&&onRowClick(i)">
+            <td>[[ r.编号 ]]</td>
             <td style="text-align:left;position:relative;">
-              <input v-model="r.CLTM" @input="onMaterialInput(i)" @focus="onMaterialInput(i)" @blur="r._showSuggest=false" autocomplete="off" style="text-align:left;width:100%;"/>
-              <div v-show="r._showSuggest && r._suggestions.length" 
-                   style="position:absolute;top:100%;left:0;right:0;max-height:300px;overflow:auto;background:#fff;border:1px solid #409EFF;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-                <div v-for="s in r._suggestions" :key="s" 
-                     @mousedown.prevent="r.CLTM=s.replace(/^.*? - /, ''); r._showSuggest=false"
-                     style="padding:6px 8px;cursor:pointer;font-size:13px;border-bottom:1px solid #eee;color:#303133;"
-                     @mouseover="$event.target.style.background='#d0e4fc'"
-                     @mouseout="$event.target.style.background='#fff'">
-                  [[ s ]]
-                </div>
+              <input v-model="r.CLTM" @input="onMaterialInput(i)" @focus="onCellFocus(i,'CLTM')" @blur="onCellBlur" @keyup="onKeyUp($event)" autocomplete="off" style="text-align:left;width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='CLTM'?'cell-active':''" />
+              <div v-show="r._showSuggest&&r._suggestions.length&&!sortMode" style="position:absolute;top:100%;left:0;right:0;max-height:300px;overflow:auto;background:#fff;border:1px solid #409EFF;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                <div v-for="s in r._suggestions" :key="s" @mousedown.prevent="r.CLTM=s.replace(/^.*? - /,''); r._showSuggest=false"
+                     style="padding:6px 8px;cursor:pointer;font-size:13px;border-bottom:1px solid #eee;"
+                     @mouseover="$event.target.style.background='#d0e4fc'" @mouseout="$event.target.style.background='#fff'">[[ s ]]</div>
               </div>
             </td>
-            <td><input v-model="r.FYEAR" style="width:100%;"/></td>
-            <td><input v-model="r.FMONTH" style="width:100%;"/></td>
-            <td><input v-model="r.FDAY" style="width:100%;"/></td>
-            <td><input v-model="r.YS" style="width:100%;"/></td>
-            <td><input v-model="r.BZ" style="width:100%;"/></td>
+            <td><input v-model="r.FYEAR" @focus="onCellFocus(i,'FYEAR')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FYEAR'?'cell-active':''" /></td>
+            <td><input v-model="r.FMONTH" @focus="onCellFocus(i,'FMONTH')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FMONTH'?'cell-active':''" /></td>
+            <td><input v-model="r.FDAY" @focus="onCellFocus(i,'FDAY')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FDAY'?'cell-active':''" /></td>
+            <td><input v-model="r.YS" @focus="onCellFocus(i,'YS')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='YS'?'cell-active':''" /></td>
+            <td><input v-model="r.BZ" @focus="onCellFocus(i,'BZ')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='BZ'?'cell-active':''" /></td>
+          </tr>
+          <tr v-if="!sortMode&&currentFL" class="new-row">
+            <td>[[ currentName?.split('、')[0]||'' ]] - *</td>
+            <td><input v-model="newRow.CLTM" placeholder="输入材料名称" style="text-align:left;width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.FYEAR" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.FMONTH" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.FDAY" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.YS" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.BZ" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- 右键菜单 -->
-  <div v-show="contextMenu.show" @click.stop
-       :style="{position:'fixed',left:contextMenu.x+'px',top:contextMenu.y+'px',zIndex:9999,background:'#fff',border:'1px solid #ddd',padding:'4px 0',minWidth:'140px',boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}">
+  <div v-show="contextMenu.show" @click.stop :style="{position:'fixed',left:contextMenu.x+'px',top:contextMenu.y+'px',zIndex:9999,background:'#fff',border:'1px solid #ddd',padding:'4px 0',minWidth:'140px',boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}">
     <div @click="insertRow('InsertUp');contextMenu.show=false" style="padding:6px 12px;cursor:pointer;font-size:13px;">向上插入行</div>
     <div @click="insertRow('InsertDown');contextMenu.show=false" style="padding:6px 12px;cursor:pointer;font-size:13px;">向下插入行</div>
     <div @click="deleteRow();contextMenu.show=false" style="padding:6px 12px;cursor:pointer;font-size:13px;">删除当前行</div>
@@ -105,107 +114,196 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 (function(){
   const { createApp, ref, reactive, onMounted } = Vue;
   const { ElMessage, ElMessageBox } = ElementPlus;
-  const app = createApp({
-    setup() {
-      const p = new URLSearchParams(window.location.search);
-      const rsid = ref(p.get('rsid'));
-      const treeData = ref([]);
-      const sub4 = ref([]); const sub9 = ref([]);
-      const archList = ref([]);
-      const currentFL = ref(0); const currentName = ref('');
-      const selectedRow = ref(-1);
-      const tableKey = ref(0);
-      const contextMenu = reactive({ show: false, x: 0, y: 0 });
 
-      const loadTree = () => {
-        axios.get('/archives/api/directory-tree/').then(res => {
-          if (res.data.code === 0) {
-            treeData.value = res.data.tree.map(t => ({...t, expanded: false}));
-            sub4.value = res.data.sub4 || []; sub9.value = res.data.sub9 || [];
-          }
-        });
-      };
+  const app = createApp({setup(){
+    const p = new URLSearchParams(location.search);
+    const rsid = ref(p.get('rsid'));
+    const treeData = ref([]), sub4 = ref([]), sub9 = ref([]);
+    const archList = ref([]);
+    const currentFL = ref(0), currentName = ref('');
+    const tableKey = ref(0);
+    const contextMenu = reactive({show:false,x:0,y:0});
+    const newRow = reactive({CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:''});
+    const sortMode = ref(false), dragIndex = ref(-1);
+    const editCell = reactive({row:-1,col:''});
 
-      const loadList = () => {
-        if (!currentFL.value) return;
-        axios.get('/archives/api/directory-list/', { params: { rsid: rsid.value, fl: currentFL.value } }).then(res => {
-          if (res.data.code === 0) archList.value = (res.data.data || []).map(r => ({ ...r, _selected: false, _suggestions: [], _showSuggest: false }));
-        });
-      };
+    const loadTree = () => axios.get('/archives/api/directory-tree/').then(res => {
+      if (res.data.code===0) {
+        treeData.value = res.data.tree.map(t=>({...t,expanded:false}));
+        sub4.value = res.data.sub4||[]; sub9.value = res.data.sub9||[];
+      }
+    });
 
-      const selectRow = (i) => { archList.value.forEach(r => r._selected = false); archList.value[i]._selected = true; selectedRow.value = i; };
-      const refreshData = () => loadList();
+    const loadList = () => {
+      if (!currentFL.value) return;
+      axios.get('/archives/api/directory-list/',{params:{rsid:rsid.value,fl:currentFL.value}}).then(res => {
+        if (res.data.code===0) archList.value = (res.data.data||[]).map(r=>({...r,_selected:false,_suggestions:[],_showSuggest:false,_dragOver:false}));
+      });
+    };
 
-      const saveAll = () => {
-        let rows = archList.value.map(r => ({ action: 'UPDATE', row: { ARCHID: r.ARCHID, CLTM: r.CLTM, FYEAR: r.FYEAR, FMONTH: r.FMONTH, FDAY: r.FDAY, YS: r.YS, BZ: r.BZ } }));
-        axios.post('/archives/api/directory-save/', { rsid: rsid.value, batch: rows }).then(res => {
-          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
-          if (res.data.code===0) loadList();
-        });
-      };
+    const quickSave = () => {
+      const rows = archList.value.filter(r=>r.ARCHID).map(r=>({action:'UPDATE',row:{ARCHID:r.ARCHID,CLTM:r.CLTM||'',FYEAR:r.FYEAR||'',FMONTH:r.FMONTH||'',FDAY:r.FDAY||'',YS:r.YS||'',BZ:r.BZ||''}}));
+      return rows.length ? axios.post('/archives/api/directory-save/',{rsid:rsid.value,batch:rows}) : Promise.resolve();
+    };
 
-      const insertRow = (action) => {
-        let idx = selectedRow.value;
-        if (idx < 0) { ElMessage.warning('请先选中一行'); return; }
-        let row = archList.value[idx];
-        axios.post('/archives/api/directory-save/', { rsid: rsid.value, action, row: { XH: row.XH, FL: currentFL.value } }).then(res => {
-          if (res.data.code === 0) { tableKey.value++; loadList(); ElMessage.success('操作成功'); }
+    const commitNewRow = async () => {
+      if (!newRow.CLTM.trim()&&!newRow.FYEAR.trim()&&!newRow.FMONTH.trim()&&!newRow.FDAY.trim()&&!newRow.YS.trim()&&!newRow.BZ.trim()) return;
+      await axios.post('/archives/api/directory-save/',{rsid:rsid.value,action:'NEWROW',row:{...newRow,FL:currentFL.value}});
+      Object.assign(newRow,{CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:''});
+      loadList();
+    };
+
+    const saveAll = async () => { await quickSave(); ElMessage.success('保存成功'); loadList(); };
+    const enterSortMode = async () => { await quickSave(); sortMode.value=true; ElMessage.info('可拖动调整编号顺序'); };
+    const saveSort = async () => {
+      const items = archList.value.map((r,i)=>({ARCHID:r.ARCHID,XH:i+1}));
+      await axios.post('/archives/api/directory-save/',{rsid:rsid.value,batch:items.map(r=>({action:'CHANGENUM',row:r}))});
+      sortMode.value=false; ElMessage.success('顺序已保存'); loadList();
+    };
+    const cancelSort = () => { sortMode.value=false; dragIndex.value=-1; loadList(); };
+
+    const onDragStart = (i,e) => { dragIndex.value=i; e.dataTransfer.effectAllowed='move'; };
+    const onDragOver = (i,e) => { e.preventDefault(); archList.value.forEach((r,idx)=>r._dragOver=idx===i); };
+    const onDragLeave = () => archList.value.forEach(r=>r._dragOver=false);
+    const onDrop = (i) => {
+      archList.value.forEach(r=>r._dragOver=false);
+      if (dragIndex.value===-1||dragIndex.value===i) return;
+      archList.value.splice(i,0,archList.value.splice(dragIndex.value,1)[0]);
+      dragIndex.value=-1;
+    };
+    const onDragEnd = () => { dragIndex.value=-1; archList.value.forEach(r=>r._dragOver=false); };
+
+    const insertRow = (action) => {
+      if (sortMode.value) return;
+      const idx = editCell.row>=0 ? editCell.row : 0;
+      const row = archList.value[idx];
+      if (!row) { ElMessage.warning('请先选中一行'); return; }
+      quickSave().catch(()=>{});
+      axios.post('/archives/api/directory-save/',{rsid:rsid.value,action,row:{XH:row.XH,FL:currentFL.value}}).then(res=>{
+        if (res.data.code===0) { tableKey.value++; loadList(); ElMessage.success('操作成功'); }
+        else ElMessage.error(res.data.msg);
+      });
+    };
+
+    const deleteRow = () => {
+      if (sortMode.value) return;
+      const idx = editCell.row>=0 ? editCell.row : 0;
+      if (!archList.value[idx]) { ElMessage.warning('请先选中一行'); return; }
+      quickSave().catch(()=>{});
+      ElMessageBox.confirm('确定删除该行？','确认',{type:'warning'}).then(()=>{
+        axios.post('/archives/api/directory-save/',{rsid:rsid.value,action:'DELETE',row:{ARCHID:archList.value[idx].ARCHID}}).then(res=>{
+          if (res.data.code===0) { tableKey.value++; loadList(); ElMessage.success('已删除'); }
           else ElMessage.error(res.data.msg);
         });
-      };
+      });
+    };
 
-      const deleteRow = () => {
-        let idx = selectedRow.value;
-        if (idx < 0) { ElMessage.warning('请先选中一行'); return; }
-        ElMessageBox.confirm('确定删除该行？', '确认', { type: 'warning' }).then(() => {
-          axios.post('/archives/api/directory-save/', { rsid: rsid.value, action: 'DELETE', row: { ARCHID: archList.value[idx].ARCHID } }).then(res => {
-            if (res.data.code === 0) { tableKey.value++; loadList(); ElMessage.success('已删除'); }
-            else ElMessage.error(res.data.msg);
-          });
-        });
-      };
+    const addNewRow = () => {
+      if (sortMode.value) return;
+      archList.value.push({ARCHID:null,XH:archList.value.length+1,CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:'',_selected:false,_suggestions:[],_showSuggest:false});
+    };
 
-      const showContextMenu = (e) => {
-        contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.show = true;
-        let tr = e.target.closest('tr');
-        if (tr) { let idx = Array.from(tr.parentNode.children).indexOf(tr); if (idx >= 0) selectRow(idx); }
-      };
+    const onRowClick = (i) => {
+      archList.value.forEach(r=>r._selected=false);
+      if (archList.value[i]) archList.value[i]._selected=true;
+      editCell.row=i;
+    };
 
-      const addNewRow = () => {
-        archList.value.push({ ARCHID: null, XH: archList.value.length+1, CLTM: '', FYEAR: '', FMONTH: '', FDAY: '', YS: '', BZ: '', _selected: false, _suggestions: [], _showSuggest: false });
-      };
+    const onCellFocus = (i,col) => { editCell.row=i; editCell.col=col; };
+    const onCellBlur = () => {};
 
-      const printDirectory = () => {
-        axios.get('/archives/api/directory-print/', { params: { rsid: rsid.value } }).then(res => {
-          if (res.data.code === 0) {
-            let w = window.open('','_blank');
-            w.document.write('<html><head><meta charset="utf-8"><title>档案目录打印</title><style>table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #000;padding:4px 8px}@page{size:A4;margin:10mm}</style></head><body><table><tr><th>编号</th><th>材料名称</th><th>年</th><th>月</th><th>日</th><th>页数</th><th>备注</th></tr>');
-            res.data.data.forEach(r => w.document.write(`<tr><td>${r.编号}</td><td>${r.材料名称}</td><td>${r.年}</td><td>${r.月}</td><td>${r.日}</td><td>${r.页数}</td><td>${r.备注}</td></tr>`));
-            w.document.write('</table></body></html>'); w.document.close();w.print();
+    const moveFocus = (inp, direction) => {
+      const td = inp.closest('td'), tr = inp.closest('tr');
+      if (!td||!tr) return;
+      if (direction==='up'||direction==='down') {
+        const tds = tr.querySelectorAll('td');
+        const colIdx = Array.from(tds).indexOf(td);
+        const targetTr = direction==='up' ? tr.previousElementSibling : tr.nextElementSibling;
+        if (targetTr) {
+          const target = targetTr.querySelectorAll('td')[colIdx]?.querySelector('input');
+          if (target&&!target.disabled) { target.focus(); target.select(); }
+        }
+      } else if (direction==='left') {
+        const target = td.previousElementSibling?.querySelector('input');
+        if (target&&!target.disabled) { target.focus(); target.selectionStart=target.value.length; }
+      } else if (direction==='right') {
+        const target = td.nextElementSibling?.querySelector('input');
+        if (target&&!target.disabled) { target.focus(); target.select(); }
+      } else if (direction==='enter') {
+        const nextTd = td.nextElementSibling;
+        if (nextTd) {
+          const target = nextTd.querySelector('input');
+          if (target&&!target.disabled) { target.focus(); target.select(); }
+        } else {
+          const nextTr = tr.nextElementSibling;
+          if (nextTr) {
+            const target = nextTr.querySelectorAll('td')[1]?.querySelector('input');
+            if (target&&!target.disabled) { target.focus(); target.select(); }
           }
-        });
-      };
+        }
+      }
+    };
 
-      const onMaterialInput = (i) => {
-        let row = archList.value[i];
-        if (!row) return;
-        let keyword = (row.CLTM || '').toLowerCase();
-        if (!keyword) { row._suggestions = []; row._showSuggest = false; return; }
-        let all = window.ARCHIVES_AUTO_FLAT || [];
-        row._suggestions = all.filter(n => n && n.toLowerCase().includes(keyword)).slice(0, 50);
-        row._showSuggest = true;
-      };
+    const onKeyUp = (e) => {
+      if (sortMode.value) return;
+      const inp = e.target;
+      const val = inp.value||'';
+      if (e.key==='ArrowUp') { moveFocus(inp,'up'); }
+      else if (e.key==='ArrowDown') { moveFocus(inp,'down'); }
+      else if (e.key==='ArrowLeft' && inp.selectionStart===0) { moveFocus(inp,'left'); }
+      else if (e.key==='ArrowRight' && inp.selectionStart===val.length && val.length>0) { moveFocus(inp,'right'); }
+      else if (e.key==='Enter') { moveFocus(inp,'enter'); }
+      else if (e.key==='Tab') { e.preventDefault(); moveFocus(inp,'right'); }
+    };
 
-      onMounted(loadTree);
+    const showContextMenu = (e) => {
+      if (sortMode.value) return;
+      let x=e.clientX, y=e.clientY;
+      if (y+180>window.innerHeight) y=window.innerHeight-190;
+      Object.assign(contextMenu,{x,y,show:true});
+      const tr = e.target.closest('tr');
+      if (tr) {
+        const idx = Array.from(tr.parentNode.children).indexOf(tr);
+        if (idx>=0) {
+          archList.value.forEach(r=>r._selected=false);
+          if (archList.value[idx]) archList.value[idx]._selected=true;
+          editCell.row=idx;
+        }
+      }
+    };
 
-      return { rsid, treeData, sub4, sub9, archList, currentFL, currentName, selectedRow, tableKey, contextMenu,
-               loadList, selectRow, refreshData, saveAll, insertRow, deleteRow, showContextMenu, addNewRow,
-               printDirectory, onMaterialInput };
-    }
-  });
-  app.config.compilerOptions.delimiters = ['[[', ']]'];
-  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+    const printDirectory = () => {
+      const url = '/archives/directory-print/?rsid='+rsid.value;
+      if (!document.getElementById('printDialog')) {
+        const d = document.createElement('div');
+        d.id='printDialog';
+        d.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.3);';
+        d.innerHTML='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;flex-direction:column;"><div style="padding:8px 12px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:bold;">档案目录打印</span><span style="cursor:pointer;font-size:20px;" onclick="document.getElementById(\'printDialog\').remove();">✕</span></div><iframe src="'+url+'" style="flex:1;border:none;"></iframe></div>';
+        document.body.appendChild(d);
+      }
+    };
+
+    const onMaterialInput = (i) => {
+      if (sortMode.value) return;
+      const row = archList.value[i];
+      if (!row) return;
+      const kw = (row.CLTM||'').toLowerCase();
+      if (!kw) { row._suggestions=[]; row._showSuggest=false; return; }
+      row._suggestions = (window.ARCHIVES_AUTO_FLAT||[]).filter(n=>n&&n.toLowerCase().includes(kw)).slice(0,50);
+      row._showSuggest=true;
+    };
+
+    onMounted(loadTree);
+
+    return { rsid,treeData,sub4,sub9,archList,currentFL,currentName,tableKey,contextMenu,newRow,sortMode,dragIndex,editCell,
+      loadList,refreshData:loadList,saveAll,commitNewRow,enterSortMode,saveSort,cancelSort,
+      onDragStart,onDragOver,onDragLeave,onDrop,onDragEnd,
+      insertRow,deleteRow,showContextMenu,addNewRow,printDirectory,onMaterialInput,
+      onRowClick,onCellFocus,onCellBlur,onKeyUp };
+  }});
+
+  app.config.compilerOptions.delimiters=['[[',']]'];
+  app.use(ElementPlus,{locale:ElementPlusLocaleZhCn}).mount('#app');
 })();
 </script>
 {% endblock %}
-

@@ -91,8 +91,6 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                 <input v-model="q.jydw" placeholder="借阅单位" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <input v-model="q.jyly" placeholder="借阅理由" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <input v-model="q.jyr" placeholder="借阅人" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
-                <input v-model="q.jyrqBegin" placeholder="日期起" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
-                <input v-model="q.jyrqEnd" placeholder="日期止" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <input v-model="q.bjyrxm" placeholder="被借阅人" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <el-button size="small" @click="loadHistory(1)">查询</el-button>
             </div>
@@ -100,9 +98,9 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                 <table class="info-table">
                     <thead><tr><th>ID</th><th>借阅人</th><th>单位</th><th>理由</th><th>借阅日期</th><th>经办人</th><th>归还日期</th><th>被借阅人数</th><th>被借阅人</th></tr></thead>
                     <tbody>
-                        <tr v-for="r in historyList" :key="r.ID" @click="selectHistory(r)"
-                            :style="{background: form.id===r.ID ? '#e6f7ff' : ''}">
-                            <td>[[ r.ID ]]</td><td>[[ r.borrower ]]</td><td>[[ r.borrowUnit ]]</td>
+                        <tr v-for="r in historyList" :key="r.id" @click="selectHistory(r)"
+                            :style="{background: form.id===r.id ? '#e6f7ff' : ''}">
+                            <td>[[ r.id ]]</td><td>[[ r.borrower ]]</td><td>[[ r.borrowUnit ]]</td>
                             <td>[[ r.borrowReason ]]</td><td>[[ r.borrowDate ]]</td><td>[[ r.borrowHandler ]]</td>
                             <td>[[ r.returnDate ]]</td><td>[[ r.personCount ]]</td><td>[[ r.personNames ]]</td>
                         </tr>
@@ -116,6 +114,10 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
             </div>
         </div>
     </div>
+
+    <el-dialog v-model="showPersonPanel" title="选择被借阅人" width="320px" :close-on-click-modal="false">
+        <iframe src="/components/person-panel-embed/" style="width:100%;height:500px;border:none;"></iframe>
+    </el-dialog>
 </div>
 
 <script>
@@ -131,7 +133,8 @@ const app = createApp({
         const historyTotal = ref(0);
         const currentPage = ref(1);
         const pageSize = ref(20);
-        const q = reactive({ jydw:'', jyly:'', jyr:'', jyrqBegin:'', jyrqEnd:'', bjyrxm:'' });
+        const showPersonPanel = ref(false);
+        const q = reactive({ jydw:'', jyly:'', jyr:'', bjyrxm:'' });
 
         const suggestData = reactive({ JYDW:[], PZR:[], JYLY:[], JYJBR:[] });
         const loadSuggest = async (field) => {
@@ -158,16 +161,17 @@ const app = createApp({
         };
 
         window.addEventListener('message', (e) => {
-            if (e.data.type === 'person-select') {
+            if (e.data && e.data.type === 'person-select') {
                 const p = e.data.data;
-                if (!personList.value.find(x=>x.RSID==p.rsid)) {
+                if (!personList.value.find(x=>String(x.RSID)===String(p.rsid))) {
                     personList.value.push({ RSID: p.rsid, 姓名: p.displayName||p.tname, _checked: false });
                     loadPersons();
                 }
+                showPersonPanel.value = false;
             }
         });
 
-        const addPerson = () => { window.open('/components/person-panel-embed/', '_blank', 'width=300,height=600'); };
+        const addPerson = () => { showPersonPanel.value = true; };
         const removeCheckedPersons = () => { personList.value = personList.value.filter(p=>!p._checked); };
 
         const loadPersons = async () => {
@@ -191,33 +195,74 @@ const app = createApp({
             if (!form.value.borrowHandler) { ElMessage.warning('借阅经办人不能为空'); return; }
 
             const res = await axios.post('/business/api/borrow/save/', {
-                action: 'save', id: form.value.id || '',
-                borrowDate: form.value.borrowDate||'', borrower: form.value.borrower||'',
-                borrowUnit: form.value.borrowUnit||'', borrowReason: form.value.borrowReason||'',
-                borrowHandler: form.value.borrowHandler||'', approver: form.value.approver||'',
-                returnDate: form.value.returnDate||'', returnHandler: form.value.returnHandler||'',
+                action: 'save',
+                id: form.value.id || '',
+                borrowDate: form.value.borrowDate||'',
+                borrower: form.value.borrower||'',
+                borrowUnit: form.value.borrowUnit||'',
+                borrowReason: form.value.borrowReason||'',
+                borrowHandler: form.value.borrowHandler||'',
+                approver: form.value.approver||'',
+                returnDate: form.value.returnDate||'',
+                returnHandler: form.value.returnHandler||'',
                 remark: form.value.remark||'',
                 personRsids: personList.value.map(p=>p.RSID).join(','),
                 personNames: personList.value.map(p=>p.姓名).join(','),
                 personCount: personList.value.length
             });
-            if (res.data.code===0) { ElMessage.success('保存成功'); loadHistory(currentPage.value); }
-            else ElMessage.error(res.data.msg);
+            if (res.data.code===0) {
+                ElMessage.success(form.value.id ? '修改成功' : '新增成功');
+                loadHistory(currentPage.value);
+            } else {
+                ElMessage.error(res.data.msg);
+            }
         };
 
         const deleteRecord = async () => {
-            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
-            await axios.post('/business/api/borrow/save/', { action:'delete', id: form.value.id });
-            ElMessage.success('已删除'); newRecord(); loadHistory(1);
+            if (!form.value.id) {
+                ElMessage.warning('请先选择一条记录');
+                return;
+            }
+            try {
+                await ElMessageBox.confirm('确定删除该借阅记录？', '确认', { type: 'warning' });
+            } catch (e) { return; }
+            const res = await axios.post('/business/api/borrow/save/', {
+                action: 'delete',
+                id: form.value.id
+            });
+            if (res.data.code===0) {
+                ElMessage.success('已删除');
+                newRecord();
+                loadHistory(1);
+            } else {
+                ElMessage.error(res.data.msg || '删除失败');
+            }
         };
+
         const printRecord = () => { ElMessage.info('打印功能开发中'); };
 
-        const selectHistory = (r) => {
-            form.value = { ...r };
-            personList.value = r.personRsids ? r.personRsids.split(',').map((id,i)=>({RSID:id,姓名:(r.personNames||'').split(',')[i]||'',_checked:false})) : [];
-            loadPersons();
-        };
-
+      const selectHistory = (r) => {
+  form.value.id = r.id || '';
+  form.value.borrowDate = r.borrowDate || '';
+  form.value.borrower = r.borrower || '';
+  form.value.borrowUnit = r.borrowUnit || '';
+  form.value.borrowReason = r.borrowReason || '';
+  form.value.borrowHandler = r.borrowHandler || '';
+  form.value.approver = r.approver || '';
+  form.value.returnDate = r.returnDate || '';
+  form.value.returnHandler = r.returnHandler || '';
+  form.value.remark = r.remark || '';
+  if (r.personRsids) {
+    const ids = r.personRsids.split(',').filter(function(x){return x.trim()!==''});
+    const names = (r.personNames || '').split(',');
+    personList.value = ids.map(function(id, i){
+      return { RSID: id, 姓名: names[i] || '', _checked: false };
+    });
+    loadPersons();
+  } else {
+    personList.value = [];
+  }
+};
         const loadHistory = async (page) => {
             const params = { page: page||1, pageSize: pageSize.value };
             if (q.jydw) params.jydw = q.jydw;
@@ -225,7 +270,11 @@ const app = createApp({
             if (q.jyr) params.jyr = q.jyr;
             if (q.bjyrxm) params.bjyrxm = q.bjyrxm;
             const res = await axios.get('/business/api/borrow/list/', { params });
-            if (res.data.code===0) { historyList.value=res.data.data||[]; historyTotal.value=res.data.total||0; currentPage.value=page||1; }
+            if (res.data.code===0) {
+                historyList.value = res.data.data||[];
+                historyTotal.value = res.data.total||0;
+                currentPage.value = page||1;
+            }
         };
 
         const onPageChange = (p) => loadHistory(p);
@@ -295,6 +344,7 @@ const app = createApp({
         return {
             form, personList, checkedPersons, allPersonsChecked, toggleAllPersons,
             historyList, historyTotal, currentPage, pageSize, q,
+            showPersonPanel,
             fetchSuggest,
             newRecord, addPerson, removeCheckedPersons, saveRecord, deleteRecord, printRecord,
             selectHistory, loadHistory, onPageChange, onSizeChange

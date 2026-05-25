@@ -6,26 +6,45 @@ import logging
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from main.models import UserProfile, UserGroup, Menu, MenuGroup
-from main.decorators import admin_required
 
 logger = logging.getLogger(__name__)
-
 DEFAULT_PWD = "12345abcde"
 
 
 @login_required
-def page(request):
+def users_page(request):
     return render(request, "system/users/platform_users.html")
 
 
-# ==================== 用户 ====================
+@login_required
+def groups_page(request):
+    return render(request, "system/users/platform_groups.html")
+
+
+# ==================== 用户列表 ====================
 
 @login_required
 def user_list_api(request):
-    users = User.objects.select_related('profile__group').exclude(username__startswith='archive_').all().order_by('-date_joined')
+    keyword = request.GET.get("keyword", "").strip()
+    page = int(request.GET.get("page", 1))
+    page_size = int(request.GET.get("pageSize", 20))
+
+    users = User.objects.select_related('profile__group').order_by('-date_joined')
+    if keyword:
+        users = users.filter(
+            Q(username__icontains=keyword) |
+            Q(profile__real_name__icontains=keyword) |
+            Q(email__icontains=keyword)
+        )
+
+    total = users.count()
+    start = (page - 1) * page_size
+    users = users[start:start + page_size]
+
     data = []
     for u in users:
         p = getattr(u, 'profile', None)
@@ -39,12 +58,13 @@ def user_list_api(request):
             "group_name": p.group.name if p and p.group else "",
             "yhbh": p.yhbh if p else None,
         })
-    return JsonResponse({"code": 0, "data": data})
+    return JsonResponse({"code": 0, "data": data, "total": total})
 
+
+# ==================== 用户保存 ====================
 
 @login_required
 @csrf_exempt
-@admin_required
 def user_save_api(request):
     if request.method != "POST":
         return JsonResponse({"code": 405})
@@ -76,7 +96,7 @@ def user_save_api(request):
         return JsonResponse({"code": 500, "msg": str(e)})
 
 
-# ==================== 组 ====================
+# ==================== 用户组 ====================
 
 @login_required
 def group_list_api(request):
@@ -86,7 +106,6 @@ def group_list_api(request):
 
 @login_required
 @csrf_exempt
-@admin_required
 def group_save_api(request):
     if request.method != "POST":
         return JsonResponse({"code": 405})
@@ -116,7 +135,6 @@ def group_save_api(request):
 
 @login_required
 def menu_tree_api(request):
-    """全部菜单树"""
     menus = Menu.objects.filter(is_active=True).order_by('sort')
     tree = []
     menu_map = {}
@@ -133,7 +151,6 @@ def menu_tree_api(request):
 
 @login_required
 def group_menus_api(request):
-    """获取组的菜单权限"""
     group_id = request.GET.get("group_id", "")
     if not group_id:
         return JsonResponse({"code": 0, "data": []})
@@ -143,9 +160,7 @@ def group_menus_api(request):
 
 @login_required
 @csrf_exempt
-@admin_required
 def group_menus_save_api(request):
-    """保存组的菜单权限"""
     if request.method != "POST":
         return JsonResponse({"code": 405})
     try:
@@ -166,12 +181,3 @@ def group_menus_save_api(request):
         return JsonResponse({"code": 0, "msg": "保存成功"})
     except UserGroup.DoesNotExist:
         return JsonResponse({"code": 404, "msg": "组不存在"})
-
-@login_required
-def users_page(request):
-    return render(request, "system/users/platform_users.html")
-
-
-@login_required
-def groups_page(request):
-    return render(request, "system/users/platform_groups.html")

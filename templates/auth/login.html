@@ -1,56 +1,68 @@
-{% extends 'layout/base.html' %}
-{% block title %}用户登录{% endblock %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户登录</title>
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/element-plus.min.js"></script>
+  <script src="/static/lib/element-plus-icons.min.js"></script>
+  <script src="/static/lib/element-plus-zh-cn.min.js"></script>
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
 
-{% block content %}
-<style>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
 
-.login-box {
-  width: 420px;
-  padding: 40px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
+    .login-box {
+      width: 420px;
+      padding: 40px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
 
-.login-title {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #303133;
-  font-size: 24px;
-  font-weight: bold;
-}
+    .login-title {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #303133;
+      font-size: 24px;
+      font-weight: bold;
+    }
 
-.captcha-img {
-  height: 40px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid #dcdfe6;
-  transition: all 0.3s;
-}
+    .captcha-img {
+      height: 40px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid #dcdfe6;
+      transition: all 0.3s;
+    }
 
-.captcha-img:hover {
-  border-color: #409EFF;
-  transform: scale(1.05);
-}
+    .captcha-img:hover {
+      border-color: #409EFF;
+      transform: scale(1.05);
+    }
 
-.el-form-item {
-  margin-bottom: 24px;
-}
-</style>
+    .el-form-item {
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
 
 <div class="login-container">
   <div class="login-box" id="app">
     <div v-if="showCertWarning" style="background:#fff8e1;border:1px solid #ffc107;padding:12px;margin-bottom:20px;border-radius:4px;font-size:13px;color:#795548;">
-  ⚠️ 浏览器提示"不安全"？请安装根证书<br>
-  <a href="/static/ca.crt" download style="color:#409EFF;">📥 点击下载 CA 根证书</a>
-</div>
+      ⚠️ 浏览器提示"不安全"？请安装根证书<br>
+      <a href="/static/ca.crt" download style="color:#409EFF;">📥 点击下载 CA 根证书</a>
+    </div>
     <div class="login-title">系统登录</div>
 
     <el-form ref="loginForm" :model="form" :rules="rules" @submit.prevent="handleLogin">
@@ -121,7 +133,8 @@
 </div>
 
 <script>
-  if (window.top !== window.self) {
+// 如果在 iframe 中，跳出到父窗口
+if (window.top !== window.self) {
   window.top.location.href = window.location.href;
 }
 
@@ -136,25 +149,21 @@ const app = createApp({
       captcha: '',
       isArchiveUser: true,
     });
-const showCertWarning = ref(false);
 
-// 检测证书：尝试请求一个静态资源，失败说明证书不被信任
-const checkCert = async () => {
-  try {
-    // 请求静态文件，如果证书不被信任，fetch 会失败
-    const resp = await fetch('/static/favicon.ico', { cache: 'reload' });
-    // 能到这里说明证书 ok
-    showCertWarning.value = false;
-  } catch (e) {
-    // 证书问题导致请求失败
-    showCertWarning.value = true;
-  }
-};
-
-checkCert();
-
+    const showCertWarning = ref(false);
     const loading = ref(false);
     const captchaUrl = ref('/captcha/?' + Date.now());
+
+    // 检测证书
+    const checkCert = async () => {
+      try {
+        await fetch('/static/favicon.ico', { cache: 'reload' });
+        showCertWarning.value = false;
+      } catch (e) {
+        showCertWarning.value = true;
+      }
+    };
+    checkCert();
 
     const rules = {
       username: [
@@ -169,7 +178,6 @@ checkCert();
       ]
     };
 
-    // 获取CSRF token的函数
     const getCSRFToken = () => {
       const token = document.querySelector('[name=csrfmiddlewaretoken]');
       return token ? token.value : '';
@@ -181,21 +189,18 @@ checkCert();
 
     const handleLogin = async () => {
       loading.value = true;
-      
       try {
-        // 修复：使用传统的表单提交方式，确保CSRF token被正确传递
         const formData = new FormData();
         formData.append('username', form.username);
         formData.append('password', form.password);
         formData.append('captcha', form.captcha);
-        
-        // 关键：从页面获取CSRF token
+
         const csrfToken = getCSRFToken();
         if (csrfToken) {
           formData.append('csrfmiddlewaretoken', csrfToken);
-          formData.append('is_archive_user', form.isArchiveUser ? '1' : '0');
         }
-        
+        formData.append('is_archive_user', form.isArchiveUser ? '1' : '0');
+
         const response = await fetch('/login/', {
           method: 'POST',
           body: formData,
@@ -211,14 +216,12 @@ checkCert();
 
         refreshCaptcha();
         form.captcha = '';
-        
+
         const text = await response.text();
-        
-        // 检查是否返回了登录页面（说明登录失败）
+
         if (text.includes('login-box') || text.includes('login-container')) {
           ElMessage.error('用户名或密码错误');
         } else {
-          // 登录成功，刷新页面
           window.location.reload();
         }
       } catch (error) {
@@ -241,9 +244,8 @@ checkCert();
   }
 });
 
-// 设置自定义分隔符
 app.config.compilerOptions.delimiters = ['[[', ']]'];
 app.use(ElementPlus).mount('#app');
 </script>
-{% endblock %}
-
+</body>
+</html>

@@ -13,14 +13,6 @@ from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
-# 前端参数 → 数据库字段
-FIELD_MAP = {
-    "cyr": "CYR", "cydw": "CYDW", "pzr": "PZR", "cyly": "CYLY",
-    "lcrq": "LCRQ", "jbr": "JBR", "bz": "BZ", "zcfw": "ZCFW",
-    "zcr": "ZCR", "bcyrxm": "BCYRXM", "bcyrrsid": "BCYRRSID", "xh": "XH",
-}
-REVERSE_MAP = {v: k for k, v in FIELD_MAP.items()}
-
 
 @login_required
 @archive_perm_required
@@ -31,8 +23,7 @@ def page(request):
 @login_required
 @archive_perm_required
 def list_api(request):
-    """历史查阅记录（真分页）"""
-    keyword = request.GET.get("keyword", "").strip()
+    """历史查阅记录"""
     page = int(request.GET.get("page", 1))
     page_size = int(request.GET.get("pageSize", 20))
 
@@ -43,17 +34,32 @@ def list_api(request):
 
         where = "WHERE 1=1"
         params = []
-        if keyword:
-            where += " AND (CYDW LIKE ? OR CYLY LIKE ? OR BCYRXM LIKE ? OR CYR LIKE ?)"
-            kw = f"%{keyword}%"
-            params = [kw, kw, kw, kw]
+
+        cydw = request.GET.get("cydw", "").strip()
+        cyly = request.GET.get("cyly", "").strip()
+        cyr = request.GET.get("cyr", "").strip()
+        bcyrxm = request.GET.get("bcyrxm", "").strip()
+
+        if cydw:
+            where += " AND CYDW LIKE ?"
+            params.append(f"%{cydw}%")
+        if cyly:
+            where += " AND CYLY LIKE ?"
+            params.append(f"%{cyly}%")
+        if cyr:
+            where += " AND CYR LIKE ?"
+            params.append(f"%{cyr}%")
+        if bcyrxm:
+            where += " AND BCYRXM LIKE ?"
+            params.append(f"%{bcyrxm}%")
 
         cursor.execute(f"SELECT COUNT(*) FROM YW_CYDA {where}", params)
         total = cursor.fetchone()[0]
 
         offset = (page - 1) * page_size
         cursor.execute(f"""
-            SELECT ID, XH, BCYRXM, CYLY, LCRQ, CYDW, CYR, PZR, ZCFW, ZCR, JBR, BZ, BCYRRSID
+            SELECT ID, XH, BCYRXM, CYLY, LCRQ, CYDW, CYR, PZR,
+                   ZCFW, ZCR, JBR, BZ, BCYRRSID
             FROM YW_CYDA {where}
             ORDER BY LCRQ DESC, ID DESC
             OFFSET {offset} ROWS FETCH NEXT {page_size} ROWS ONLY
@@ -63,7 +69,21 @@ def list_api(request):
         rows = []
         for r in cursor.fetchall():
             d = dict(zip(cols, r))
-            rows.append({REVERSE_MAP.get(k, k): v for k, v in d.items()})
+            rows.append({
+                "id": d["ID"],
+                "xh": d["XH"],
+                "bcyrxm": d["BCYRXM"],
+                "cyly": d["CYLY"],
+                "lcrq": d["LCRQ"],
+                "cydw": d["CYDW"],
+                "cyr": d["CYR"],
+                "pzr": d["PZR"],
+                "zcfw": d["ZCFW"],
+                "zcr": d["ZCR"],
+                "jbr": d["JBR"],
+                "bz": d["BZ"],
+                "bcyrrsid": d["BCYRRSID"],
+            })
 
         cursor.close()
         return JsonResponse({"code": 0, "data": rows, "total": total})
@@ -78,50 +98,58 @@ def list_api(request):
 @archive_perm_required
 @csrf_exempt
 def save_api(request):
-    """保存/删除"""
+    """新增、修改、删除"""
     if request.method != "POST":
         return JsonResponse({"code": 405})
     try:
         data = json.loads(request.body)
     except:
-        return JsonResponse({"code": 400})
+        return JsonResponse({"code": 400, "msg": "参数格式错误"})
 
-    action = data.get("action")
+    action = data.get("action", "save")
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
 
-        if action == "save":
-            rid = data.get("id", "")
-            if rid:
-                cursor.execute("""
-                    UPDATE YW_CYDA SET XH=?, PZR=?, CYDW=?, CYLY=?, BCYRRSID=?,
-                    LCRQ=?, CYR=?, ZCFW=?, ZCR=?, JBR=?, BZ=?, BCYRXM=?
-                    WHERE ID=?
-                """, (
-                    data.get("xh", 0), data.get("pzr", ""), data.get("cydw", ""),
-                    data.get("cyly", ""), data.get("bcyrrsid", ""), data.get("lcrq", ""),
-                    data.get("cyr", ""), data.get("zcfw", ""), data.get("zcr", ""),
-                    data.get("jbr", ""), data.get("bz", ""), data.get("bcyrxm", ""),
-                    rid
-                ))
-            else:
-                cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_CYDA")
-                new_id = cursor.fetchone()[0]
-                cursor.execute("""
-                    INSERT INTO YW_CYDA (ID, RSID, XH, PZR, CYDW, CYLY, BCYRRSID,
-                    LCRQ, CYR, ZCFW, ZCR, JBR, BZ, BCYRXM)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    new_id, new_id, data.get("xh", 0), data.get("pzr", ""),
-                    data.get("cydw", ""), data.get("cyly", ""), data.get("bcyrrsid", ""),
-                    data.get("lcrq", ""), data.get("cyr", ""), data.get("zcfw", ""),
-                    data.get("zcr", ""), data.get("jbr", ""), data.get("bz", ""),
-                    data.get("bcyrxm", "")
-                ))
-        elif action == "delete":
-            cursor.execute("DELETE FROM YW_CYDA WHERE ID=?", (data.get("id"),))
+        if action == "delete":
+            rid = data.get("id")
+            if not rid:
+                return JsonResponse({"code": 400, "msg": "缺少ID"})
+            cursor.execute("DELETE FROM YW_CYDA WHERE ID=?", (int(rid),))
+            conn.commit()
+            cursor.close()
+            return JsonResponse({"code": 0, "msg": "删除成功"})
+
+        # save
+        rid = data.get("id")
+        xh = data.get("xh", 0)
+        pzr = data.get("pzr", "")
+        cydw = data.get("cydw", "")
+        cyly = data.get("cyly", "")
+        bcyrrsid = data.get("bcyrrsid", "")
+        lcrq = data.get("lcrq", "")
+        cyr = data.get("cyr", "")
+        zcfw = data.get("zcfw", "")
+        zcr = data.get("zcr", "")
+        jbr = data.get("jbr", "")
+        bz = data.get("bz", "")
+        bcyrxm = data.get("bcyrxm", "")
+
+        if rid:
+            cursor.execute("""
+                UPDATE YW_CYDA SET XH=?, PZR=?, CYDW=?, CYLY=?, BCYRRSID=?,
+                LCRQ=?, CYR=?, ZCFW=?, ZCR=?, JBR=?, BZ=?, BCYRXM=?
+                WHERE ID=?
+            """, (xh, pzr, cydw, cyly, bcyrrsid, lcrq, cyr, zcfw, zcr, jbr, bz, bcyrxm, int(rid)))
+        else:
+            cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_CYDA")
+            new_id = cursor.fetchone()[0]
+            cursor.execute("""
+                INSERT INTO YW_CYDA (ID, RSID, XH, PZR, CYDW, CYLY, BCYRRSID,
+                LCRQ, CYR, ZCFW, ZCR, JBR, BZ, BCYRXM)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (new_id, new_id, xh, pzr, cydw, cyly, bcyrrsid, lcrq, cyr, zcfw, zcr, jbr, bz, bcyrxm))
 
         conn.commit()
         cursor.close()
@@ -138,7 +166,7 @@ def save_api(request):
 @login_required
 @archive_perm_required
 def persons_api(request):
-    """被查阅人信息"""
+    """被查阅人详细信息"""
     rsids = request.GET.get("rsids", "")
     if not rsids:
         return JsonResponse({"code": 0, "data": []})
@@ -174,10 +202,11 @@ def persons_api(request):
         if conn:
             conn.close()
 
+
 @login_required
 @archive_perm_required
 def suggest_api(request):
-    """下拉提示数据（Redis缓存30分钟）"""
+    """下拉提示"""
     field = request.GET.get("field", "")
     if field not in ("CYDW", "PZR", "CYLY", "JBR"):
         return JsonResponse({"code": 0, "data": []})

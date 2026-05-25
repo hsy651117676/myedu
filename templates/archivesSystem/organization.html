@@ -1,0 +1,357 @@
+{% extends "layout/base.html" %}
+{% block title %}机构维护{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+.drag-bar:hover { background:#c0c4cc; }
+.tree-node { padding:4px 8px; cursor:pointer; white-space:nowrap; user-select:none; display:flex; align-items:center; gap:4px; }
+.tree-node:hover { background:#e8f0fe; }
+.tree-node.active { background:#d0e4fc; }
+.tree-node.drag-over { border-top:2px solid #409EFF; }
+.tree-arrow { font-size:11px; width:14px; flex-shrink:0; cursor:pointer; }
+.tree-label { flex:1; }
+.context-menu { position:fixed; background:#fff; border:1px solid #e4e7ed; border-radius:4px; padding:5px 0; z-index:9999; box-shadow:0 2px 12px rgba(0,0,0,0.1); min-width:120px; }
+.context-menu div { padding:8px 15px; cursor:pointer; font-size:13px; }
+.context-menu div:hover { background:#e8f0fe; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+
+  <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <span style="font-weight:600;">📋 机构维护</span>
+    <div style="flex:1;"></div>
+    <el-button size="small" type="primary" @click="openAddDialog" :disabled="!currentNode">新增子机构</el-button>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <!-- 左：机构树 -->
+    <div id="leftPanel" class="resize-panel" style="width:35%;min-width:220px;border-right:1px solid #e4e7ed;overflow-y:auto;padding:4px;">
+      <template v-for="node in treeData" :key="node.BM">
+        <div class="tree-node" :class="{active: currentNode && currentNode.BM===node.BM}"
+             draggable="true"
+             @dragstart="onDragStart($event, node)"
+             @dragover.prevent="onDragOver($event, node)"
+             @dragleave="onDragLeave($event, node)"
+             @drop="onDrop($event, node)"
+             @contextmenu.prevent="showMenu($event, node)">
+          <span class="tree-arrow" @click.stop="toggleNode(node)">[[ node._expanded ? '▼' : '▶' ]]</span>
+          <span class="tree-label" @click.stop="editNode(node)">🏢 [[ node.BMMC ]]</span>
+        </div>
+        <template v-if="node._expanded && node._children">
+          <div v-for="child in node._children" :key="child.BM"
+               class="tree-node" :class="{active: currentNode && currentNode.BM===child.BM}"
+               style="padding-left:24px;"
+               draggable="true"
+               @dragstart="onDragStart($event, child)"
+               @dragover.prevent="onDragOver($event, child)"
+               @dragleave="onDragLeave($event, child)"
+               @drop="onDrop($event, child)"
+               @contextmenu.prevent="showMenu($event, child)">
+            <span style="width:14px;flex-shrink:0;"></span>
+            <span class="tree-label" @click.stop="editNode(child)">🏫 [[ child.BMMC ]]</span>
+          </div>
+        </template>
+      </template>
+    </div>
+
+    <div class="drag-bar" data-target="leftPanel"></div>
+
+    <!-- 右：空白提示 -->
+    <div id="rightPanel" class="resize-panel" style="flex:1;min-width:300px;display:flex;align-items:center;justify-content:center;color:#909399;">
+      右键节点进行操作，或点击节点编辑
+    </div>
+  </div>
+
+  <!-- 右键菜单 -->
+  <div class="context-menu" v-show="menuVisible" :style="{left:menuX+'px',top:menuY+'px'}" @click.stop>
+    <div @click="openAddDialog">新增子机构</div>
+    <div @click="deleteNode">删除 [[ menuNode ? menuNode.BMMC : '' ]]</div>
+  </div>
+
+  <!-- 编辑弹窗 -->
+  <el-dialog v-model="dialogVisible" :title="dialogTitle" width="450px" @closed="dialogClosed">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:80px;text-align:right;font-size:13px;">机构代码：</span>
+        <el-input v-model="dialogForm.bmdm" placeholder="如 6040001" size="small" style="flex:1;"></el-input>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:80px;text-align:right;font-size:13px;">机构名称：</span>
+        <el-input v-model="dialogForm.bmmc" placeholder="机构名称" size="small" style="flex:1;"></el-input>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:80px;text-align:right;font-size:13px;">排序号：</span>
+        <el-input v-model="dialogForm.sxh" type="number" placeholder="越小越前" size="small" style="flex:1;"></el-input>
+      </div>
+      <div v-if="dialogForm.parent_name" style="display:flex;align-items:center;gap:8px;">
+        <span style="width:80px;text-align:right;font-size:13px;">上级机构：</span>
+        <span style="font-size:13px;color:#909399;">[[ dialogForm.parent_name ]]</span>
+      </div>
+    </div>
+    <template #footer>
+      <el-button size="small" @click="dialogVisible=false">取消</el-button>
+      <el-button size="small" type="primary" @click="saveNode">保存</el-button>
+    </template>
+  </el-dialog>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const { createApp, ref, onMounted, nextTick } = Vue;
+
+const app = createApp({
+  setup() {
+    const treeData = ref([]);
+    const currentNode = ref(null);
+    const menuNode = ref(null);
+
+    // 右键菜单
+    const menuVisible = ref(false);
+    const menuX = ref(0);
+    const menuY = ref(0);
+
+    // 弹窗
+    const dialogVisible = ref(false);
+    const dialogTitle = ref('');
+    const isNew = ref(false);
+    const dialogForm = ref({ bmdm: '', bmmc: '', sxh: 0, pid: '', parent_name: '' });
+
+    // 拖拽
+    const dragNode = ref(null);
+
+    // ==================== 树 ====================
+    const loadTree = async () => {
+      try {
+        const r = await axios.get('/archivesSystem/api/organization/tree/');
+        if (r.data.code === 0) {
+          treeData.value = r.data.data.map(n => ({ ...n, _expanded: false, _children: [] }));
+        }
+      } catch (e) { console.error(e); }
+    };
+
+    const toggleNode = async (node) => {
+      if (node._expanded) { node._expanded = false; return; }
+      if (node._children.length > 0) { node._expanded = true; return; }
+      try {
+        const r = await axios.get('/archivesSystem/api/organization/tree-children/', { params: { pid: node.BM } });
+        if (r.data.code === 0) {
+          node._children = r.data.data;
+          node._expanded = true;
+        }
+      } catch (e) { console.error(e); }
+    };
+
+    // ==================== 右键菜单 ====================
+    const showMenu = (e, node) => {
+      menuNode.value = node;
+      currentNode.value = node;
+      menuX.value = e.clientX;
+      menuY.value = e.clientY;
+      menuVisible.value = true;
+      nextTick(() => {
+        document.addEventListener('click', hideMenu, { once: true });
+      });
+    };
+
+    const hideMenu = () => { menuVisible.value = false; };
+
+    // ==================== 弹窗 ====================
+    const editNode = async (node) => {
+      currentNode.value = node;
+      isNew.value = false;
+      try {
+        const r = await axios.get('/archivesSystem/api/organization/detail/', { params: { bm: node.BM } });
+        if (r.data.code === 0) {
+          dialogForm.value = {
+            bmdm: r.data.data.BMDM || '',
+            bmmc: r.data.data.BMMC || '',
+            sxh: r.data.data.SXH || 0,
+            pid: r.data.data.PID,
+            parent_name: r.data.data.parent_name || '',
+            bm: r.data.data.BM
+          };
+          dialogTitle.value = '编辑机构';
+          dialogVisible.value = true;
+        }
+      } catch (e) { console.error(e); }
+    };
+
+    const openAddDialog = () => {
+      if (!currentNode.value) return;
+      isNew.value = true;
+      dialogForm.value = {
+        bmdm: '',
+        bmmc: '',
+        sxh: 0,
+        pid: currentNode.value.BM,
+        parent_name: currentNode.value.BMMC,
+        bm: ''
+      };
+      dialogTitle.value = '新增子机构';
+      dialogVisible.value = true;
+    };
+
+    const saveNode = async () => {
+      if (!dialogForm.value.bmmc.trim()) {
+        ElementPlus.ElMessage.warning('请输入机构名称');
+        return;
+      }
+      try {
+        const payload = {
+          action: isNew.value ? 'create' : 'update',
+          bm: dialogForm.value.bm || '',
+          bmmc: dialogForm.value.bmmc,
+          bmdm: dialogForm.value.bmdm,
+          pid: isNew.value ? dialogForm.value.pid : undefined,
+          sxh: dialogForm.value.sxh
+        };
+        const r = await axios.post('/archivesSystem/api/organization/save/', payload);
+        ElementPlus.ElMessage[r.data.code === 0 ? 'success' : 'error'](r.data.msg);
+        if (r.data.code === 0) {
+          dialogVisible.value = false;
+          refreshTree();
+        }
+      } catch (e) {
+        ElementPlus.ElMessage.error('请求失败');
+      }
+    };
+
+    const deleteNode = async () => {
+      if (!menuNode.value) return;
+      hideMenu();
+      try {
+        await ElementPlus.ElMessageBox.confirm(
+          `确定删除 ${menuNode.value.BMMC}？`,
+          '确认删除',
+          { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }
+        );
+      } catch { return; }
+      try {
+        const r = await axios.post('/archivesSystem/api/organization/delete/', { bm: menuNode.value.BM });
+        ElementPlus.ElMessage[r.data.code === 0 ? 'success' : 'error'](r.data.msg);
+        if (r.data.code === 0) {
+          currentNode.value = null;
+          refreshTree();
+        }
+      } catch (e) {
+        ElementPlus.ElMessage.error('请求失败');
+      }
+    };
+
+    // ==================== 拖拽排序 ====================
+    const onDragStart = (e, node) => {
+      dragNode.value = node;
+      e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const onDragOver = (e, node) => {
+      if (!dragNode.value || dragNode.value === node) return;
+      // 只能同级拖拽
+      if (dragNode.value.PID !== node.PID) return;
+      e.target.closest('.tree-node')?.classList.add('drag-over');
+    };
+
+    const onDragLeave = (e, node) => {
+      e.target.closest('.tree-node')?.classList.remove('drag-over');
+    };
+
+    const onDrop = async (e, targetNode) => {
+      e.target.closest('.tree-node')?.classList.remove('drag-over');
+      if (!dragNode.value || dragNode.value === targetNode) return;
+      if (dragNode.value.PID !== targetNode.PID) return;
+
+      // 找到同级列表
+      const pid = dragNode.value.PID;
+      let siblings;
+      if (pid == -1) {
+        siblings = treeData.value;
+      } else {
+        const parent = findNode(treeData.value, pid);
+        siblings = parent ? parent._children : [];
+      }
+
+      const fromIdx = siblings.findIndex(n => n.BM === dragNode.value.BM);
+      const toIdx = siblings.findIndex(n => n.BM === targetNode.BM);
+      if (fromIdx === -1 || toIdx === -1) return;
+
+      // 移动
+      siblings.splice(fromIdx, 1);
+      siblings.splice(toIdx, 0, dragNode.value);
+
+      // 更新 SXH
+      const items = siblings.map((n, i) => ({ bm: n.BM, sxh: i + 1 }));
+      n.SXH = (i + 1)  // 本地也更新
+      try {
+        await axios.post('/archivesSystem/api/organization/sort/', { items });
+      } catch (e) {
+        ElementPlus.ElMessage.error('排序保存失败');
+        refreshTree();
+      }
+      dragNode.value = null;
+    };
+
+    const findNode = (nodes, bm) => {
+      for (const n of nodes) {
+        if (n.BM == bm) return n;
+        if (n._children) {
+          const found = findNode(n._children, bm);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // ==================== 工具 ====================
+    const refreshTree = async () => {
+      treeData.value = [];
+      await loadTree();
+    };
+
+    const dialogClosed = () => {
+      dialogForm.value = { bmdm: '', bmmc: '', sxh: 0, pid: '', parent_name: '' };
+    };
+
+    // ==================== 拖拽分栏 ====================
+    const initDrag = () => {
+      document.querySelectorAll('.drag-bar').forEach(bar => {
+        bar.addEventListener('mousedown', (e) => {
+          const panel = document.getElementById(bar.dataset.target);
+          if (!panel) return;
+          const startX = e.clientX, startW = panel.offsetWidth;
+          const onMove = (ev) => {
+            let w = startW + ev.clientX - startX;
+            if (w < 180) w = 180;
+            panel.style.width = w + 'px';
+          };
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          };
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      });
+    };
+
+    onMounted(() => { loadTree(); initDrag(); });
+
+    return {
+      treeData, currentNode, menuNode,
+      menuVisible, menuX, menuY,
+      dialogVisible, dialogTitle, dialogForm,
+      toggleNode, showMenu,
+      editNode, openAddDialog, saveNode, deleteNode,
+      onDragStart, onDragOver, onDragLeave, onDrop,
+      dialogClosed
+    };
+  }
+});
+
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+app.config.compilerOptions = { delimiters: ['[[', ']]'] };
+app.mount('#app');
+</script>
+{% endblock %}

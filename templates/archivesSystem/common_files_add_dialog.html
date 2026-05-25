@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/element-plus.min.js"></script>
+  <script src="/static/lib/element-plus-zh-cn.min.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-size:13px; padding:12px; }
+    .edit-table { border-collapse:collapse; width:100%; font-size:12px; margin-top:8px; }
+    .edit-table th, .edit-table td { border:1px solid #ddd; padding:4px 6px; text-align:center; }
+    .edit-table td input { width:100%; border:1px solid #ddd; padding:2px 4px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <el-form label-width="80px">
+    <el-form-item label="类别">
+      <el-select v-model="form.category" filterable>
+        <el-option v-for="c in categories" :key="c" :label="c" :value="c"/>
+      </el-select>
+    </el-form-item>
+    <el-form-item label="年度"><el-input v-model="form.year" /></el-form-item>
+    <el-form-item label="文号"><el-input v-model="form.fileNo" /></el-form-item>
+    <el-form-item label="文件"><input type="file" ref="fileInput" /></el-form-item>
+  </el-form>
+
+  <!-- 单人模式 -->
+  <div v-if="previewList.length===0" style="margin-bottom:12px;">
+    <div style="font-size:12px;color:#909399;margin-bottom:4px;">单人文件信息</div>
+    <el-input v-model="singleName" placeholder="姓名" size="small" style="margin-bottom:6px;" />
+    <el-input v-model="singleSummary" placeholder="概要" size="small" />
+  </div>
+
+  <!-- 粘贴区域 -->
+  <div style="margin-bottom:8px;">
+    <div style="font-size:12px;color:#909399;margin-bottom:4px;">
+      或从Excel复制姓名和概要（Tab分隔），每行一人
+    </div>
+    <textarea v-model="pasteText" rows="4" style="width:100%;border:1px solid #dcdfe6;border-radius:4px;padding:6px;font-size:12px;" @input="parsePaste" placeholder="张三&#9;分配至第一小学&#10;李四&#9;分配至第二小学"></textarea>
+  </div>
+
+  <!-- 识别结果 -->
+  <div v-if="previewList.length>0" style="margin-bottom:8px;">
+    <div style="font-size:12px;color:#909399;margin-bottom:4px;">
+      识别为：<el-tag :type="previewList.length>1?'warning':'info'">[[ previewList.length>1?'多人文件':'单人文件' ]] ([[ previewList.length ]]人)</el-tag>
+    </div>
+    <table class="edit-table">
+      <thead><tr><th>姓名</th><th>概要</th><th>操作</th></tr></thead>
+      <tbody>
+        <tr v-for="(r,i) in previewList" :key="i">
+          <td><input v-model="r.personName" /></td>
+          <td><input v-model="r.summary" /></td>
+          <td><el-button size="small" type="danger" @click="previewList.splice(i,1)">删除</el-button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="text-align:right;margin-top:12px;">
+    <el-button @click="closeDialog">取消</el-button>
+    <el-button type="primary" @click="doAdd">上传</el-button>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, reactive, onMounted } = Vue;
+
+createApp({
+  delimiters: ['[[', ']]'],
+  setup(){
+    const categories = ref([]);
+    const form = reactive({category:'', year:'', fileNo:''});
+    const singleName = ref('');
+    const singleSummary = ref('');
+    const pasteText = ref('');
+    const previewList = ref([]);
+    const fileInput = ref(null);
+
+    onMounted(async () => {
+      const r = await axios.get('/archivesSystem/api/files/categories/');
+      if (r.data.code===0) categories.value = r.data.data||[];
+    });
+
+    const parsePaste = () => {
+      previewList.value = pasteText.value.trim().split('\n').filter(Boolean).map(line => {
+        const p = line.split('\t');
+        return {personName:(p[0]||'').trim(), summary:(p[1]||'').trim()};
+      });
+    };
+
+    const doAdd = async () => {
+      const file = fileInput.value?.files?.[0];
+      if (!file) { ElementPlus.ElMessage.warning('请选择文件'); return; }
+
+      let persons;
+      if (previewList.value.length > 0) {
+        persons = previewList.value;
+      } else {
+        if (!singleName.value.trim()) { ElementPlus.ElMessage.warning('请输入姓名'); return; }
+        persons = [{personName: singleName.value.trim(), summary: singleSummary.value.trim()}];
+      }
+
+      const fd = new FormData();
+      fd.append('category', form.category);
+      fd.append('year', form.year);
+      fd.append('fileNo', form.fileNo);
+      fd.append('file', file);
+      fd.append('persons', JSON.stringify(persons));
+
+      const r = await axios.post('/archivesSystem/api/files/manage/upload/', fd);
+      if (r.data.code===0) {
+        window.parent.postMessage({type:'file-added'}, '*');
+        window.parent.postMessage({type:'close-dialog'}, '*');
+      } else {
+        ElementPlus.ElMessage.error(r.data.msg);
+      }
+    };
+
+    const closeDialog = () => {
+      window.parent.postMessage({type:'close-dialog'}, '*');
+    };
+
+    return { categories, form, singleName, singleSummary, pasteText, previewList, fileInput, parsePaste, doAdd, closeDialog };
+  }
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+</body>
+</html>

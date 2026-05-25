@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+    <script src="/static/lib/element-plus-zh-cn.min.js"></script>
   <link rel="stylesheet" href="/static/lib/element-plus.css">
   <script src="/static/lib/vue.global.prod.js"></script>
   <script src="/static/lib/element-plus.min.js"></script>
@@ -69,8 +70,8 @@
       <div v-for="p in searchList" :key="p.rsid" class="search-item"
            :class="{ active: currentRsid===p.rsid }"
            @click="selectSearch(p)">
-        <div style="font-weight:bold;">{{ p.displayName }}</div>
-        <div style="color:#909399;font-size:11px;">{{ p.unitName }}</div>
+          <div style="font-weight:bold;">{{ p.displayName }}</div>
+          <div style="color:#909399;font-size:11px;">{{ p.unitName }} | 编号: {{ p.archiveNo }}</div>
       </div>
       <div v-if="searchList.length===0 && !searching" style="text-align:center;color:#909399;padding:20px;">未找到人员</div>
       <div v-if="searching" style="text-align:center;padding:20px;">搜索中...</div>
@@ -139,24 +140,26 @@
             data: { rsid: node.rsid, tname: node.tname, displayName: node.tname }
           }, '*');
         };
-
-        const doSearch = async (page) => {
-          const kw = keyword.value.trim();
-          if (!kw) return;
-          const p = page || 1;
-          if (kw !== lastKeyword.value) {
-            lastKeyword.value = kw; searchPage.value = 1; searchList.value = []; showSearch.value = true;
-          }
-          searching.value = true;
-          try {
-            const res = await axios.get('/components/person-search/', {
-              params: { keyword: kw, page: p, pageSize: searchPageSize.value }
-            });
-            searchList.value = res.data.data || [];
-            searchTotal.value = res.data.total || 0;
-            searchPage.value = p;
-          } finally { searching.value = false; }
-        };
+const doSearch = async (page) => {
+  const kw = keyword.value.trim();
+  if (!kw) return;
+  const p = page || 1;
+  showSearch.value = true;
+  if (kw !== lastKeyword.value) {
+    lastKeyword.value = kw;
+    searchPage.value = 1;
+    searchList.value = [];
+  }
+  searching.value = true;
+  try {
+    const res = await axios.get('/components/person-search/', {
+      params: { keyword: kw, page: p, pageSize: searchPageSize.value }
+    });
+    searchList.value = res.data.data || [];
+    searchTotal.value = res.data.total || 0;
+    searchPage.value = p;
+  } finally { searching.value = false; }
+};
 
         const onPageChange = (page) => { doSearch(page); };
         const onSizeChange = (size) => { searchPageSize.value = size; doSearch(1); };
@@ -181,7 +184,7 @@
           doSearch, selectSearch, onPageChange, onSizeChange, backToTree
         };
       }
-    }).use(ElementPlus).mount('#app');
+    }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
   </script>
 </body>
 </html>

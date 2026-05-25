@@ -25,28 +25,44 @@ def person_search_api(request):
         conn = _get_conn()
         cursor = conn.cursor()
 
+        # 总数
         if is_pinyin:
             cursor.execute(
-                "SELECT COUNT(*) FROM RS_INFO WHERE XMPY LIKE ? OR STRXMPY LIKE ?",
+                """SELECT COUNT(*) FROM RS_INFO r
+                   LEFT JOIN USERS_DEPARTMENT ud ON r.RSID = ud.RSID
+                   WHERE r.XMPY LIKE ? OR r.STRXMPY LIKE ?""",
                 [f"%{keyword}%", f"%{keyword}%"]
             )
         else:
             keyword_safe = keyword.replace("'", "''")
-            cursor.execute(f"SELECT COUNT(*) FROM RS_INFO WHERE XM LIKE N'%{keyword_safe}%'")
+            cursor.execute(f"""SELECT COUNT(*) FROM RS_INFO r
+                              LEFT JOIN USERS_DEPARTMENT ud ON r.RSID = ud.RSID
+                              WHERE r.XM LIKE N'%{keyword_safe}%'""")
 
         total = cursor.fetchone()[0]
 
+        # 分页数据
         if is_pinyin:
             cursor.execute(
-                """SELECT RSID, XM AS 姓名 FROM RS_INFO
-                   WHERE XMPY LIKE ? OR STRXMPY LIKE ?
-                   ORDER BY RYBH OFFSET ? ROWS FETCH NEXT ? ROWS ONLY""",
+                """SELECT r.RSID, r.XM AS 姓名, r.RYBH AS 档案编号,
+                          ISNULL(d.BMMC, '') AS 单位名称
+                   FROM RS_INFO r
+                   LEFT JOIN USERS_DEPARTMENT ud ON r.RSID = ud.RSID
+                   LEFT JOIN DEPART d ON ud.DEPARTMENTID = d.BM
+                   WHERE r.XMPY LIKE ? OR r.STRXMPY LIKE ?
+                   ORDER BY r.RYBH
+                   OFFSET ? ROWS FETCH NEXT ? ROWS ONLY""",
                 [f"%{keyword}%", f"%{keyword}%", offset, page_size]
             )
         else:
-            cursor.execute(f"""SELECT RSID, XM AS 姓名 FROM RS_INFO
-                              WHERE XM LIKE N'%{keyword_safe}%'
-                              ORDER BY RYBH OFFSET {offset} ROWS FETCH NEXT {page_size} ROWS ONLY""")
+            cursor.execute(f"""SELECT r.RSID, r.XM AS 姓名, r.RYBH AS 档案编号,
+                                      ISNULL(d.BMMC, '') AS 单位名称
+                               FROM RS_INFO r
+                               LEFT JOIN USERS_DEPARTMENT ud ON r.RSID = ud.RSID
+                               LEFT JOIN DEPART d ON ud.DEPARTMENTID = d.BM
+                               WHERE r.XM LIKE N'%{keyword_safe}%'
+                               ORDER BY r.RYBH
+                               OFFSET {offset} ROWS FETCH NEXT {page_size} ROWS ONLY""")
 
         cols = [col[0] for col in cursor.description]
         rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
@@ -57,7 +73,8 @@ def person_search_api(request):
             results.append({
                 "rsid": str(r["RSID"]),
                 "displayName": r.get("姓名", "未知"),
-                "unitName": "",
+                "unitName": r.get("单位名称", ""),
+                "archiveNo": r.get("档案编号", ""),
                 "matchType": "拼音匹配" if is_pinyin else "",
             })
 

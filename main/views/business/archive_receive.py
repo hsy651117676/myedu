@@ -12,30 +12,6 @@ from main.decorators import archive_perm_required
 
 logger = logging.getLogger(__name__)
 
-FIELD_MAP = {
-    "receiveDate": "SJSJ",
-    "documentNo": "SJWH",
-    "receiver": "JSR",
-    "fromUnit": "LJBM",
-    "archiveNo": "DABH",
-    "original": "ZB",
-    "copy": "FB",
-    "cabinetNo": "GH",
-    "layerNo": "CH",
-    "sequenceNo": "XH",
-    "sender": "SHR",
-    "senderDate": "SHRQ",
-    "returnDate": "HZRQ",
-    "storageDate": "RKRQ",
-    "storageApprover": "RKSPR",
-    "personName": "TXM",
-    "archiveType": "AJZL",
-    "remark": "BZ",
-    "personCount": "num",
-    "personRsid": "RSID",
-}
-REVERSE_MAP = {v: k for k, v in FIELD_MAP.items()}
-
 
 @login_required
 @archive_perm_required
@@ -46,6 +22,7 @@ def page(request):
 @login_required
 @archive_perm_required
 def list_api(request):
+    """历史接收记录"""
     page = int(request.GET.get("page", 1))
     page_size = int(request.GET.get("pageSize", 20))
 
@@ -68,7 +45,29 @@ def list_api(request):
         rows = []
         for r in cursor.fetchall():
             d = dict(zip(cols, r))
-            rows.append({REVERSE_MAP.get(k, k): v for k, v in d.items()})
+            rows.append({
+                "id": d["ID"],
+                "personRsid": d["RSID"],
+                "receiveDate": d["SJSJ"],
+                "documentNo": d["SJWH"],
+                "receiver": d["JSR"],
+                "fromUnit": d["LJBM"],
+                "archiveNo": d["DABH"],
+                "original": d["ZB"],
+                "copy": d["FB"],
+                "cabinetNo": d["GH"],
+                "layerNo": d["CH"],
+                "sequenceNo": d["XH"],
+                "sender": d["SHR"],
+                "senderDate": d["SHRQ"],
+                "returnDate": d["HZRQ"],
+                "storageDate": d["RKRQ"],
+                "storageApprover": d["RKSPR"],
+                "personName": d["TXM"],
+                "archiveType": d["AJZL"],
+                "remark": d["BZ"],
+                "personCount": d["num"],
+            })
 
         cursor.close()
         return JsonResponse({"code": 0, "data": rows, "total": total})
@@ -83,59 +82,76 @@ def list_api(request):
 @archive_perm_required
 @csrf_exempt
 def save_api(request):
+    """新增、修改、删除"""
     if request.method != "POST":
         return JsonResponse({"code": 405})
     try:
         data = json.loads(request.body)
     except:
-        return JsonResponse({"code": 400})
+        return JsonResponse({"code": 400, "msg": "参数格式错误"})
 
-    action = data.get("action")
+    action = data.get("action", "save")
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
 
-        if action == "save":
-            rid = data.get("id", "")
-            if rid:
-                cursor.execute("""
-                    UPDATE YW_JSDA SET RSID=?, SJSJ=?, SJWH=?, JSR=?, LJBM=?, DABH=?,
-                    ZB=?, FB=?, GH=?, CH=?, XH=?, SHR=?, SHRQ=?, HZRQ=?, RKRQ=?,
-                    RKSPR=?, TXM=?, AJZL=?, BZ=?, num=? WHERE ID=?
-                """, (
-                    data.get("personRsid", ""), data.get("receiveDate", ""),
-                    data.get("documentNo", ""), data.get("receiver", ""),
-                    data.get("fromUnit", ""), data.get("archiveNo", ""),
-                    data.get("original", ""), data.get("copy", ""),
-                    data.get("cabinetNo", ""), data.get("layerNo", ""),
-                    data.get("sequenceNo", ""), data.get("sender", ""),
-                    data.get("senderDate", ""), data.get("returnDate", ""),
-                    data.get("storageDate", ""), data.get("storageApprover", ""),
-                    data.get("personName", ""), data.get("archiveType", ""),
-                    data.get("remark", ""), data.get("personCount", 0), rid
-                ))
-            else:
-                cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_JSDA")
-                new_id = cursor.fetchone()[0]
-                cursor.execute("""
-                    INSERT INTO YW_JSDA (ID, RSID, SJSJ, SJWH, JSR, LJBM, DABH, ZB, FB, GH, CH, XH,
-                    SHR, SHRQ, HZRQ, RKRQ, RKSPR, TXM, AJZL, BZ, num)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    new_id, data.get("personRsid", ""), data.get("receiveDate", ""),
-                    data.get("documentNo", ""), data.get("receiver", ""),
-                    data.get("fromUnit", ""), data.get("archiveNo", ""),
-                    data.get("original", ""), data.get("copy", ""),
-                    data.get("cabinetNo", ""), data.get("layerNo", ""),
-                    data.get("sequenceNo", ""), data.get("sender", ""),
-                    data.get("senderDate", ""), data.get("returnDate", ""),
-                    data.get("storageDate", ""), data.get("storageApprover", ""),
-                    data.get("personName", ""), data.get("archiveType", ""),
-                    data.get("remark", ""), data.get("personCount", 0)
-                ))
-        elif action == "delete":
-            cursor.execute("DELETE FROM YW_JSDA WHERE ID=?", (data.get("id"),))
+        if action == "delete":
+            rid = data.get("id")
+            if not rid:
+                return JsonResponse({"code": 400, "msg": "缺少ID"})
+            cursor.execute("DELETE FROM YW_JSDA WHERE ID=?", (int(rid),))
+            conn.commit()
+            cursor.close()
+            return JsonResponse({"code": 0, "msg": "删除成功"})
+
+        # save
+        rid = data.get("id")
+        personRsid = data.get("personRsid", "")
+        receiveDate = data.get("receiveDate", "")
+        documentNo = data.get("documentNo", "")
+        receiver = data.get("receiver", "")
+        fromUnit = data.get("fromUnit", "")
+        archiveNo = data.get("archiveNo", "")
+        original = data.get("original", "")
+        copy_ = data.get("copy", "")
+        cabinetNo = data.get("cabinetNo", "")
+        layerNo = data.get("layerNo", "")
+        sequenceNo = data.get("sequenceNo", "")
+        sender = data.get("sender", "")
+        senderDate = data.get("senderDate", "")
+        returnDate = data.get("returnDate", "")
+        storageDate = data.get("storageDate", "")
+        storageApprover = data.get("storageApprover", "")
+        personName = data.get("personName", "")
+        archiveType = data.get("archiveType", "")
+        remark = data.get("remark", "")
+        personCount = data.get("personCount", 0)
+
+        if rid:
+            cursor.execute("""
+                UPDATE YW_JSDA SET RSID=?, SJSJ=?, SJWH=?, JSR=?, LJBM=?, DABH=?,
+                ZB=?, FB=?, GH=?, CH=?, XH=?, SHR=?, SHRQ=?, HZRQ=?, RKRQ=?,
+                RKSPR=?, TXM=?, AJZL=?, BZ=?, num=? WHERE ID=?
+            """, (
+                personRsid, receiveDate, documentNo, receiver, fromUnit, archiveNo,
+                original, copy_, cabinetNo, layerNo, sequenceNo, sender, senderDate,
+                returnDate, storageDate, storageApprover, personName, archiveType, remark,
+                personCount, int(rid)
+            ))
+        else:
+            cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_JSDA")
+            new_id = cursor.fetchone()[0]
+            cursor.execute("""
+                INSERT INTO YW_JSDA (ID, RSID, SJSJ, SJWH, JSR, LJBM, DABH, ZB, FB, GH, CH, XH,
+                SHR, SHRQ, HZRQ, RKRQ, RKSPR, TXM, AJZL, BZ, num)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                new_id, personRsid, receiveDate, documentNo, receiver, fromUnit, archiveNo,
+                original, copy_, cabinetNo, layerNo, sequenceNo, sender, senderDate,
+                returnDate, storageDate, storageApprover, personName, archiveType, remark,
+                personCount
+            ))
 
         conn.commit()
         cursor.close()
@@ -152,6 +168,7 @@ def save_api(request):
 @login_required
 @archive_perm_required
 def persons_api(request):
+    """被接收人详细信息"""
     rsids = request.GET.get("rsids", "")
     if not rsids:
         return JsonResponse({"code": 0, "data": []})

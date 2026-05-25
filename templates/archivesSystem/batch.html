@@ -1,0 +1,330 @@
+{% extends "layout/base.html" %}
+{% block title %}档案目录批量添加{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.info-table { border-collapse:collapse; width:100%; font-size:13px; }
+.info-table th, .info-table td { border:1px solid #ddd; padding:4px 8px; text-align:center; }
+.info-table th { background:#f5f5f5; position:sticky; top:0; z-index:1; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+
+  <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <span style="font-weight:600;">📋 批量维护</span>
+    <div style="flex:1;"></div>
+    <el-button size="small" type="warning" @click="preview" :disabled="checkedCount===0">预览（[[ checkedCount ]]人）</el-button>
+    <el-button size="small" type="primary" @click="confirmInsert" :disabled="previewList.length===0">确认批量添加</el-button>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <!-- 左：单位树 -->
+    <div id="leftPanel" class="resize-panel" style="width:220px;min-width:180px;border-right:1px solid #e4e7ed;overflow:hidden;">
+      <iframe src="/components/unit-tree-embed/" style="width:100%;height:100%;border:none;"></iframe>
+    </div>
+
+    <div class="drag-bar" data-target="left"></div>
+
+    <!-- 中：表单+人员列表 -->
+    <div id="midPanel" class="resize-panel" style="width:40%;min-width:300px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;padding:8px;">
+
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+        <span style="font-size:12px;">类别:</span>
+        <select v-model="form.fl" @change="onCategoryChange" style="height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 4px;font-size:12px;">
+          <option value="">请选择</option>
+          <option v-for="c in categories" :key="c.fl" :value="c.fl">[[ c.display_name ]]</option>
+        </select>
+        <span style="font-size:12px;">年:</span><input v-model="form.year" style="width:55px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;text-align:center;">
+        <span style="font-size:12px;">月:</span><input v-model="form.month" style="width:45px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;text-align:center;">
+        <span style="font-size:12px;">日:</span><input v-model="form.day" style="width:45px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;text-align:center;">
+        <span style="font-size:12px;">页数:</span><input v-model="form.ys" style="width:45px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;text-align:center;">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+        <span style="font-size:12px;">材料名称:</span><input v-model="form.cltm" style="width:220px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;">
+        <span style="font-size:12px;">备注:</span><input v-model="form.bz" style="width:150px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;">
+      </div>
+
+      <div style="flex:1;overflow:auto;border:1px solid #e4e7ed;border-radius:4px;">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th style="width:40px;"><input type="checkbox" @change="toggleAll" :checked="allChecked" /></th>
+              <th>姓名</th>
+              <th>单位</th>
+              <th>已有该类材料</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="p in persons" :key="p.RSID" :style="{background: p._checked ? '#e6f7ff' : '#fff'}">
+              <td><input type="checkbox" v-model="p._checked" @change="onCheckChange" /></td>
+              <td>[[ p.姓名 ]]</td>
+              <td>[[ p.单位 ]]</td>
+              <td>[[ p._existingCount ]]</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="persons.length===0 && selectedUnitId" style="text-align:center;color:#909399;padding:40px;">该单位无人员</div>
+        <div v-if="!selectedUnitId" style="text-align:center;color:#909399;padding:40px;">请选择单位</div>
+      </div>
+    </div>
+
+    <div class="drag-bar" data-target="mid"></div>
+
+    <!-- 右：预览表 -->
+    <div id="rightPanel" class="resize-panel" style="flex:1;min-width:300px;display:flex;flex-direction:column;overflow:hidden;padding:8px;">
+      <div style="font-weight:bold;margin-bottom:6px;">预览</div>
+      <div style="flex:1;overflow:auto;">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>编号</th><th>姓名</th><th>材料名称</th><th>年</th><th>月</th><th>日</th><th>页数</th><th>备注</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="p in previewList" :key="p.RSID">
+              <td>[[ p.编号 ]]</td><td>[[ p.姓名 ]]</td><td>[[ p.材料名称 ]]</td><td>[[ p.年 ]]</td><td>[[ p.月 ]]</td><td>[[ p.日 ]]</td><td>[[ p.页数 ]]</td><td>[[ p.备注 ]]</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="previewList.length===0" style="text-align:center;color:#909399;padding:40px;">请勾选人员并点击"预览"</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+const app = createApp({
+  setup() {
+    const selectedUnitId = ref('');
+    const persons = ref([]);
+    const categories = ref([]);
+    const previewList = ref([]);
+    const jbbh = ref('');  // 当前选中类别的 JBBH
+    const form = ref({ fl: '', year: '', month: '', day: '', ys: '', cltm: '', bz: '' });
+
+    // 监听单位树 iframe 发来的选择事件
+    const handleMessage = (e) => {
+      if (e.data && e.data.type === 'unit-select') {
+        selectedUnitId.value = e.data.data.tid;
+        loadPersons(e.data.data.tid);
+      }
+    };
+
+    onMounted(() => {
+      window.addEventListener('message', handleMessage);
+      loadCategories();
+    });
+
+    // 加载人员
+    const loadPersons = async (unitId) => {
+      if (!unitId) return;
+      try {
+        const r = await axios.get('/archivesSystem/api/batch/unit-persons/', {
+          params: { unitId }
+        });
+        if (r.data.code === 0) {
+          persons.value = r.data.data.map(p => ({
+            ...p,
+            _checked: false,
+            _existingCount: 0,
+            _nextXh: 0
+          }));
+        }
+      } catch (e) {
+        console.error('加载人员失败:', e);
+      }
+    };
+
+    // 加载材料类别
+    const loadCategories = async () => {
+      try {
+        const r = await axios.get('/archivesSystem/api/batch/categories/');
+        if (r.data.code === 0) {
+          categories.value = r.data.data;
+        }
+      } catch (e) {
+        console.error('加载类别失败:', e);
+      }
+    };
+
+    // 类别变更时：查询JBBH + 刷新已勾选人员的已有数量
+    const onCategoryChange = async () => {
+      if (!form.value.fl) {
+        jbbh.value = '';
+        persons.value.forEach(p => { p._existingCount = 0; p._nextXh = 0; });
+        return;
+      }
+      try {
+        const r = await axios.get('/archivesSystem/api/batch/jbbh/', {
+          params: { fl: form.value.fl }
+        });
+        if (r.data.code === 0) {
+          jbbh.value = r.data.jbbh;
+        }
+      } catch (e) {
+        console.error('获取JBBH失败:', e);
+      }
+      await refreshExistingCounts();
+    };
+
+    // 刷新已勾选人员的已有数量
+    const refreshExistingCounts = async () => {
+      const checkedPersons = persons.value.filter(p => p._checked);
+      if (checkedPersons.length === 0 || !form.value.fl) return;
+      try {
+        const rsids = checkedPersons.map(p => p.RSID).join(',');
+        const r = await axios.get('/archivesSystem/api/batch/existing-count/', {
+          params: { rsids, fl: form.value.fl }
+        });
+        if (r.data.code === 0) {
+          const counts = r.data.data;
+          persons.value.forEach(p => {
+            if (p._checked && counts[p.RSID]) {
+              p._existingCount = counts[p.RSID].count;
+              p._nextXh = counts[p.RSID].next_xh;
+            }
+          });
+        }
+      } catch (e) {
+        console.error('加载已有数量失败:', e);
+      }
+    };
+
+    // 勾选变更时刷新
+    const onCheckChange = () => {
+      if (form.value.fl) {
+        refreshExistingCounts();
+      }
+    };
+
+    // 全选
+    const allChecked = computed(() =>
+      persons.value.length > 0 && persons.value.every(p => p._checked)
+    );
+
+    const checkedCount = computed(() =>
+      persons.value.filter(p => p._checked).length
+    );
+
+    const toggleAll = (e) => {
+      const checked = e.target.checked;
+      persons.value.forEach(p => { p._checked = checked; });
+      if (form.value.fl) {
+        refreshExistingCounts();
+      }
+    };
+
+    // 预览
+    const preview = () => {
+      if (checkedCount.value === 0) {
+        ElementPlus.ElMessage.warning('请先勾选人员');
+        return;
+      }
+      if (!form.value.fl) {
+        ElementPlus.ElMessage.warning('请先选择材料类别');
+        return;
+      }
+      const checked = persons.value.filter(p => p._checked);
+      previewList.value = checked.map(p => ({
+        RSID: p.RSID,
+        编号: jbbh.value + '-' + p._nextXh,
+        姓名: p.姓名,
+        材料名称: form.value.cltm,
+        年: form.value.year,
+        月: form.value.month,
+        日: form.value.day,
+        页数: form.value.ys,
+        备注: form.value.bz
+      }));
+    };
+
+    // 确认批量插入
+    const confirmInsert = async () => {
+      if (previewList.value.length === 0) return;
+      try {
+        await ElementPlus.ElMessageBox.confirm(
+          `确定为 ${previewList.value.length} 人批量添加材料？此操作不可撤销。`,
+          '确认批量添加',
+          { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }
+        );
+      } catch {
+        return;
+      }
+      const rsids = previewList.value.map(p => p.RSID);
+      try {
+        const r = await axios.post('/archivesSystem/api/batch/insert/', {
+          rsids, fl: form.value.fl, year: form.value.year, month: form.value.month,
+          day: form.value.day, ys: form.value.ys, bz: form.value.bz, cltm: form.value.cltm
+        });
+        ElementPlus.ElMessage[r.data.code === 0 ? 'success' : 'error'](r.data.msg);
+        if (r.data.code === 0) {
+          previewList.value = [];
+          persons.value.forEach(p => { p._checked = false; p._existingCount = 0; p._nextXh = 0; });
+        }
+      } catch (e) {
+        ElementPlus.ElMessage.error('请求失败');
+      }
+    };
+
+    // 拖拽分栏
+    const initDrag = () => {
+      document.querySelectorAll('.drag-bar').forEach(bar => {
+        bar.addEventListener('mousedown', (e) => {
+          const panel = document.getElementById(bar.dataset.target + 'Panel');
+          if (!panel) return;
+          const startX = e.clientX, startW = panel.offsetWidth;
+          document.querySelectorAll('.resize-panel').forEach(p => {
+            const iframe = p.querySelector('iframe');
+            if (iframe) iframe.style.pointerEvents = 'none';
+          });
+          const onMove = (ev) => {
+            let w = startW + ev.clientX - startX;
+            if (w < 150) w = 150;
+            if (w > 600) w = 600;
+            panel.style.width = w + 'px';
+            panel.style.minWidth = w + 'px';
+            panel.style.flexShrink = '0';
+            panel.style.flexGrow = '0';
+          };
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.querySelectorAll('.resize-panel').forEach(p => {
+              const iframe = p.querySelector('iframe');
+              if (iframe) iframe.style.pointerEvents = '';
+            });
+          };
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+          e.preventDefault();
+        });
+      });
+    };
+
+    onMounted(() => {
+      initDrag();
+    });
+
+    return {
+      selectedUnitId, categories, persons, previewList, form,
+      checkedCount, allChecked,
+      toggleAll, preview, confirmInsert, onCategoryChange, onCheckChange
+    };
+  }
+});
+
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+app.config.compilerOptions = { delimiters: ['[[', ']]'] };
+app.mount('#app');
+</script>
+{% endblock %}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/element-plus.min.js"></script>
+  <script src="/static/lib/element-plus-zh-cn.min.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-size:13px; padding:12px; }
+    .edit-table { border-collapse:collapse; width:100%; font-size:12px; margin-top:8px; }
+    .edit-table th, .edit-table td { border:1px solid #ddd; padding:4px 6px; text-align:center; }
+    .edit-table td input { width:100%; border:1px solid #ddd; padding:2px 4px; }
+    .info-row { display:flex; gap:12px; margin-bottom:8px; font-size:13px; }
+    .info-row span { color:#909399; }
+    .info-row b { color:#303133; }
+  </style>
+</head>
+<body>
+<div id="app" v-if="loaded">
+  <div class="info-row">
+    <span>类别：<b>[[ form.category ]]</b></span>
+    <span>年度：<b>[[ form.year ]]</b></span>
+    <span>文件名：<b>[[ form.fileName ]]</b></span>
+  </div>
+  <div style="margin-bottom:4px;">
+    <span>类型：</span>
+    <el-tag v-if="isMulti" type="warning">多人文件</el-tag>
+    <el-tag v-else type="info">单人文件</el-tag>
+  </div>
+
+  <div style="margin-bottom:8px;">
+    <div style="font-size:12px;color:#909399;margin-bottom:4px;">批量添加：从Excel复制姓名和概要（Tab分隔），每行一人</div>
+    <textarea v-model="pasteText" rows="3" style="width:100%;border:1px solid #dcdfe6;border-radius:4px;padding:6px;font-size:12px;" @input="parsePaste" placeholder="张三&#9;分配至第一小学"></textarea>
+  </div>
+
+  <div style="font-weight:bold;margin-bottom:6px;">人员列表（[[ persons.length ]]人）</div>
+  <table class="edit-table">
+    <thead><tr><th>姓名</th><th>概要</th><th>操作</th></tr></thead>
+    <tbody>
+      <tr v-for="(p,i) in persons" :key="i">
+        <td><input v-model="p.personName" /></td>
+        <td><input v-model="p.summary" /></td>
+        <td><el-button size="small" type="danger" @click="persons.splice(i,1)">删除</el-button></td>
+      </tr>
+    </tbody>
+  </table>
+  <el-button size="small" @click="persons.push({personName:'',summary:''})" style="margin-top:8px;">+ 添加人员</el-button>
+
+  <div style="text-align:right;margin-top:12px;">
+    <el-button @click="closeDialog">取消</el-button>
+    <el-button type="primary" @click="saveEdit">保存</el-button>
+  </div>
+</div>
+<div v-else style="text-align:center;padding:40px;">加载中...</div>
+
+<script>
+const { createApp, ref, reactive, computed, onMounted } = Vue;
+
+createApp({
+  delimiters: ['[[', ']]'],
+  setup(){
+    const loaded = ref(false);
+    const form = reactive({category:'', year:'', fileName:''});
+    const persons = ref([]);
+    const pasteText = ref('');
+    const isMulti = computed(() => persons.value.length > 1);
+    let fileNo = '';
+
+    onMounted(async () => {
+      const params = new URLSearchParams(window.location.search);
+      fileNo = params.get('fileNo');
+      if (!fileNo) { loaded.value = true; return; }
+      const r = await axios.get('/archivesSystem/api/files/manage/persons/', {params:{fileNo}});
+      if (r.data.code===0 && r.data.data.length) {
+        persons.value = r.data.data.map(p=>({personName:p.PersonName, summary:p.Summary}));
+        form.category = r.data.data[0].Category;
+        form.year = r.data.data[0].Year;
+        form.fileName = r.data.data[0].FileName;
+      }
+      loaded.value = true;
+    });
+
+    const parsePaste = () => {
+      const lines = pasteText.value.trim().split('\n').filter(Boolean);
+      lines.forEach(line => {
+        const p = line.split('\t');
+        persons.value.push({personName:(p[0]||'').trim(), summary:(p[1]||'').trim()});
+      });
+      pasteText.value = '';
+    };
+
+    const saveEdit = async () => {
+      await axios.post('/archivesSystem/api/files/manage/save/', {
+        action:'update_persons', FileNo:fileNo,
+        Category:form.category, Year:form.year, FileName:form.fileName, persons:persons.value
+      });
+      ElementPlus.ElMessage.success('保存成功');
+      window.parent.postMessage({type:'file-edited'}, '*');
+      window.parent.postMessage({type:'close-dialog'}, '*');
+    };
+
+    const closeDialog = () => {
+      window.parent.postMessage({type:'close-dialog'}, '*');
+    };
+
+    return { loaded, form, persons, pasteText, isMulti, parsePaste, saveEdit, closeDialog };
+  }
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+</body>
+</html>

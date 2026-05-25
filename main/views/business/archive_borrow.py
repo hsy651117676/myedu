@@ -13,23 +13,6 @@ from main.decorators import archive_perm_required
 
 logger = logging.getLogger(__name__)
 
-# 前端参数 → 数据库字段
-FIELD_MAP = {
-    "borrowDate": "JYRQ",
-    "borrower": "JYR",
-    "borrowUnit": "JYDW",
-    "borrowReason": "JYLY",
-    "borrowHandler": "JYJBR",
-    "approver": "PZR",
-    "returnDate": "GHRQ",
-    "returnHandler": "GHJBR",
-    "remark": "BZ",
-    "personNames": "BJYRXM",
-    "personRsids": "DHHM",
-    "personCount": "XH",
-}
-REVERSE_MAP = {v: k for k, v in FIELD_MAP.items()}
-
 
 @login_required
 @archive_perm_required
@@ -40,7 +23,7 @@ def page(request):
 @login_required
 @archive_perm_required
 def list_api(request):
-    keyword = request.GET.get("keyword", "").strip()
+    """历史借阅列表"""
     page = int(request.GET.get("page", 1))
     page_size = int(request.GET.get("pageSize", 20))
 
@@ -51,17 +34,32 @@ def list_api(request):
 
         where = "WHERE 1=1"
         params = []
-        if keyword:
-            where += " AND (JYDW LIKE ? OR JYLY LIKE ? OR BJYRXM LIKE ? OR JYR LIKE ?)"
-            kw = f"%{keyword}%"
-            params = [kw, kw, kw, kw]
+
+        jydw = request.GET.get("jydw", "").strip()
+        jyly = request.GET.get("jyly", "").strip()
+        jyr = request.GET.get("jyr", "").strip()
+        bjyrxm = request.GET.get("bjyrxm", "").strip()
+
+        if jydw:
+            where += " AND JYDW LIKE ?"
+            params.append(f"%{jydw}%")
+        if jyly:
+            where += " AND JYLY LIKE ?"
+            params.append(f"%{jyly}%")
+        if jyr:
+            where += " AND JYR LIKE ?"
+            params.append(f"%{jyr}%")
+        if bjyrxm:
+            where += " AND BJYRXM LIKE ?"
+            params.append(f"%{bjyrxm}%")
 
         cursor.execute(f"SELECT COUNT(*) FROM YW_DAJY {where}", params)
         total = cursor.fetchone()[0]
 
         offset = (page - 1) * page_size
         cursor.execute(f"""
-            SELECT ID, JYRQ, JYR, JYDW, DHHM, JYLY, JYJBR, PZR, GHRQ, GHJBR, BZ, BJYRXM, XH
+            SELECT ID, JYRQ, JYR, JYDW, DHHM, JYLY, JYJBR, PZR,
+                   GHRQ, GHJBR, BZ, BJYRXM, XH
             FROM YW_DAJY {where}
             ORDER BY JYRQ DESC, ID DESC
             OFFSET {offset} ROWS FETCH NEXT {page_size} ROWS ONLY
@@ -71,7 +69,21 @@ def list_api(request):
         rows = []
         for r in cursor.fetchall():
             d = dict(zip(cols, r))
-            rows.append({REVERSE_MAP.get(k, k): v for k, v in d.items()})
+            rows.append({
+                "id": d["ID"],
+                "borrowDate": d["JYRQ"],
+                "borrower": d["JYR"],
+                "borrowUnit": d["JYDW"],
+                "personRsids": d["DHHM"],
+                "borrowReason": d["JYLY"],
+                "borrowHandler": d["JYJBR"],
+                "approver": d["PZR"],
+                "returnDate": d["GHRQ"],
+                "returnHandler": d["GHJBR"],
+                "remark": d["BZ"],
+                "personNames": d["BJYRXM"],
+                "personCount": d["XH"],
+            })
 
         cursor.close()
         return JsonResponse({"code": 0, "data": rows, "total": total})
@@ -86,50 +98,66 @@ def list_api(request):
 @archive_perm_required
 @csrf_exempt
 def save_api(request):
+    """新增、修改、删除"""
     if request.method != "POST":
         return JsonResponse({"code": 405})
     try:
         data = json.loads(request.body)
     except:
-        return JsonResponse({"code": 400})
+        return JsonResponse({"code": 400, "msg": "参数格式错误"})
 
-    action = data.get("action")
+    action = data.get("action", "save")
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
 
-        if action == "save":
-            rid = data.get("id", "")
-            if rid:
-                cursor.execute("""
-                    UPDATE YW_DAJY SET JYRQ=?, JYR=?, JYDW=?, DHHM=?, JYLY=?,
-                    JYJBR=?, PZR=?, GHRQ=?, GHJBR=?, BZ=?, BJYRXM=?, XH=?
-                    WHERE ID=?
-                """, (
-                    data.get("borrowDate", ""), data.get("borrower", ""),
-                    data.get("borrowUnit", ""), data.get("personRsids", ""),
-                    data.get("borrowReason", ""), data.get("borrowHandler", ""),
-                    data.get("approver", ""), data.get("returnDate", ""),
-                    data.get("returnHandler", ""), data.get("remark", ""),
-                    data.get("personNames", ""), data.get("personCount", 0), rid
-                ))
-            else:
-                cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_DAJY")
-                new_id = cursor.fetchone()[0]
-                cursor.execute("""
-                    INSERT INTO YW_DAJY (ID, JYRQ, JYR, JYDW, DHHM, JYLY, JYJBR, PZR, GHRQ, GHJBR, BZ, BJYRXM, XH)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    new_id, data.get("borrowDate", ""), data.get("borrower", ""),
-                    data.get("borrowUnit", ""), data.get("personRsids", ""),
-                    data.get("borrowReason", ""), data.get("borrowHandler", ""),
-                    data.get("approver", ""), data.get("returnDate", ""),
-                    data.get("returnHandler", ""), data.get("remark", ""),
-                    data.get("personNames", ""), data.get("personCount", 0)
-                ))
-        elif action == "delete":
-            cursor.execute("DELETE FROM YW_DAJY WHERE ID=?", (data.get("id"),))
+        if action == "delete":
+            rid = data.get("id")
+            if not rid:
+                return JsonResponse({"code": 400, "msg": "缺少ID"})
+            cursor.execute("DELETE FROM YW_DAJY WHERE ID=?", (int(rid),))
+            conn.commit()
+            cursor.close()
+            return JsonResponse({"code": 0, "msg": "删除成功"})
+
+        # save（新增或修改）
+        rid = data.get("id")
+        borrowDate = data.get("borrowDate", "")
+        borrower = data.get("borrower", "")
+        borrowUnit = data.get("borrowUnit", "")
+        personRsids = data.get("personRsids", "")
+        borrowReason = data.get("borrowReason", "")
+        borrowHandler = data.get("borrowHandler", "")
+        approver = data.get("approver", "")
+        returnDate = data.get("returnDate", "")
+        returnHandler = data.get("returnHandler", "")
+        remark = data.get("remark", "")
+        personNames = data.get("personNames", "")
+        personCount = data.get("personCount", 0)
+
+        if rid:
+            cursor.execute("""
+                UPDATE YW_DAJY SET JYRQ=?, JYR=?, JYDW=?, DHHM=?, JYLY=?,
+                JYJBR=?, PZR=?, GHRQ=?, GHJBR=?, BZ=?, BJYRXM=?, XH=?
+                WHERE ID=?
+            """, (
+                borrowDate, borrower, borrowUnit, personRsids,
+                borrowReason, borrowHandler, approver, returnDate,
+                returnHandler, remark, personNames, personCount, int(rid)
+            ))
+        else:
+            cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_DAJY")
+            new_id = cursor.fetchone()[0]
+            cursor.execute("""
+                INSERT INTO YW_DAJY (ID, JYRQ, JYR, JYDW, DHHM, JYLY, JYJBR, PZR,
+                GHRQ, GHJBR, BZ, BJYRXM, XH)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                new_id, borrowDate, borrower, borrowUnit, personRsids,
+                borrowReason, borrowHandler, approver, returnDate,
+                returnHandler, remark, personNames, personCount
+            ))
 
         conn.commit()
         cursor.close()
@@ -146,6 +174,7 @@ def save_api(request):
 @login_required
 @archive_perm_required
 def persons_api(request):
+    """获取被借阅人详细信息"""
     rsids = request.GET.get("rsids", "")
     if not rsids:
         return JsonResponse({"code": 0, "data": []})
@@ -184,6 +213,7 @@ def persons_api(request):
 @login_required
 @archive_perm_required
 def suggest_api(request):
+    """自动补全建议"""
     field = request.GET.get("field", "")
     if field not in ("JYDW", "PZR", "JYLY", "JYJBR"):
         return JsonResponse({"code": 0, "data": []})

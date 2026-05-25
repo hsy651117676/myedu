@@ -32,7 +32,6 @@ class ArchiveAuthBackend:
             )
 
             row = cursor.fetchone()
-
             if not row:
                 cursor.close()
                 return None
@@ -51,6 +50,9 @@ class ArchiveAuthBackend:
             )
             power = cursor.fetchone()
             cursor.close()
+
+            is_admin = bool(power and power[5]) if power else False
+
             user, created = User.objects.get_or_create(
                 username=f"archive_{yhbh}",
                 defaults={'email': f'{yhbh}@archive.local', 'is_active': True}
@@ -59,10 +61,20 @@ class ArchiveAuthBackend:
                 user.set_unusable_password()
                 user.save()
 
-            from main.models import UserProfile
+            from main.models import UserProfile, UserGroup
             profile, _ = UserProfile.objects.get_or_create(user=user)
             profile.yhbh = yhbh
             profile.real_name = yhmc or ''
+
+            # 分配用户组
+            try:
+                if is_admin:
+                    profile.group = UserGroup.objects.get(code='admin')
+                else:
+                    profile.group = UserGroup.objects.get(code='archive_reviewer')
+            except UserGroup.DoesNotExist:
+                pass
+
             profile.save()
 
             request.session['archive_user'] = {
@@ -73,7 +85,7 @@ class ArchiveAuthBackend:
                 'zw': zw or '',
                 'doorstr': doorstr or '',
                 'handstr': handstr or '',
-                'is_admin': bool(power and power[5]) if power else False,
+                'is_admin': is_admin,
                 'can_scan': bool(power and power[1]) if power else False,
                 'can_check': bool(power and power[2]) if power else False,
                 'can_print': bool(power and power[3]) if power else False,

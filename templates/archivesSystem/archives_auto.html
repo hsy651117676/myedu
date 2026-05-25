@@ -1,0 +1,167 @@
+{% extends "layout/base.html" %}
+{% block title %}材料名称维护{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.file-table { border-collapse:collapse; width:100%; font-size:13px; }
+.file-table th, .file-table td { padding:4px 8px; border:1px solid #ddd; text-align:center; }
+.file-table th { background:#f5f5f5; position:sticky; top:0; z-index:1; }
+.file-table td input, .file-table td select { width:100%; border:1px solid #ddd; padding:3px 6px; }
+.tree-node { padding:4px 10px; cursor:pointer; font-size:13px; white-space:nowrap; }
+.tree-node:hover { background:#e8f0fe; }
+.tree-node.active { background:#d0e4fc; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+
+  <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <span style="font-weight:600;">📋 材料名称维护</span>
+      <div style="flex:1;"></div>
+      <el-button size="small" type="success" @click="addRow">新增</el-button>
+      <el-button size="small" type="danger" @click="batchDel" :disabled="checkedIds.length===0">删除</el-button>
+      <el-button size="small" type="warning" @click="batchSave" :disabled="checkedIds.length===0">保存</el-button>
+      <el-button size="small" @click="exportJs">生成JS</el-button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <el-input v-model="q.keyword" size="small" placeholder="材料名称" style="width:200px;" @keyup.enter="doQuery" clearable />
+      <el-select v-model="q.fl" size="small" clearable placeholder="全部分类" style="width:180px;" @change="doQuery">
+        <el-option v-for="f in flList" :key="f.fl" :label="f.flName" :value="f.fl" />
+      </el-select>
+      <el-button size="small" type="primary" @click="doQuery">查询</el-button>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <div style="width:200px;border-right:1px solid #e4e7ed;overflow-y:auto;padding:4px;flex-shrink:0;">
+      <div v-for="f in flList" :key="f.fl" class="tree-node"
+           :class="{active: q.fl===f.fl}" @click="selectFl(f)">📁 [[ f.flName ]]</div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px;">
+
+      <div style="flex:1;overflow:auto;">
+        <table class="file-table">
+          <thead>
+            <tr>
+              <th style="width:40px;"><input type="checkbox" @change="toggleAll" :checked="allChecked" /></th>
+              <th style="width:60px;">ID</th>
+              <th>材料名称</th>
+              <th style="width:180px;">分类</th>
+              <th style="width:140px;">更新时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(r,i) in list" :key="r.id" :style="{background: r._checked ? '#e6f7ff' : '#fff'}">
+              <td><input type="checkbox" v-model="r._checked" /></td>
+              <td>[[ r.id ]]</td>
+              <td><input v-model="r.archivesName" /></td>
+              <td>
+                <select v-model="r.fl">
+                  <option v-for="f in flList" :key="f.fl" :value="f.fl">[[ f.flName ]]</option>
+                </select>
+              </td>
+              <td>[[ r.updateTime ]]</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="list.length===0" style="text-align:center;color:#909399;padding:40px;">暂无数据</div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;padding-top:8px;flex-shrink:0;">
+        <el-pagination v-model:current-page="page" v-model:page-size="pageSize" :total="total"
+          :page-sizes="[30,50,100]" layout="total, sizes, prev, pager, next"
+          @size-change="doQuery" @current-change="doQuery" small />
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, reactive, computed, onMounted } = Vue;
+  const { ElMessage, ElMessageBox } = ElementPlus;
+  const app = createApp({
+    setup() {
+      const q = reactive({ keyword: '', fl: '' });
+      const list = ref([]);
+      const flList = ref([]);
+      const page = ref(1);
+      const pageSize = ref(30);
+      const total = ref(0);
+
+      const checkedIds = computed(() => list.value.filter(r=>r._checked && r.id).map(r=>r.id));
+      const allChecked = computed(() => list.value.length>0 && list.value.every(r=>r._checked));
+
+      const loadFl = () => {
+        axios.get('/archivesSystem/api/auto-names/fl/').then(res => {
+          if (res.data.code === 0) flList.value = res.data.data;
+        });
+      };
+
+      const selectFl = (f) => {
+        q.fl = q.fl === f.fl ? '' : f.fl;
+        doQuery();
+      };
+
+      const doQuery = () => {
+        axios.get('/archivesSystem/api/auto-names/list/', {
+          params: { keyword: q.keyword, fl: q.fl, page: page.value, pageSize: pageSize.value }
+        }).then(res => {
+          if (res.data.code === 0) {
+            list.value = res.data.data.map(r => ({ ...r, _checked: false }));
+            total.value = res.data.total;
+          }
+        });
+      };
+
+      const toggleAll = (e) => { list.value.forEach(r=>r._checked=e.target.checked); };
+
+      const addRow = () => {
+        list.value.unshift({
+          id: null, fl: q.fl || null, flName: '', number: '', archivesName: '', updateTime: '', _checked: true
+        });
+      };
+
+      const batchSave = async () => {
+        const rows = list.value.filter(r=>r._checked);
+        if (!rows.length) { ElMessage.warning('请勾选行'); return; }
+        for (const r of rows) {
+          const flName = flList.value.find(f=>f.fl===r.fl)?.flName || '';
+          let action = r.id ? 'update' : 'add';
+          await axios.post('/archivesSystem/api/auto-names/save/', {
+            action, id: r.id, fl: r.fl, flName, number: r.number, archivesName: r.archivesName
+          });
+        }
+        ElMessage.success('保存成功'); doQuery();
+      };
+
+      const batchDel = () => {
+        if (!checkedIds.value.length) { ElMessage.warning('请勾选行'); return; }
+        ElMessageBox.confirm('确定删除选中行？', '确认', { type: 'warning' }).then(async () => {
+          for (const id of checkedIds.value) {
+            await axios.post('/archivesSystem/api/auto-names/save/', { action: 'delete', id });
+          }
+          ElMessage.success('已删除'); doQuery();
+        });
+      };
+
+      const exportJs = () => {
+        axios.get('/archivesSystem/api/auto-names/export/').then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+        });
+      };
+
+      onMounted(() => { loadFl(); doQuery(); });
+
+      return { q, list, flList, page, pageSize, total, checkedIds, allChecked,
+               selectFl, doQuery, toggleAll, addRow, batchSave, batchDel, exportJs };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

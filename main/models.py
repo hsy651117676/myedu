@@ -75,3 +75,17 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.real_name or self.user.username
+
+class Diary(models.Model):
+    """在线日记"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="用户")
+    title = models.CharField(max_length=200, verbose_name="标题")
+    content = models.TextField(blank=True, verbose_name="内容")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="修改时间")
+
+    class Meta:
+        db_table = 'tools_diary'
+        ordering = ['-updated_at']
+        verbose_name = '日记'
+        verbose_name_plural = '日记'

@@ -1,0 +1,162 @@
+{% extends "layout/base.html" %}
+{% block title %}文件查询{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.file-table { border-collapse:collapse; width:100%; font-size:12px; }
+.file-table th, .file-table td { border:1px solid #ddd; padding:4px 8px; text-align:center; white-space:nowrap; }
+.file-table th { background:#f5f7fa; position:sticky; top:0; z-index:1; }
+.file-table tr { cursor:pointer; }
+.file-table tr:hover { background:#e8f0fe; }
+.file-table tr.active { background:#d0e4fc; }
+.tree-node { padding:4px 10px; cursor:pointer; font-size:13px; }
+.tree-node:hover { background:#e8f0fe; }
+.tree-node.active { background:#d0e4fc; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+
+    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <span style="font-weight:600;">📁 文件查询</span>
+        <input v-model="q.fileNo" placeholder="文号" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+        <input v-model="q.personName" placeholder="姓名" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+        <input v-model="q.summary" placeholder="概要" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+        <select v-model="q.year" style="height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 4px;font-size:12px;">
+            <option value="">全部年度</option>
+            <option v-for="y in yearOptions" :key="y" :value="y">[[ y ]]</option>
+        </select>
+        <el-button size="small" @click="loadList(1)">搜索</el-button>
+    </div>
+
+    <div style="flex:1;display:flex;overflow:hidden;">
+        <div id="leftPanel" class="resize-panel" style="width:200px;min-width:150px;border-right:1px solid #e4e7ed;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;font-weight:bold;font-size:13px;flex-shrink:0;">类别</div>
+            <div style="flex:1;overflow-y:auto;">
+                <div v-for="c in categories" :key="c" class="tree-node"
+                     :class="{active: selectedCategory===c}" @click="selectCategory(c)">📁 [[ c ]]</div>
+            </div>
+        </div>
+        <div class="drag-bar" data-target="left" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <div id="midPanel" class="resize-panel" style="width:40%;min-width:250px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;">
+            <div style="flex:1;overflow:auto;">
+                <table class="file-table">
+                    <thead><tr><th>文号</th><th>姓名</th><th>概要</th><th>文件名</th><th>大小</th></tr></thead>
+                    <tbody>
+                        <tr v-for="r in list" :key="r.PersonID || r.ID" :class="{active: selectedFileId===r.ID}" @click="selectFile(r)">
+                            <td>[[ r.FileNo ]]</td><td>[[ r.PersonName ]]</td><td>[[ r.Summary ]]</td>
+                            <td>[[ r.FileName ]]</td><td>[[ (r.FileSize/1024).toFixed(1) ]] KB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-if="total>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+                <el-pagination small background layout="total, sizes, prev, pager, next"
+                    :page-sizes="[20,30,50,100]" :page-size="pageSize" :total="total"
+                    :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+            </div>
+        </div>
+        <div class="drag-bar" data-target="mid" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <div id="rightPanel" class="resize-panel" style="flex:1;min-width:300px;display:flex;flex-direction:column;overflow:hidden;">
+            <div v-if="pdfUrl" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+                <div style="padding:6px 8px;border-bottom:1px solid #e4e7ed;font-weight:bold;flex-shrink:0;">
+                    [[ selectedFileName || 'PDF预览' ]]
+                    <el-button size="small" @click="printPdf" style="float:right;">打印</el-button>
+                </div>
+                <iframe :src="pdfUrl" style="flex:1;border:none;"></iframe>
+            </div>
+            <div v-else style="flex:1;display:flex;align-items:center;justify-content:center;color:#ccc;">请选择文件查看</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, reactive, onMounted } = Vue;
+
+createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const categories = ref([]);
+        const selectedCategory = ref('');
+        const q = reactive({fileNo:'', personName:'', summary:'', year:''});
+        const list = ref([]);
+        const total = ref(0);
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+        const selectedFileId = ref(null);
+        const selectedFileName = ref('');
+        const pdfUrl = ref('');
+
+        const yearOptions = [];
+        for (let y = 1988; y <= 2030; y++) yearOptions.push(String(y));
+
+        const loadCategories = async () => {
+            const r = await axios.get('/archivesSystem/api/files/categories/');
+            if (r.data.code===0) categories.value = r.data.data||[];
+        };
+        const selectCategory = (c) => { selectedCategory.value = c; loadList(1); };
+        const loadList = async (page) => {
+            if (!selectedCategory.value) return;
+            const r = await axios.get('/archivesSystem/api/files/list/', {
+                params: {
+                    category: selectedCategory.value, year: q.year,
+                    keyword: [q.fileNo, q.personName, q.summary].filter(Boolean).join(' '),
+                    page: page||1, pageSize: pageSize.value
+                }
+            });
+            if (r.data.code===0) { list.value=r.data.data||[]; total.value=r.data.total||0; currentPage.value=page||1; }
+        };
+        const selectFile = (r) => {
+            selectedFileId.value = r.ID;
+            selectedFileName.value = r.FileName;
+            pdfUrl.value = '/archivesSystem/api/files/download/?id=' + r.ID;
+        };
+        const printPdf = () => { if (pdfUrl.value) window.open(pdfUrl.value, '_blank'); };
+        const onPageChange = (p) => loadList(p);
+        const onSizeChange = (s) => { pageSize.value=s; loadList(1); };
+
+        onMounted(loadCategories);
+
+        const initDrag = () => {
+            document.querySelectorAll('.drag-bar').forEach(bar => {
+                bar.addEventListener('mousedown', (e) => {
+                    const panel = document.getElementById(bar.dataset.target+'Panel');
+                    if (!panel) return;
+                    const startX = e.clientX, startW = panel.offsetWidth;
+                    document.querySelectorAll('.resize-panel').forEach(p => {
+                        const iframe = p.querySelector('iframe');
+                        if (iframe) iframe.style.pointerEvents = 'none';
+                    });
+                    const onMove = (ev) => {
+                        let w = startW + ev.clientX - startX;
+                        if (w < 120) w = 120; if (w > 900) w = 900;
+                        panel.style.width = w + 'px'; panel.style.minWidth = w + 'px';
+                        panel.style.flexShrink = '0'; panel.style.flexGrow = '0';
+                    };
+                    const onUp = () => {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.style.cursor = ''; document.body.style.userSelect = '';
+                        document.querySelectorAll('.resize-panel').forEach(p => {
+                            const iframe = p.querySelector('iframe');
+                            if (iframe) iframe.style.pointerEvents = '';
+                        });
+                    };
+                    document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                });
+            });
+        };
+        onMounted(initDrag);
+
+        return { categories, selectedCategory, q, list, total, currentPage, pageSize,
+                 selectedFileId, selectedFileName, pdfUrl, yearOptions,
+                 selectCategory, loadList, selectFile, printPdf, onPageChange, onSizeChange };
+    }
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}

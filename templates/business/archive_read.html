@@ -10,10 +10,6 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 .form-table th, .form-table td { border:1px solid #ddd; padding:4px 8px; }
 .form-table th { background:#f5f7fa; text-align:right; width:80px; }
 .form-table td input { width:100%; border:1px solid #ddd; padding:4px 6px; font-size:13px; border-radius:2px; }
-.form-table td .suggest-wrap { position:relative; }
-.suggest-list { position:absolute; top:100%; left:0; right:0; max-height:150px; overflow-y:auto; background:#fff; border:1px solid #409eff; z-index:99; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-.suggest-list div { padding:4px 8px; cursor:pointer; font-size:12px; }
-.suggest-list div:hover { background:#e6f7ff; }
 .drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
 .drag-bar-h { height:4px; background:#e4e7ed; cursor:row-resize; flex-shrink:0; }
 </style>
@@ -38,19 +34,19 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                     <el-button size="small" @click="printRecord">打印</el-button>
                 </div>
                 <div style="flex:1;overflow:auto;padding:8px;">
-          <table class="form-table" style="max-width:700px;">
-    <tr><th>查阅人</th><td><input v-model="form.cyr" /></td><th>查阅单位</th>
-        <td><el-autocomplete v-model="form.cydw" :fetch-suggestions="(q,cb)=>fetchSuggest('CYDW',q,cb)" placeholder="查阅单位" size="small" style="width:100%;" /></td></tr>
-    <tr><th>批准人</th>
-        <td><el-autocomplete v-model="form.pzr" :fetch-suggestions="(q,cb)=>fetchSuggest('PZR',q,cb)" placeholder="批准人" size="small" style="width:100%;" /></td>
-        <th>查阅理由</th>
-        <td><el-autocomplete v-model="form.cyly" :fetch-suggestions="(q,cb)=>fetchSuggest('CYLY',q,cb)" placeholder="查阅理由" size="small" style="width:100%;" /></td></tr>
-    <tr><th>经办人</th>
-        <td><el-autocomplete v-model="form.jbr" :fetch-suggestions="(q,cb)=>fetchSuggest('JBR',q,cb)" placeholder="经办人" size="small" style="width:100%;" /></td>
-        <th>备注</th><td><input v-model="form.bz" /></td></tr>
-    <tr><th>摘抄范围</th><td><input v-model="form.zcfw" /></td><th>摘抄人</th><td><input v-model="form.zcr" /></td></tr>
-    <tr><th>被查阅人数</th><td>[[ personList.length ]]</td><th>查阅时间</th><td><input v-model="form.lcrq" /></td></tr>
-</table>
+                    <table class="form-table" style="max-width:700px;">
+                        <tr><th>查阅人</th><td><input v-model="form.cyr" /></td><th>查阅单位</th>
+                            <td><el-autocomplete v-model="form.cydw" :fetch-suggestions="(q,cb)=>fetchSuggest('CYDW',q,cb)" placeholder="查阅单位" size="small" style="width:100%;" /></td></tr>
+                        <tr><th>批准人</th>
+                            <td><el-autocomplete v-model="form.pzr" :fetch-suggestions="(q,cb)=>fetchSuggest('PZR',q,cb)" placeholder="批准人" size="small" style="width:100%;" /></td>
+                            <th>查阅理由</th>
+                            <td><el-autocomplete v-model="form.cyly" :fetch-suggestions="(q,cb)=>fetchSuggest('CYLY',q,cb)" placeholder="查阅理由" size="small" style="width:100%;" /></td></tr>
+                        <tr><th>经办人</th>
+                            <td><el-autocomplete v-model="form.jbr" :fetch-suggestions="(q,cb)=>fetchSuggest('JBR',q,cb)" placeholder="经办人" size="small" style="width:100%;" /></td>
+                            <th>备注</th><td><input v-model="form.bz" /></td></tr>
+                        <tr><th>摘抄范围</th><td><input v-model="form.zcfw" /></td><th>摘抄人</th><td><input v-model="form.zcr" /></td></tr>
+                        <tr><th>被查阅人数</th><td>[[ personList.length ]]</td><th>查阅时间</th><td><input v-model="form.lcrq" /></td></tr>
+                    </table>
                 </div>
             </div>
 
@@ -98,8 +94,6 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                 <input v-model="q.cydw" placeholder="查阅单位" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <input v-model="q.cyly" placeholder="查阅理由" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <input v-model="q.cyr" placeholder="查阅人" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
-                <input v-model="q.lcrqBegin" placeholder="时间起" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
-                <input v-model="q.lcrqEnd" placeholder="时间止" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <input v-model="q.bcyrxm" placeholder="被查阅人" style="width:80px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
                 <el-button size="small" @click="loadHistory(1)">查询</el-button>
             </div>
@@ -107,9 +101,9 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                 <table class="info-table">
                     <thead><tr><th>ID</th><th>查阅人</th><th>单位</th><th>理由</th><th>时间</th><th>经办人</th><th>被查阅人数</th><th>被查阅人</th></tr></thead>
                     <tbody>
-                        <tr v-for="r in historyList" :key="r.ID" @click="selectHistory(r)"
-                            :style="{background: form.id===r.ID ? '#e6f7ff' : ''}">
-                            <td>[[ r.ID ]]</td><td>[[ r.cyr ]]</td><td>[[ r.cydw ]]</td>
+                        <tr v-for="r in historyList" :key="r.id" @click="selectHistory(r)"
+                            :style="{background: form.id===r.id ? '#e6f7ff' : ''}">
+                            <td>[[ r.id ]]</td><td>[[ r.cyr ]]</td><td>[[ r.cydw ]]</td>
                             <td>[[ r.cyly ]]</td><td>[[ r.lcrq ]]</td><td>[[ r.jbr ]]</td>
                             <td>[[ r.xh ]]</td><td>[[ r.bcyrxm ]]</td>
                         </tr>
@@ -123,6 +117,10 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
             </div>
         </div>
     </div>
+
+    <el-dialog v-model="showPersonPanel" title="选择被查阅人" width="320px" :close-on-click-modal="false">
+        <iframe src="/components/person-panel-embed/" style="width:100%;height:500px;border:none;"></iframe>
+    </el-dialog>
 </div>
 
 <script>
@@ -138,9 +136,9 @@ const app = createApp({
         const historyTotal = ref(0);
         const currentPage = ref(1);
         const pageSize = ref(20);
-        const q = reactive({ cydw:'', cyly:'', cyr:'', lcrqBegin:'', lcrqEnd:'', bcyrxm:'' });
+        const showPersonPanel = ref(false);
+        const q = reactive({ cydw:'', cyly:'', cyr:'', bcyrxm:'' });
 
-        // 下拉提示
         const suggestData = reactive({ CYDW:[], PZR:[], CYLY:[], JBR:[] });
         const loadSuggest = async (field) => {
             if (suggestData[field].length) return;
@@ -156,7 +154,6 @@ const app = createApp({
             cb(results);
         };
 
-        // 被查阅人
         const checkedPersons = computed(() => personList.value.filter(p=>p._checked));
         const allPersonsChecked = computed(() => personList.value.length>0 && personList.value.every(p=>p._checked));
         const toggleAllPersons = (e) => { personList.value.forEach(p=>p._checked=e.target.checked); };
@@ -167,16 +164,17 @@ const app = createApp({
         };
 
         window.addEventListener('message', (e) => {
-            if (e.data.type === 'person-select') {
+            if (e.data && e.data.type === 'person-select') {
                 const p = e.data.data;
-                if (!personList.value.find(x=>x.RSID==p.rsid)) {
+                if (!personList.value.find(x=>String(x.RSID)===String(p.rsid))) {
                     personList.value.push({ RSID: p.rsid, 姓名: p.displayName||p.tname, _checked: false });
                     loadPersons();
                 }
+                showPersonPanel.value = false;
             }
         });
 
-        const addPerson = () => { window.open('/components/person-panel-embed/', '_blank', 'width=300,height=600'); };
+        const addPerson = () => { showPersonPanel.value = true; };
         const removeCheckedPersons = () => { personList.value = personList.value.filter(p=>!p._checked); };
 
         const loadPersons = async () => {
@@ -200,31 +198,73 @@ const app = createApp({
             if (!form.value.jbr) { ElMessage.warning('经办人不能为空'); return; }
 
             const res = await axios.post('/business/api/look/save/', {
-                action: 'save', id: form.value.id || '',
+                action: 'save',
+                id: form.value.id || '',
                 xh: personList.value.length,
-                pzr: form.value.pzr||'', cydw: form.value.cydw||'',
-                cyly: form.value.cyly||'', bcyrrsid: personList.value.map(p=>p.RSID).join(','),
-                lcrq: form.value.lcrq||'', cyr: form.value.cyr||'',
-                zcfw: form.value.zcfw||'', zcr: form.value.zcr||'',
-                jbr: form.value.jbr||'', bz: form.value.bz||'',
+                pzr: form.value.pzr||'',
+                cydw: form.value.cydw||'',
+                cyly: form.value.cyly||'',
+                bcyrrsid: personList.value.map(p=>p.RSID).join(','),
+                lcrq: form.value.lcrq||'',
+                cyr: form.value.cyr||'',
+                zcfw: form.value.zcfw||'',
+                zcr: form.value.zcr||'',
+                jbr: form.value.jbr||'',
+                bz: form.value.bz||'',
                 bcyrxm: personList.value.map(p=>p.姓名).join(',')
             });
-            if (res.data.code===0) { ElMessage.success('保存成功'); loadHistory(currentPage.value); }
-            else ElMessage.error(res.data.msg);
+            if (res.data.code===0) {
+                ElMessage.success(form.value.id ? '修改成功' : '新增成功');
+                loadHistory(currentPage.value);
+            } else {
+                ElMessage.error(res.data.msg);
+            }
         };
 
         const deleteRecord = async () => {
-            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
-            await axios.post('/business/api/look/save/', { action:'delete', id: form.value.id });
-            ElMessage.success('已删除'); newRecord(); loadHistory(1);
+            if (!form.value.id) {
+                ElMessage.warning('请先选择一条记录');
+                return;
+            }
+            try {
+                await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
+            } catch(e) { return; }
+            const res = await axios.post('/business/api/look/save/', {
+                action: 'delete',
+                id: form.value.id
+            });
+            if (res.data.code===0) {
+                ElMessage.success('已删除');
+                newRecord();
+                loadHistory(1);
+            } else {
+                ElMessage.error(res.data.msg || '删除失败');
+            }
         };
 
         const printRecord = () => { ElMessage.info('打印功能开发中'); };
 
         const selectHistory = (r) => {
-            form.value = { ...r };
-            personList.value = r.bcyrrsid ? r.bcyrrsid.split(',').map((id,i)=>({RSID:id,姓名:(r.bcyrxm||'').split(',')[i]||'',_checked:false})) : [];
-            loadPersons();
+            form.value.id = r.id || '';
+            form.value.cyr = r.cyr || '';
+            form.value.cydw = r.cydw || '';
+            form.value.pzr = r.pzr || '';
+            form.value.cyly = r.cyly || '';
+            form.value.jbr = r.jbr || '';
+            form.value.bz = r.bz || '';
+            form.value.zcfw = r.zcfw || '';
+            form.value.zcr = r.zcr || '';
+            form.value.lcrq = r.lcrq || '';
+            if (r.bcyrrsid) {
+                const ids = r.bcyrrsid.split(',').filter(function(x){return x.trim()!==''});
+                const names = (r.bcyrxm || '').split(',');
+                personList.value = ids.map(function(id, i){
+                    return { RSID: id, 姓名: names[i] || '', _checked: false };
+                });
+                loadPersons();
+            } else {
+                personList.value = [];
+            }
         };
 
         const loadHistory = async (page) => {
@@ -234,13 +274,16 @@ const app = createApp({
             if (q.cyr) params.cyr = q.cyr;
             if (q.bcyrxm) params.bcyrxm = q.bcyrxm;
             const res = await axios.get('/business/api/look/list/', { params });
-            if (res.data.code===0) { historyList.value=res.data.data||[]; historyTotal.value=res.data.total||0; currentPage.value=page||1; }
+            if (res.data.code===0) {
+                historyList.value = res.data.data||[];
+                historyTotal.value = res.data.total||0;
+                currentPage.value = page||1;
+            }
         };
 
         const onPageChange = (p) => loadHistory(p);
         const onSizeChange = (s) => { pageSize.value=s; loadHistory(1); };
 
-        // 拖动条
         const initDragBars = () => {
             document.querySelectorAll('.drag-bar').forEach(bar => {
                 bar.addEventListener('mousedown', (e) => {
@@ -253,8 +296,7 @@ const app = createApp({
                     });
                     const onMove = (ev) => {
                         let w = startW + ev.clientX - startX;
-                        if (w < 250) w = 250;
-                        if (w > 900) w = 900;
+                        if (w < 250) w = 250; if (w > 900) w = 900;
                         panel.style.width = w + 'px';
                         panel.style.minWidth = w + 'px';
                         panel.style.flexShrink = '0'; panel.style.flexGrow = '0';
@@ -283,8 +325,7 @@ const app = createApp({
                     const startY = e.clientY, startH = panel.offsetHeight;
                     const onMove = (ev) => {
                         let h = startH + ev.clientY - startY;
-                        if (h < 120) h = 120;
-                        if (h > 500) h = 500;
+                        if (h < 120) h = 120; if (h > 500) h = 500;
                         panel.style.height = h + 'px';
                         panel.style.minHeight = h + 'px';
                         panel.style.flexShrink = '0';
@@ -307,6 +348,7 @@ const app = createApp({
         return {
             form, personList, checkedPersons, allPersonsChecked, toggleAllPersons,
             historyList, historyTotal, currentPage, pageSize, q,
+            showPersonPanel,
             fetchSuggest,
             newRecord, addPerson, removeCheckedPersons, saveRecord, deleteRecord, printRecord,
             selectHistory, loadHistory, onPageChange, onSizeChange

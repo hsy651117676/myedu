@@ -33,7 +33,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                 <div style="flex:1;overflow:auto;padding:8px;">
                     <table class="form-table" style="max-width:750px;">
                         <tr><th>转递时间</th><td><input v-model="form.transferDate" /></td><th>文件号</th><td><input v-model="form.fileNo" /></td></tr>
-                        <tr><th>转往单位</th><td><input v-model="form.transferUnit" /></td><th>转递原因</th><td><input v-model="form.transferReason" /></td></tr>
+                        <tr><th>转往单位</th><td><input v-model="form.transferUnit" /></td><th>转往何单位</th><td><input v-model="form.transferReason" /></td></tr>
                         <tr><th>经办人</th><td><input v-model="form.handler" /></td><th>正本</th><td><input v-model="form.original" /></td></tr>
                         <tr><th>回执人</th><td><input v-model="form.receiptPerson" /></td><th>回执时间</th><td><input v-model="form.receiptDate" /></td></tr>
                         <tr><th>备注</th><td><input v-model="form.remark" /></td><th>被转递人数</th><td>[[ personList.length ]]</td></tr>
@@ -83,11 +83,11 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
             <div style="font-weight:bold;margin-bottom:8px;flex-shrink:0;">历史转递表</div>
             <div style="flex:1;overflow:auto;">
                 <table class="info-table">
-                    <thead><tr><th>ID</th><th>转递时间</th><th>文件号</th><th>转往单位</th><th>转递原因</th><th>被转递人</th><th>经办人</th><th>回执人</th><th>回执时间</th></tr></thead>
+                    <thead><tr><th>ID</th><th>转递时间</th><th>文件号</th><th>转往单位</th><th>转往何单位（转递原因）</th><th>被转递人</th><th>经办人</th><th>回执人</th><th>回执时间</th></tr></thead>
                     <tbody>
-                        <tr v-for="r in historyList" :key="r.ID" @click="selectHistory(r)"
-                            :style="{background: form.id===r.ID ? '#e6f7ff' : ''}">
-                            <td>[[ r.ID ]]</td><td>[[ r.transferDate ]]</td><td>[[ r.fileNo ]]</td>
+                        <tr v-for="r in historyList" :key="r.id" @click="selectHistory(r)"
+                            :style="{background: form.id===r.id ? '#e6f7ff' : ''}">
+                            <td>[[ r.id ]]</td><td>[[ r.transferDate ]]</td><td>[[ r.fileNo ]]</td>
                             <td>[[ r.transferUnit ]]</td><td>[[ r.transferReason ]]</td><td>[[ r.personName ]]</td>
                             <td>[[ r.handler ]]</td><td>[[ r.receiptPerson ]]</td><td>[[ r.receiptDate ]]</td>
                         </tr>
@@ -101,118 +101,161 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
             </div>
         </div>
     </div>
+
+    <el-dialog v-model="showPersonPanel" title="选择被转递人" width="320px" :close-on-click-modal="false">
+        <iframe src="/components/person-panel-embed/" style="width:100%;height:500px;border:none;"></iframe>
+    </el-dialog>
+
+    <el-dialog v-model="showPrintDialog" title="档案转递打印" width="860px" :close-on-click-modal="false" @closed="printUrl=''">
+        <iframe v-if="printUrl" :src="printUrl" style="width:100%;height:540px;border:none;"></iframe>
+    </el-dialog>
 </div>
 
 <script>
-const { createApp, ref, reactive, computed, onMounted } = Vue;
+const { createApp, ref, computed, onMounted } = Vue;
 const { ElMessage, ElMessageBox } = ElementPlus;
 
 const app = createApp({
     delimiters: ['[[', ']]'],
     setup(){
-        const form = ref({});
-        const personList = ref([]);
-        const historyList = ref([]);
-        const historyTotal = ref(0);
-        const currentPage = ref(1);
-        const pageSize = ref(20);
+        var form = ref({});
+        var personList = ref([]);
+        var historyList = ref([]);
+        var historyTotal = ref(0);
+        var currentPage = ref(1);
+        var pageSize = ref(20);
+        var showPersonPanel = ref(false);
+        var showPrintDialog = ref(false);
+        var printUrl = ref('');
 
-        const checkedPersons = computed(() => personList.value.filter(p=>p._checked));
-        const allPersonsChecked = computed(() => personList.value.length>0 && personList.value.every(p=>p._checked));
-        const toggleAllPersons = (e) => { personList.value.forEach(p=>p._checked=e.target.checked); };
+        var checkedPersons = computed(function(){ return personList.value.filter(function(p){ return p._checked; }); });
+        var allPersonsChecked = computed(function(){ return personList.value.length>0 && personList.value.every(function(p){ return p._checked; }); });
+        var toggleAllPersons = function(e){ personList.value.forEach(function(p){ p._checked = e.target.checked; }); };
 
-        const newRecord = () => {
+        var newRecord = function(){
             form.value = { transferDate: new Date().toISOString().slice(0,10).replace(/-/g,'') };
             personList.value = [];
         };
 
-        window.addEventListener('message', (e) => {
-            if (e.data.type === 'person-select') {
-                const p = e.data.data;
-                if (personList.value.length >= 1) { ElMessage.warning('转递单只能转递1人'); return; }
-                if (!personList.value.find(x=>x.RSID==p.rsid)) {
+        window.addEventListener('message', function(e){
+            if (e.data && e.data.type === 'person-select'){
+                var p = e.data.data;
+                if (personList.value.length >= 1){ ElMessage.warning('转递单只能转递1人'); return; }
+                if (!personList.value.find(function(x){ return String(x.RSID)===String(p.rsid); })){
                     personList.value.push({ RSID: p.rsid, 姓名: p.displayName||p.tname, _checked: false });
                     loadPersons();
                 }
+                showPersonPanel.value = false;
             }
         });
 
-        const addPerson = () => { window.open('/components/person-panel-embed/', '_blank', 'width=300,height=600'); };
-        const removeCheckedPersons = () => { personList.value = personList.value.filter(p=>!p._checked); };
+        var addPerson = function(){ showPersonPanel.value = true; };
+        var removeCheckedPersons = function(){ personList.value = personList.value.filter(function(p){ return !p._checked; }); };
 
-        const loadPersons = async () => {
-            const rsids = personList.value.map(p=>p.RSID).join(',');
+        var loadPersons = async function(){
+            var rsids = personList.value.map(function(p){ return p.RSID; }).join(',');
             if (!rsids) return;
-            const res = await axios.get('/business/api/transfer/persons/', { params: { rsids } });
-            if (res.data.code===0) {
-                const data = res.data.data||[];
-                personList.value = personList.value.map(p => {
-                    const full = data.find(d=>String(d.RSID)===String(p.RSID));
-                    return full ? { ...p, ...full, _checked: p._checked } : p;
+            var res = await axios.get('/business/api/transfer/persons/', { params: { rsids: rsids } });
+            if (res.data.code===0){
+                var data = res.data.data||[];
+                personList.value = personList.value.map(function(p){
+                    var full = data.find(function(d){ return String(d.RSID)===String(p.RSID); });
+                    return full ? Object.assign({}, p, full, { _checked: p._checked }) : p;
                 });
             }
         };
 
-        const saveRecord = async () => {
-            if (personList.value.length !== 1) { ElMessage.warning('转递单只能转递1人'); return; }
-            if (!form.value.transferUnit) { ElMessage.warning('转往单位不能为空'); return; }
-            if (!form.value.transferReason) { ElMessage.warning('转递原因不能为空'); return; }
-            const res = await axios.post('/business/api/transfer/save/', {
-                action: 'save', id: form.value.id || '',
+        var saveRecord = async function(){
+            if (personList.value.length !== 1){ ElMessage.warning('转递单只能转递1人'); return; }
+            if (!form.value.transferUnit){ ElMessage.warning('转往单位不能为空'); return; }
+            if (!form.value.transferReason){ ElMessage.warning('转递原因不能为空'); return; }
+            var res = await axios.post('/business/api/transfer/save/', {
+                action: 'save',
+                id: form.value.id || '',
                 transferDate: form.value.transferDate||'', fileNo: form.value.fileNo||'',
                 transferUnit: form.value.transferUnit||'', transferReason: form.value.transferReason||'',
                 handler: form.value.handler||'', original: form.value.original||'',
                 receiptPerson: form.value.receiptPerson||'', receiptDate: form.value.receiptDate||'',
-                remark: form.value.remark||'', personRsid: personList.value[0]?.RSID||'',
-                personName: personList.value[0]?.姓名||'', personCount: personList.value.length
+                remark: form.value.remark||'',
+                personRsid: (personList.value[0]||{}).RSID||'',
+                personName: (personList.value[0]||{}).姓名||'',
+                personCount: personList.value.length
             });
-            if (res.data.code===0) { ElMessage.success('保存成功'); loadHistory(currentPage.value); }
-            else ElMessage.error(res.data.msg);
+            if (res.data.code===0){
+                ElMessage.success(form.value.id ? '修改成功' : '新增成功');
+                loadHistory(currentPage.value);
+            } else {
+                ElMessage.error(res.data.msg);
+            }
         };
 
-        const deleteRecord = async () => {
-            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
-            await axios.post('/business/api/transfer/save/', { action:'delete', id: form.value.id });
-            ElMessage.success('已删除'); newRecord(); loadHistory(1);
-        };
-        const printRecord = () => { ElMessage.info('打印功能开发中'); };
-
-        const selectHistory = (r) => {
-            form.value = { ...r };
-            personList.value = r.personRsid ? [{ RSID: r.personRsid, 姓名: r.personName, _checked: false }] : [];
-            loadPersons();
+        var deleteRecord = async function(){
+            if (!form.value.id){ ElMessage.warning('请先选择一条记录'); return; }
+            try { await ElMessageBox.confirm('确定删除？','确认',{type:'warning'}); } catch(e){ return; }
+            var res = await axios.post('/business/api/transfer/save/', { action: 'delete', id: form.value.id });
+            if (res.data.code===0){ ElMessage.success('已删除'); newRecord(); loadHistory(1); }
+            else { ElMessage.error(res.data.msg || '删除失败'); }
         };
 
-        const loadHistory = async (page) => {
-            const res = await axios.get('/business/api/transfer/list/', { params: { page: page||1, pageSize: pageSize.value } });
-            if (res.data.code===0) { historyList.value=res.data.data||[]; historyTotal.value=res.data.total||0; currentPage.value=page||1; }
+        var printRecord = function(){
+            if (!form.value.id){ ElMessage.warning('请先保存或选择一条记录'); return; }
+            printUrl.value = '/business/transfer/print/?id=' + form.value.id;
+            showPrintDialog.value = true;
         };
 
-        const onPageChange = (p) => loadHistory(p);
-        const onSizeChange = (s) => { pageSize.value=s; loadHistory(1); };
+        var selectHistory = function(r){
+            form.value.id = r.id || '';
+            form.value.transferDate = r.transferDate || '';
+            form.value.fileNo = r.fileNo || '';
+            form.value.transferUnit = r.transferUnit || '';
+            form.value.transferReason = r.transferReason || '';
+            form.value.handler = r.handler || '';
+            form.value.original = r.original || '';
+            form.value.receiptPerson = r.receiptPerson || '';
+            form.value.receiptDate = r.receiptDate || '';
+            form.value.remark = r.remark || '';
+            if (r.personRsid){
+                personList.value = [{ RSID: r.personRsid, 姓名: r.personName, _checked: false }];
+                loadPersons();
+            } else {
+                personList.value = [];
+            }
+        };
 
-        const initDragBars = () => {
-            document.querySelectorAll('.drag-bar').forEach(bar => {
-                bar.addEventListener('mousedown', (e) => {
-                    const panel = document.getElementById(bar.dataset.target+'Panel');
+        var loadHistory = async function(page){
+            var res = await axios.get('/business/api/transfer/list/', { params: { page: page||1, pageSize: pageSize.value } });
+            if (res.data.code===0){
+                historyList.value = res.data.data||[];
+                historyTotal.value = res.data.total||0;
+                currentPage.value = page||1;
+            }
+        };
+
+        var onPageChange = function(p){ loadHistory(p); };
+        var onSizeChange = function(s){ pageSize.value=s; loadHistory(1); };
+
+        var initDragBars = function(){
+            document.querySelectorAll('.drag-bar').forEach(function(bar){
+                bar.addEventListener('mousedown', function(e){
+                    var panel = document.getElementById(bar.dataset.target+'Panel');
                     if (!panel) return;
-                    const startX = e.clientX, startW = panel.offsetWidth;
-                    document.querySelectorAll('.resize-panel').forEach(p => {
-                        const iframe = p.querySelector('iframe');
+                    var startX = e.clientX, startW = panel.offsetWidth;
+                    document.querySelectorAll('.resize-panel').forEach(function(p){
+                        var iframe = p.querySelector('iframe');
                         if (iframe) iframe.style.pointerEvents = 'none';
                     });
-                    const onMove = (ev) => {
-                        let w = startW + ev.clientX - startX;
+                    var onMove = function(ev){
+                        var w = startW + ev.clientX - startX;
                         if (w < 250) w = 250; if (w > 900) w = 900;
                         panel.style.width = w + 'px'; panel.style.minWidth = w + 'px';
                         panel.style.flexShrink = '0'; panel.style.flexGrow = '0';
                     };
-                    const onUp = () => {
+                    var onUp = function(){
                         document.removeEventListener('mousemove', onMove);
                         document.removeEventListener('mouseup', onUp);
                         document.body.style.cursor = ''; document.body.style.userSelect = '';
-                        document.querySelectorAll('.resize-panel').forEach(p => {
-                            const iframe = p.querySelector('iframe');
+                        document.querySelectorAll('.resize-panel').forEach(function(p){
+                            var iframe = p.querySelector('iframe');
                             if (iframe) iframe.style.pointerEvents = '';
                         });
                     };
@@ -222,18 +265,18 @@ const app = createApp({
                     e.preventDefault();
                 });
             });
-            document.querySelectorAll('.drag-bar-h').forEach(bar => {
-                bar.addEventListener('mousedown', (e) => {
-                    const panel = document.getElementById(bar.dataset.target);
+            document.querySelectorAll('.drag-bar-h').forEach(function(bar){
+                bar.addEventListener('mousedown', function(e){
+                    var panel = document.getElementById(bar.dataset.target);
                     if (!panel) return;
-                    const startY = e.clientY, startH = panel.offsetHeight;
-                    const onMove = (ev) => {
-                        let h = startH + ev.clientY - startY;
+                    var startY = e.clientY, startH = panel.offsetHeight;
+                    var onMove = function(ev){
+                        var h = startH + ev.clientY - startY;
                         if (h < 120) h = 120; if (h > 500) h = 500;
                         panel.style.height = h + 'px'; panel.style.minHeight = h + 'px';
                         panel.style.flexShrink = '0';
                     };
-                    const onUp = () => {
+                    var onUp = function(){
                         document.removeEventListener('mousemove', onMove);
                         document.removeEventListener('mouseup', onUp);
                         document.body.style.cursor = '';
@@ -246,13 +289,16 @@ const app = createApp({
             });
         };
 
-        onMounted(() => { loadHistory(1); newRecord(); initDragBars(); });
+        onMounted(function(){ loadHistory(1); newRecord(); initDragBars(); });
 
         return {
-            form, personList, checkedPersons, allPersonsChecked, toggleAllPersons,
-            historyList, historyTotal, currentPage, pageSize,
-            newRecord, addPerson, removeCheckedPersons, saveRecord, deleteRecord, printRecord,
-            selectHistory, loadHistory, onPageChange, onSizeChange
+            form: form, personList: personList, checkedPersons: checkedPersons,
+            allPersonsChecked: allPersonsChecked, toggleAllPersons: toggleAllPersons,
+            historyList: historyList, historyTotal: historyTotal, currentPage: currentPage, pageSize: pageSize,
+            showPersonPanel: showPersonPanel, showPrintDialog: showPrintDialog, printUrl: printUrl,
+            newRecord: newRecord, addPerson: addPerson, removeCheckedPersons: removeCheckedPersons,
+            saveRecord: saveRecord, deleteRecord: deleteRecord, printRecord: printRecord,
+            selectHistory: selectHistory, loadHistory: loadHistory, onPageChange: onPageChange, onSizeChange: onSizeChange
         };
     }
 });

@@ -3,14 +3,19 @@
 {% block content %}
 <style>
 html, body { height:100%; margin:0; padding:0; overflow:hidden; }
-.group-table { border-collapse:collapse; width:100%; max-width:600px; font-size:13px; }
+.group-table { border-collapse:collapse; width:100%; font-size:13px; }
 .group-table th, .group-table td { border:1px solid #ddd; padding:6px 8px; text-align:center; }
 .group-table th { background:#f5f7fa; }
 .group-table td input { width:100%; border:1px solid transparent; padding:4px; text-align:center; }
 .group-table td input:focus { border-color:#409eff; outline:none; background:#fff; }
-.menu-tree { font-size:13px; margin-top:10px; }
-.menu-tree label { cursor:pointer; display:block; padding:2px 0; }
-.menu-tree label:hover { background:#f0f0f0; }
+.menu-tree { font-size:13px; overflow-y:auto; }
+.menu-tree .menu-group { margin-bottom:4px; }
+.menu-tree .menu-group-title { padding:6px 10px; cursor:pointer; font-weight:bold; background:#f5f7fa; border-radius:4px; user-select:none; }
+.menu-tree .menu-group-title:hover { background:#e8f0fe; }
+.menu-tree .menu-group-items { padding-left:20px; }
+.menu-tree .menu-group-items label { display:block; padding:3px 0; cursor:pointer; }
+.menu-tree .menu-group-items label:hover { background:#f0f0f0; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
 </style>
 
 <div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
@@ -20,42 +25,53 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         <el-button size="small" type="success" @click="saveGroups">保存组</el-button>
         <el-button size="small" @click="addGroup">添加组</el-button>
     </div>
-    <div style="flex:1;display:flex;overflow:hidden;padding:12px;gap:12px;">
-        <div style="flex:1;">
+    <div style="flex:1;display:flex;overflow:hidden;">
+
+        <!-- 左：组列表 -->
+        <div id="leftPanel" class="resize-panel" style="width:50%;min-width:250px;overflow:auto;padding:8px;border-right:1px solid #e4e7ed;">
             <table class="group-table">
-                <thead><tr><th>组名</th><th>代码</th><th>描述</th><th>操作</th></tr></thead>
+                <thead><tr><th>组名</th><th>代码</th><th>描述</th></tr></thead>
                 <tbody>
                     <tr v-for="g in groupList" :key="g.id" @click="selectGroup(g)"
                         :style="{background: selectedGroupId===g.id ? '#e6f7ff' : ''}">
                         <td><input v-model="g.name" /></td>
                         <td><input v-model="g.code" /></td>
                         <td><input v-model="g.description" /></td>
-                        <td><el-button size="small" type="danger" @click.stop="deleteGroup(g)">删除</el-button></td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div style="width:300px;border-left:1px solid #e4e7ed;padding-left:12px;" v-if="selectedGroupId">
-            <div style="font-weight:bold;margin-bottom:6px;">菜单权限 - [[ selectedGroupName ]]</div>
-            <div class="menu-tree">
-                <template v-for="m in menuTree" :key="m.id">
-                    <label><input type="checkbox" :value="m.id" v-model="checkedMenus" /> [[ m.name ]]</label>
-                    <div v-if="m.children" style="padding-left:20px;">
-                        <label v-for="c in m.children" :key="c.id">
-                            <input type="checkbox" :value="c.id" v-model="checkedMenus" /> [[ c.name ]]
-                        </label>
+
+        <!-- 拖动条 -->
+        <div class="drag-bar" data-target="left" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <!-- 右：菜单权限 -->
+        <div id="rightPanel" class="resize-panel" style="flex:1;min-width:250px;padding:8px;display:flex;flex-direction:column;overflow:hidden;">
+            <div v-if="selectedGroupId" style="display:flex;flex-direction:column;height:100%;">
+                <div style="font-weight:bold;margin-bottom:6px;flex-shrink:0;">菜单权限 - [[ selectedGroupName ]]</div>
+                <div class="menu-tree" style="flex:1;">
+                    <div v-for="m in menuTree" :key="m.id" class="menu-group">
+                        <div class="menu-group-title" @click="toggleMenu(m)">
+                            <span style="font-size:11px;">[[ m.expanded ? '▼' : '▶' ]]</span>
+                            <label style="cursor:pointer;font-weight:bold;"><input type="checkbox" :value="m.id" v-model="checkedMenus" @click.stop @change="onParentCheck(m)" /> [[ m.name ]]</label>
+                        </div>
+                        <div v-if="m.expanded && m.children" class="menu-group-items">
+                            <label v-for="c in m.children" :key="c.id">
+                                <input type="checkbox" :value="c.id" v-model="checkedMenus" /> [[ c.name ]]
+                            </label>
+                        </div>
                     </div>
-                </template>
+                </div>
+                <el-button size="small" type="primary" @click="saveMenus" style="margin-top:8px;flex-shrink:0;">保存菜单权限</el-button>
             </div>
-            <el-button size="small" type="primary" @click="saveMenus" style="margin-top:8px;">保存菜单权限</el-button>
+            <div v-else style="color:#ccc;text-align:center;padding-top:50px;">请选择左侧组</div>
         </div>
-        <div v-else style="width:300px;color:#ccc;text-align:center;padding-top:50px;">请选择左侧组</div>
     </div>
 </div>
 
 <script>
 const { createApp, ref, onMounted } = Vue;
-const { ElMessage, ElMessageBox } = ElementPlus;
+
 const app = createApp({
     delimiters: ['[[', ']]'],
     setup(){
@@ -67,11 +83,11 @@ const app = createApp({
 
         const loadGroups = async () => {
             const r = await axios.get('/api/platform-groups/list/');
-            if(r.data.code===0) groupList.value = r.data.data||[];
+            if (r.data.code===0) groupList.value = r.data.data||[];
         };
         const loadMenuTree = async () => {
             const r = await axios.get('/api/menu-tree/');
-            if(r.data.code===0) menuTree.value = r.data.data||[];
+            if (r.data.code===0) menuTree.value = (r.data.data||[]).map(m=>({...m,expanded:false}));
         };
 
         const selectGroup = async (g) => {
@@ -80,30 +96,70 @@ const app = createApp({
             checkedMenus.value = r.data.data||[];
         };
 
+        const toggleMenu = (m) => { m.expanded = !m.expanded; };
+        const onParentCheck = (m) => {
+            if (m.children) {
+                if (checkedMenus.value.includes(m.id)) {
+                    m.children.forEach(c => { if (!checkedMenus.value.includes(c.id)) checkedMenus.value.push(c.id); });
+                } else {
+                    m.children.forEach(c => { const i = checkedMenus.value.indexOf(c.id); if (i>=0) checkedMenus.value.splice(i,1); });
+                }
+            }
+        };
+
         const saveGroups = async () => {
             await axios.post('/api/platform-groups/save/',{groups:groupList.value});
-            ElMessage.success('保存成功'); loadGroups();
+            ElementPlus.ElMessage.success('保存成功'); loadGroups();
         };
         const addGroup = () => { groupList.value.push({id:null,name:'',code:'',description:''}); };
-        const deleteGroup = async (g) => {
-            if(!g.id){groupList.value=groupList.value.filter(x=>x!==g);return;}
-            await ElMessageBox.confirm('确定删除？','确认',{type:'warning'});
-            await axios.post('/api/platform-groups/save/',{action:'delete',id:g.id});
-            ElMessage.success('已删除'); loadGroups();
+        const saveMenus = async () => {
+            await axios.post('/api/group-menus/save/',{group_id:selectedGroupId.value,menu_ids:checkedMenus.value});
+            ElementPlus.ElMessage.success('保存成功');
+            const r = await axios.get('/api/group-menus/',{params:{group_id:selectedGroupId.value}});
+            checkedMenus.value = r.data.data||[];
         };
-      const saveMenus = async () => {
-    const res = await axios.post('/api/group-menus/save/',{group_id:selectedGroupId.value,menu_ids:checkedMenus.value});
-    if (res.data.code === 0) {
-        ElementPlus.ElMessage.success(res.data.msg);
-        const r = await axios.get('/api/group-menus/',{params:{group_id:selectedGroupId.value}});
-        checkedMenus.value = r.data.data || [];
-    } else {
-        ElementPlus.ElMessage.error(res.data.msg);
-    }
-};
-        onMounted(()=>{loadGroups();loadMenuTree();});
+
+        // 拖动条
+        onMounted(() => {
+            loadGroups(); loadMenuTree();
+            document.querySelectorAll('.drag-bar').forEach(bar => {
+                bar.addEventListener('mousedown', (e) => {
+                    const panel = document.getElementById(bar.dataset.target+'Panel');
+                    if (!panel) return;
+                    const startX = e.clientX, startW = panel.offsetWidth;
+                    document.querySelectorAll('.resize-panel').forEach(p => {
+                        const iframe = p.querySelector('iframe');
+                        if (iframe) iframe.style.pointerEvents = 'none';
+                    });
+                    const onMove = (ev) => {
+                        let w = startW + ev.clientX - startX;
+                        if (w < 200) w = 200;
+                        if (w > 900) w = 900;
+                        panel.style.width = w + 'px';
+                        panel.style.minWidth = w + 'px';
+                        panel.style.flexShrink = '0'; panel.style.flexGrow = '0';
+                    };
+                    const onUp = () => {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                        document.querySelectorAll('.resize-panel').forEach(p => {
+                            const iframe = p.querySelector('iframe');
+                            if (iframe) iframe.style.pointerEvents = '';
+                        });
+                    };
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                });
+            });
+        });
+
         return {groupList,selectedGroupId,selectedGroupName,menuTree,checkedMenus,
-                selectGroup,saveGroups,addGroup,deleteGroup,saveMenus};
+                selectGroup,toggleMenu,onParentCheck,saveGroups,addGroup,saveMenus};
     }
 });
 app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');

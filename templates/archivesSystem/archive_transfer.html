@@ -1,0 +1,281 @@
+{% extends "layout/base.html" %}
+{% block title %}档案人员调转{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.info-table { border-collapse:collapse; width:100%; font-size:13px; }
+.info-table th, .info-table td { border:1px solid #ddd; padding:4px 8px; text-align:center; }
+.info-table th { background:#f5f5f5; position:sticky; top:0; z-index:1; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+.drag-bar:hover { background:#c0c4cc; }
+.highlight { background:#fff3b0 !important; font-weight:bold; }
+.section-title { font-weight:bold; padding:4px 8px; background:#f5f5f5; position:sticky; top:0; z-index:1; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+
+  <!-- 顶部标题栏 -->
+  <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <span style="font-weight:600;">📋 档案人员调转</span>
+    <div style="flex:1;"></div>
+    <el-button size="small" type="primary" @click="confirmTransfer" :disabled="!canSave">确认调转</el-button>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <!-- 第1列：人员面板 -->
+    <div id="col1" class="resize-panel" style="width:15%;min-width:150px;border-right:1px solid #e4e7ed;overflow:hidden;">
+      <iframe src="/components/person-panel-embed/" style="width:100%;height:100%;border:none;"></iframe>
+    </div>
+
+    <div class="drag-bar" data-target="col1"></div>
+
+    <!-- 第2列：当前人员信息 + 姓氏参考表 -->
+    <div id="col2" class="resize-panel" style="width:30%;min-width:200px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;padding:8px;">
+
+      <div style="flex-shrink:0;margin-bottom:8px;">
+        <div class="section-title">当前人员信息</div>
+        <table class="info-table" v-if="person.xm">
+          <tr><th style="width:70px;">姓名</th><td>[[ person.xm ]]</td></tr>
+          <tr><th>单位</th><td>[[ person.bmmc ]]</td></tr>
+          <tr><th>档案编号</th><td>[[ person.rybh ]]</td></tr>
+          <tr><th>柜号</th><td>[[ person.gh ]]</td></tr>
+          <tr><th>层号</th><td>[[ person.ch ]]</td></tr>
+        </table>
+        <div v-else style="text-align:center;color:#909399;padding:20px;">请在左侧选择人员</div>
+      </div>
+
+      <div style="flex:1;overflow:auto;border:1px solid #e4e7ed;border-radius:4px;">
+        <div class="section-title">姓氏参考表</div>
+        <table class="info-table">
+          <thead><tr><th>ID</th><th>姓氏</th><th>简拼</th></tr></thead>
+          <tbody>
+            <tr v-for="r in xsTable" :key="r.id" :class="{highlight: r.id === xsCurrentId}">
+              <td>[[ r.id ]]</td><td>[[ r.xs ]]</td><td>[[ r.jybm ]]</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="xsTable.length===0 && person.xm" style="text-align:center;color:#909399;padding:10px;">无数据</div>
+      </div>
+    </div>
+
+    <div class="drag-bar" data-target="col2"></div>
+
+    <!-- 第3列：新编号 + 人员列表 -->
+    <div id="col3" class="resize-panel" style="width:35%;min-width:200px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;padding:8px;">
+
+      <div style="flex-shrink:0;margin-bottom:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;">新档案编号：</span>
+        <input v-model="newRybh" style="width:100px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;text-align:center;">
+        <span style="font-size:12px;">柜号：</span>
+        <input v-model="newGh" style="width:60px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;text-align:center;">
+        <span style="font-size:12px;">层号：</span>
+        <input v-model="newCh" style="width:60px;height:28px;border:1px solid #dcdfe6;border-radius:4px;font-size:12px;text-align:center;">
+      </div>
+
+      <div style="flex:1;overflow:auto;border:1px solid #e4e7ed;border-radius:4px;">
+        <div class="section-title">[[ listTitle ]]（[[ targetBmmc ]]）</div>
+        <table class="info-table">
+          <thead><tr><th>序号</th><th>姓名</th><th>档案编号</th><th>柜号</th><th>层号</th></tr></thead>
+          <tbody>
+            <tr v-for="r in sameXsList" :key="r.序号">
+              <td>[[ r.序号 ]]</td><td>[[ r.姓名 ]]</td><td>[[ r.档案编号 ]]</td><td>[[ r.柜号 ]]</td><td>[[ r.层号 ]]</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="sameXsList.length===0 && targetBm && person.xs" style="text-align:center;color:#909399;padding:10px;">该单位无人员</div>
+        <div v-if="!targetBm" style="text-align:center;color:#909399;padding:10px;">请先选择目标单位</div>
+        <div v-if="!person.xs" style="text-align:center;color:#909399;padding:10px;">请先选择人员</div>
+      </div>
+    </div>
+
+    <div class="drag-bar" data-target="col3"></div>
+
+    <!-- 第4列：目标单位选择 -->
+    <div id="col4" class="resize-panel" style="flex:1;min-width:150px;display:flex;flex-direction:column;overflow:hidden;padding:8px;">
+      <div style="flex:1;border:1px solid #e4e7ed;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;">
+        <div class="section-title">目标单位选择</div>
+        <iframe src="/components/unit-tree-embed/" style="width:100%;flex:1;border:none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+const app = createApp({
+  setup() {
+    const person = ref({});
+    const xsTable = ref([]);
+    const xsCurrentId = ref(null);
+
+    const targetBm = ref('');
+    const targetBmmc = ref('');
+    const newRybh = ref('');
+    const newGh = ref('');
+    const newCh = ref('');
+    const sameXsList = ref([]);
+    const listTitle = ref('新单位同姓人员列表');
+
+    // 监听人员面板选择
+    const handlePersonMessage = (e) => {
+      if (!e.data || e.data.type !== 'person-select') return;
+      const rsid = e.data.data.rsid;
+      if (rsid) loadPersonDetail(rsid);
+    };
+
+    // 监听目标单位选择
+    const handleUnitMessage = (e) => {
+      if (!e.data || e.data.type !== 'unit-select') return;
+      targetBm.value = e.data.data.tid;
+      targetBmmc.value = e.data.data.tname;
+      loadSameXsList();
+    };
+
+    onMounted(() => {
+      window.addEventListener('message', (e) => {
+        handlePersonMessage(e);
+        handleUnitMessage(e);
+      });
+    });
+
+    const loadPersonDetail = async (rsid) => {
+      try {
+        const r = await axios.get('/archivesSystem/api/transfer/person-detail/', { params: { rsid } });
+        if (r.data.code === 0) {
+          person.value = r.data.data;
+          newGh.value = '';
+          newCh.value = '';
+          newRybh.value = '';
+          if (r.data.data.xs_id) loadXsTable(r.data.data.xs_id);
+          if (targetBm.value) loadSameXsList();
+        }
+      } catch (e) {
+        console.error('加载人员详情失败:', e);
+      }
+    };
+
+    const loadXsTable = async (xsId) => {
+      try {
+        const r = await axios.get('/archivesSystem/api/transfer/xs-table/', { params: { xs_id: xsId } });
+        if (r.data.code === 0) {
+          xsTable.value = r.data.data;
+          xsCurrentId.value = r.data.current_id;
+        }
+      } catch (e) {
+        console.error('加载姓氏表失败:', e);
+      }
+    };
+
+    const loadSameXsList = async () => {
+      if (!targetBm.value || !person.value.xs) return;
+      try {
+        const r = await axios.get('/archivesSystem/api/transfer/same-xs-list/', {
+          params: { new_bm: targetBm.value, xs: person.value.xs }
+        });
+        if (r.data.code === 0) {
+          sameXsList.value = r.data.data;
+          listTitle.value = r.data.hasSameXs ? '新单位同姓人员列表' : '该单位人员（前10条）';
+        }
+      } catch (e) {
+        console.error('加载列表失败:', e);
+      }
+    };
+
+    const canSave = computed(() =>
+      person.value.rsid && targetBm.value && newRybh.value.trim()
+    );
+
+    const confirmTransfer = async () => {
+      if (!canSave.value) return;
+      try {
+        await ElementPlus.ElMessageBox.confirm(
+          `确认将${person.value.xm}同志从${person.value.bmmc}调转到${targetBmmc.value}？新编号为：${newRybh.value}？`,
+          '确认调转',
+          { type: 'warning', confirmButtonText: '确定', cancelButtonText: '取消' }
+        );
+      } catch {
+        return;
+      }
+      try {
+        const r = await axios.post('/archivesSystem/api/transfer/save/', {
+          rsid: person.value.rsid,
+          new_rybh: newRybh.value.trim(),
+          new_bm: targetBm.value,
+          gh: newGh.value,
+          ch: newCh.value
+        });
+        ElementPlus.ElMessage[r.data.code === 0 ? 'success' : 'error'](r.data.msg);
+        if (r.data.code === 0) {
+          person.value = {};
+          xsTable.value = [];
+          newRybh.value = '';
+          newGh.value = '';
+          newCh.value = '';
+          sameXsList.value = [];
+          listTitle.value = '新单位同姓人员列表';
+        }
+      } catch (e) {
+        ElementPlus.ElMessage.error('请求失败');
+      }
+    };
+
+    // 拖拽分栏
+    const initDrag = () => {
+      document.querySelectorAll('.drag-bar').forEach(bar => {
+        bar.addEventListener('mousedown', (e) => {
+          const panel = document.getElementById(bar.dataset.target);
+          if (!panel) return;
+          const startX = e.clientX, startW = panel.offsetWidth;
+          document.querySelectorAll('.resize-panel').forEach(p => {
+            const iframe = p.querySelector('iframe');
+            if (iframe) iframe.style.pointerEvents = 'none';
+          });
+          const onMove = (ev) => {
+            let w = startW + ev.clientX - startX;
+            if (w < 80) w = 80;
+            panel.style.width = w + 'px';
+            panel.style.minWidth = w + 'px';
+            panel.style.flexShrink = '0';
+            panel.style.flexGrow = '0';
+          };
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.querySelectorAll('.resize-panel').forEach(p => {
+              const iframe = p.querySelector('iframe');
+              if (iframe) iframe.style.pointerEvents = '';
+            });
+          };
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+          e.preventDefault();
+        });
+      });
+    };
+
+    onMounted(() => {
+      initDrag();
+    });
+
+    return {
+      person, xsTable, xsCurrentId,
+      targetBm, targetBmmc,
+      newRybh, newGh, newCh, sameXsList, listTitle,
+      canSave, confirmTransfer
+    };
+  }
+});
+
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+app.config.compilerOptions = { delimiters: ['[[', ']]'] };
+app.mount('#app');
+</script>
+{% endblock %}

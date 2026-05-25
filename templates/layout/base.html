@@ -17,6 +17,13 @@
       response => response,
       error => {
         if (error.response && error.response.status === 401) {
+          // 逐层跳出所有 iframe
+          try {
+            if (window.parent && window.parent !== window && window.parent.location.host === window.location.host) {
+              window.parent.location.href = '/login/';
+              return Promise.reject(error);
+            }
+          } catch(e) {}
           window.location.href = '/login/';
         }
         return Promise.reject(error);

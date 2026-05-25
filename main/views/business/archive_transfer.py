@@ -7,27 +7,10 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.core.cache import cache
 from main.db_utils import _get_conn
 from main.decorators import archive_perm_required
 
 logger = logging.getLogger(__name__)
-
-FIELD_MAP = {
-    "transferDate": "ZDSJ",
-    "transferUnit": "ZWDW",
-    "transferReason": "ZDYY",
-    "handler": "JBR",
-    "fileNo": "WJH",
-    "original": "ZB",
-    "personName": "FB",
-    "receiptPerson": "HZR",
-    "receiptDate": "HZSJ",
-    "remark": "BZ",
-    "personCount": "num",
-    "personRsid": "RSID",
-}
-REVERSE_MAP = {v: k for k, v in FIELD_MAP.items()}
 
 
 @login_required
@@ -46,14 +29,13 @@ def list_api(request):
     try:
         conn = _get_conn()
         cursor = conn.cursor()
-
         cursor.execute("SELECT COUNT(*) FROM YW_DAZD")
         total = cursor.fetchone()[0]
 
         offset = (page - 1) * page_size
         cursor.execute(f"""
             SELECT ID, RSID, ZDSJ, WJH, ZWDW, ZDYY, JBR, ZB, FB, HZR, HZSJ, BZ, num
-            FROM YW_DAZD ORDER BY ZDSJ DESC, WJH DESC
+            FROM YW_DAZD ORDER BY ZDSJ DESC, ID DESC
             OFFSET {offset} ROWS FETCH NEXT {page_size} ROWS ONLY
         """)
 
@@ -61,7 +43,21 @@ def list_api(request):
         rows = []
         for r in cursor.fetchall():
             d = dict(zip(cols, r))
-            rows.append({REVERSE_MAP.get(k, k): v for k, v in d.items()})
+            rows.append({
+                "id": d["ID"],
+                "personRsid": d["RSID"],
+                "transferDate": d["ZDSJ"],
+                "fileNo": d["WJH"],
+                "transferUnit": d["ZWDW"],
+                "transferReason": d["ZDYY"],
+                "handler": d["JBR"],
+                "original": d["ZB"],
+                "personName": d["FB"],
+                "receiptPerson": d["HZR"],
+                "receiptDate": d["HZSJ"],
+                "remark": d["BZ"],
+                "personCount": d["num"],
+            })
 
         cursor.close()
         return JsonResponse({"code": 0, "data": rows, "total": total})
@@ -81,45 +77,54 @@ def save_api(request):
     try:
         data = json.loads(request.body)
     except:
-        return JsonResponse({"code": 400})
+        return JsonResponse({"code": 400, "msg": "参数格式错误"})
 
-    action = data.get("action")
+    action = data.get("action", "save")
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
 
-        if action == "save":
-            rid = data.get("id", "")
-            if rid:
-                cursor.execute("""
-                    UPDATE YW_DAZD SET RSID=?, ZDSJ=?, WJH=?, ZWDW=?, ZDYY=?,
-                    JBR=?, ZB=?, FB=?, HZR=?, HZSJ=?, BZ=?, num=?
-                    WHERE ID=?
-                """, (
-                    data.get("personRsid", ""), data.get("transferDate", ""),
-                    data.get("fileNo", ""), data.get("transferUnit", ""),
-                    data.get("transferReason", ""), data.get("handler", ""),
-                    data.get("original", ""), data.get("personName", ""),
-                    data.get("receiptPerson", ""), data.get("receiptDate", ""),
-                    data.get("remark", ""), data.get("personCount", 0), rid
-                ))
-            else:
-                cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_DAZD")
-                new_id = cursor.fetchone()[0]
-                cursor.execute("""
-                    INSERT INTO YW_DAZD (ID, RSID, ZDSJ, WJH, ZWDW, ZDYY, JBR, ZB, FB, HZR, HZSJ, BZ, num)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    new_id, data.get("personRsid", ""), data.get("transferDate", ""),
-                    data.get("fileNo", ""), data.get("transferUnit", ""),
-                    data.get("transferReason", ""), data.get("handler", ""),
-                    data.get("original", ""), data.get("personName", ""),
-                    data.get("receiptPerson", ""), data.get("receiptDate", ""),
-                    data.get("remark", ""), data.get("personCount", 0)
-                ))
-        elif action == "delete":
-            cursor.execute("DELETE FROM YW_DAZD WHERE ID=?", (data.get("id"),))
+        if action == "delete":
+            rid = data.get("id")
+            if not rid:
+                return JsonResponse({"code": 400, "msg": "缺少ID"})
+            cursor.execute("DELETE FROM YW_DAZD WHERE ID=?", (int(rid),))
+            conn.commit()
+            cursor.close()
+            return JsonResponse({"code": 0, "msg": "删除成功"})
+
+        rid = data.get("id")
+        personRsid = data.get("personRsid", "")
+        transferDate = data.get("transferDate", "")
+        fileNo = data.get("fileNo", "")
+        transferUnit = data.get("transferUnit", "")
+        transferReason = data.get("transferReason", "")
+        handler = data.get("handler", "")
+        original = data.get("original", "")
+        personName = data.get("personName", "")
+        receiptPerson = data.get("receiptPerson", "")
+        receiptDate = data.get("receiptDate", "")
+        remark = data.get("remark", "")
+        personCount = data.get("personCount", 0)
+
+        if rid:
+            cursor.execute("""
+                UPDATE YW_DAZD SET RSID=?, ZDSJ=?, WJH=?, ZWDW=?, ZDYY=?,
+                JBR=?, ZB=?, FB=?, HZR=?, HZSJ=?, BZ=?, num=?
+                WHERE ID=?
+            """, (personRsid, transferDate, fileNo, transferUnit, transferReason,
+                  handler, original, personName, receiptPerson, receiptDate,
+                  remark, personCount, int(rid)))
+        else:
+            cursor.execute("SELECT ISNULL(MAX(ID),0)+1 FROM YW_DAZD")
+            new_id = cursor.fetchone()[0]
+            cursor.execute("""
+                INSERT INTO YW_DAZD (ID, RSID, ZDSJ, WJH, ZWDW, ZDYY, JBR, ZB, FB, HZR, HZSJ, BZ, num)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (new_id, personRsid, transferDate, fileNo, transferUnit, transferReason,
+                  handler, original, personName, receiptPerson, receiptDate,
+                  remark, personCount))
 
         conn.commit()
         cursor.close()

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-size:13px; }
+    .tree-node { padding:4px 10px; cursor:pointer; white-space:nowrap; }
+    .tree-node:hover { background:#e8f0fe; }
+    .tree-node.active { background:#d0e4fc; }
+    .tree-unit { font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100%;overflow-y:auto;padding:4px;">
+    <template v-for="node in treeData" :key="node.tid">
+      <div class="tree-node tree-unit" @click.stop="toggleNode(node)"
+           :class="{active: selectedTid===node.tid}">
+        <span style="font-size:11px;">{{ node.expanded ? '▼' : '▶' }}</span> 🏢 {{ node.tname }}
+      </div>
+      <template v-if="node.expanded && node.children">
+        <div v-for="child in node.children" :key="child.tid"
+             class="tree-node" style="padding-left:20px;"
+             :class="{active: selectedTid===child.tid}"
+             @click.stop="selectUnit(child)">
+          🏫 {{ child.tname }}
+        </div>
+      </template>
+    </template>
+  </div>
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+    createApp({
+      setup(){
+        const treeData = ref([]);
+        const selectedTid = ref('');
+
+        // 字段名映射：大写 → 小写
+        const normalizeNode = (n) => ({
+          tid: n.TID,
+          tname: n.TNAME,
+          pid: n.PID,
+          rsid: n.RSID,
+          dabh: n.DABH,
+          gh: n.GH,
+          ch: n.CH,
+          sex: n.SEX,
+          expanded: false,
+          children: []
+        });
+
+        const loadTree = async () => {
+          try {
+            const r = await axios.get('/components/tree/');
+            if (r.data.code===0) treeData.value = r.data.data.map(normalizeNode);
+          } catch(e) {
+            console.error('加载单位树失败:', e);
+          }
+        };
+
+        const toggleNode = async (node) => {
+          if (node.expanded) { node.expanded = false; return; }
+          if (node.children.length) { node.expanded = true; return; }
+          try {
+            const r = await axios.get('/components/tree-children/', {params:{tid:node.tid}});
+            if (r.data.code===0) {
+              node.children = r.data.data.map(normalizeNode);
+              node.expanded = true;
+            }
+          } catch(e) {
+            console.error('加载子节点失败:', e);
+          }
+        };
+
+        const selectUnit = (node) => {
+          selectedTid.value = node.tid;
+          window.parent.postMessage({type:'unit-select', data:{tid:node.tid, tname:node.tname}}, '*');
+        };
+
+        onMounted(loadTree);
+        return { treeData, selectedTid, toggleNode, selectUnit };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

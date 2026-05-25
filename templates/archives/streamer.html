@@ -1,0 +1,183 @@
+{% extends "layout/base.html" %}
+{% block title %}档案标签打印{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+.info-table { border-collapse:collapse; width:100%; font-size:12px; }
+.info-table th, .info-table td { border:1px solid #ddd; padding:3px 6px; text-align:center; white-space:nowrap; }
+.info-table th { background:#f5f7fa; position:sticky; top:0; z-index:1; }
+.info-table td input { width:100%; border:1px solid transparent; padding:2px 4px; font-size:12px; text-align:center; background:transparent; }
+.info-table td input:focus { background:#fff; border-color:#409eff; outline:none; }
+.drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+.table-wrap { flex:1; overflow:auto; }
+</style>
+
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+
+    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;flex-shrink:0;">
+        <span style="font-weight:600;">📋 档案标签打印</span>
+    </div>
+
+    <div style="flex:1;display:flex;overflow:hidden;">
+
+        <div id="leftPanel" class="resize-panel" style="width:50%;min-width:300px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;">
+            <div style="padding:6px 8px;display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                <span>单位:</span>
+                <el-select v-model="unitId" size="small" style="width:180px;" @change="loadTable(1)" filterable clearable>
+                    <el-option v-for="u in unitList" :key="u.BM" :label="u.BMMC" :value="u.BM" />
+                </el-select>
+                <span>行分组:</span>
+                <select v-model="rowSet" style="height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;" @change="applyRowColor">
+                    <option v-for="n in 30" :key="n" :value="n">[[ n ]]</option>
+                </select>
+                <el-button size="small" @click="loadTable(currentPage)">重新加载</el-button>
+                <el-button size="small" type="success" @click="saveTable">保存</el-button>
+            </div>
+            <div class="table-wrap">
+                <table class="info-table">
+                    <thead><tr>
+                        <th><input type="checkbox" @change="toggleAll" /></th>
+                        <th>姓名</th><th>单位</th><th>档案编号</th><th>籍贯</th><th>柜号</th><th>层号</th><th>原值</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr v-for="(r,ri) in tableData" :key="r.RSID" :style="{background: rowColors[ri] || '#fff'}">
+                            <td><input type="checkbox" v-model="r._checked" /></td>
+                            <td>[[ r.XM ]]</td><td>[[ r.BMMC ]]</td>
+                            <td><input v-model="r.RYBH" /></td><td><input v-model="r.JG" /></td>
+                            <td><input v-model="r.GH" /></td><td><input v-model="r.CH" /></td>
+                            <td>[[ r.oldValue ]]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-if="total>0" style="padding:4px 0;display:flex;justify-content:center;flex-shrink:0;">
+                <el-pagination small background layout="total, sizes, prev, pager, next"
+                    :page-sizes="[20,30,50,100]" :page-size="pageSize" :total="total"
+                    :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+            </div>
+        </div>
+
+        <div class="drag-bar" data-target="left" style="width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;"></div>
+
+        <div id="rightPanel" class="resize-panel" style="flex:1;min-width:300px;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:6px 8px;display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                <el-button size="small" @click="printStreamer">条幅打印</el-button>
+                <el-button size="small" @click="printLabel">姓名标签</el-button>
+                <el-button size="small" @click="printCabinet('h')">柜号横排</el-button>
+                <el-button size="small" @click="printCabinet('v')">柜号竖排</el-button>
+                <span>每页:</span>
+                <select v-model="pageQty" style="height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;">
+                    <option v-for="n in [3,4,5,6,7,8]" :key="n" :value="n">[[ n ]]条</option>
+                </select>
+            </div>
+            <div style="flex:1;overflow:hidden;">
+                <iframe v-if="pdfUrl" :src="pdfUrl" style="width:100%;height:100%;border:none;"></iframe>
+                <div v-else style="text-align:center;color:#ccc;padding-top:100px;">请先选择单位并点击打印按钮</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+        const unitList = ref([]);
+        const unitId = ref('');
+        const tableData = ref([]);
+        const total = ref(0);
+        const currentPage = ref(1);
+        const pageSize = ref(30);
+        const pdfUrl = ref('');
+        const pageQty = ref(5);
+        const rowSet = ref(5);
+        const rowColors = ref([]);
+
+        const loadUnits = async () => {
+            const r = await axios.get('/archives/api/streamer/units/');
+            if (r.data.code===0) unitList.value=r.data.data||[];
+        };
+        const loadTable = async (page) => {
+            if (!unitId.value) return;
+            const r = await axios.get('/archives/api/streamer/table/', {
+                params: { unitId: unitId.value, page: page||1, pageSize: pageSize.value }
+            });
+            if (r.data.code===0) {
+                tableData.value = (r.data.data||[]).map(x=>({...x,_checked:false}));
+                total.value = r.data.total||0;
+                currentPage.value = page||1;
+                applyRowColor();
+            }
+        };
+        const applyRowColor = () => {
+            const colors = [];
+            tableData.value.forEach((_, i) => {
+                colors[i] = (Math.floor(i / rowSet.value) % 2 === 1) ? '#ffe4c4' : '#fff';
+            });
+            rowColors.value = colors;
+        };
+        const saveTable = async () => {
+            const rows = tableData.value.map(r=>({RSID:r.RSID,RYBH:r.RYBH,JG:r.JG,GH:r.GH,CH:r.CH}));
+            const r = await axios.post('/archives/api/streamer/save/', { rows });
+            ElementPlus.ElMessage[r.data.code===0?'success':'error'](r.data.msg);
+        };
+        const getSelectedRsids = () => tableData.value.filter(r=>r._checked).map(r=>r.RSID).join(',') || '';
+        const printStreamer = () => {
+            pdfUrl.value = '/archives/api/streamer/print-streamer/?unitId='+unitId.value+'&rsids='+getSelectedRsids()+'&t='+Date.now();
+        };
+        const printLabel = () => {
+            pdfUrl.value = '/archives/api/streamer/print-label/?unitId='+unitId.value+'&rsids='+getSelectedRsids()+'&t='+Date.now();
+        };
+        const printCabinet = (dir) => {
+            pdfUrl.value = '/archives/api/streamer/print-cabinet/?unitId='+unitId.value+'&direction='+dir+'&pageQty='+pageQty.value+'&t='+Date.now();
+        };
+        const toggleAll = (e) => { tableData.value.forEach(r=>r._checked=e.target.checked); };
+        const onPageChange = (p) => loadTable(p);
+        const onSizeChange = (s) => { pageSize.value=s; loadTable(1); };
+
+        onMounted(loadUnits);
+
+        const initDrag = () => {
+            document.querySelectorAll('.drag-bar').forEach(bar => {
+                bar.addEventListener('mousedown', (e) => {
+                    const panel = document.getElementById(bar.dataset.target+'Panel');
+                    if (!panel) return;
+                    const startX = e.clientX, startW = panel.offsetWidth;
+                    document.querySelectorAll('.resize-panel').forEach(p => {
+                        const iframe = p.querySelector('iframe');
+                        if (iframe) iframe.style.pointerEvents = 'none';
+                    });
+                    const onMove = (ev) => {
+                        let w = startW + ev.clientX - startX;
+                        if (w < 200) w = 200; if (w > 900) w = 900;
+                        panel.style.width = w + 'px'; panel.style.minWidth = w + 'px';
+                        panel.style.flexShrink = '0'; panel.style.flexGrow = '0';
+                    };
+                    const onUp = () => {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        document.body.style.cursor = ''; document.body.style.userSelect = '';
+                        document.querySelectorAll('.resize-panel').forEach(p => {
+                            const iframe = p.querySelector('iframe');
+                            if (iframe) iframe.style.pointerEvents = '';
+                        });
+                    };
+                    document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                });
+            });
+        };
+        onMounted(initDrag);
+
+        return { unitList, unitId, tableData, total, currentPage, pageSize, pdfUrl, pageQty, rowSet, rowColors,
+                 loadTable, applyRowColor, saveTable, printStreamer, printLabel, printCabinet, toggleAll,
+                 onPageChange, onSizeChange };
+    }
+});
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+</script>
+{% endblock %}

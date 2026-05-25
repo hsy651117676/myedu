@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.conf import settings
 from main.system_admin.views import placeholder
 from .views.home import home_view
-from .views.tools import linux, encrypt, decrypt
 
 urlpatterns = [
     # ==================== 主页 ====================
@@ -13,9 +12,7 @@ urlpatterns = [
     path("population/", include("main.views.population.urls")),
 
     # ==================== 常用工具 ====================
-    path("tools/linux/", linux, name="linux"),
-    path("tools/encrypt/", encrypt, name="encrypt"),
-    path("tools/decrypt/", decrypt, name="decrypt"),
+    path("tools/", include("main.views.tools.urls")),
 
     # ==================== 档案系统管理 ====================
     path("archivesSystem/", include("main.views.archivesSystem.urls")),
@@ -32,8 +29,6 @@ urlpatterns = [
     # ==================== 组件 ====================
     path("components/", include("main.views.components.urls")),
 
-    # ==================== 占位路由 ====================
-    re_path(r"^(daily|archivesSystem)/.*$", placeholder, name="placeholder"),
 ]
 
 if settings.DEBUG:

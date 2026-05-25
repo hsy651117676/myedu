@@ -1,10 +1,10 @@
 from django.urls import path
-from main.views.business import organization
 from main.views.business import archive_read
 from . import archive_borrow
 from . import archive_transfer
 from . import archive_receive
 from . import query_stats
+from . import transfer_print
 
 app_name = 'business'
 
@@ -36,17 +36,12 @@ urlpatterns = [
     path("api/receive/persons/", archive_receive.persons_api, name="receive-persons"),
 
     # 查询统计
-    path("stats/", query_stats.stats_page, name="query-stats"),
-    path("api/stats/", query_stats.stats_api, name="stats-api"),
+    path("query/", query_stats.page, name="query-stats"),
+    path("api/query/stats/", query_stats.stats_api, name="query-stats-api"),
+    path("api/query/detail/", query_stats.detail_api, name="query-detail-api"),
 
-
-    # 机构维护
-    path('organization/', organization.organization_view, name='organization'),
-    path('organization/api/search/', organization.person_search_api, name='org_search'),
-    path('organization/api/detail/', organization.person_detail_api, name='org_detail'),
-    path('organization/api/save/', organization.person_save_api, name='org_save'),
-    path('organization/api/transfer/', organization.person_transfer_api, name='org_transfer'),
-    path('organization/api/tree/', organization.org_tree_api, name='org_tree'),
-    path('organization/api/tree-children/', organization.org_tree_children_api, name='org_tree_children'),
-    path('organization/api/save-and-transfer/', organization.save_and_transfer_api, name='org_save_transfer'),
+    # 转递打印
+    path("transfer/print/", transfer_print.print_page, name="transfer-print"),
+    path("transfer/print/excel/", transfer_print.export_excel, name="transfer-print-excel"),
+    path("transfer/print/pdf/", transfer_print.export_pdf, name="transfer-print-pdf"),
 ]

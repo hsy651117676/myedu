@@ -30,13 +30,15 @@ class LoginJumpMiddleware(MiddlewareMixin):
         return response
     
     def _should_redirect_to_login(self, request, response):
-        """判断是否需要跳转到登录页"""
-        return (
+        result = (
             not request.user.is_authenticated
             and response.status_code == 302
             and response.get("Location", "").startswith(self.login_url)
         )
-    
+        logger.info(f"should_redirect: user_authenticated={request.user.is_authenticated}, "
+                    f"status={response.status_code}, location={response.get('Location','')}, "
+                    f"result={result}, path={request.path}")
+        return result
     def _create_iframe_redirect(self):
         """创建iframe环境下的跳转响应"""
         html_content = (

@@ -5801,3 +5801,2027 @@ Traceback (most recent call last):
   File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
     raise TemplateDoesNotExist(template_name, chain=chain)
 django.template.exceptions.TemplateDoesNotExist: people/person_manage.html
+[ERROR] 2026-05-20 08:57:43,043 log 61322 140457996515008 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:01:07,234 log 61322 140457887647424 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:12:12,155 organization 25326 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:12:14,647 organization 25315 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:12:17,874 organization 25322 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:12:22,912 organization 25333 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:12:25,472 organization 25320 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:12:25,761 organization 25320 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:12:29,456 organization 25329 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:12:32,225 organization 25315 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:15:52,666 organization 25341 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:15:53,594 organization 25322 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:15:53,777 organization 25320 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:15:53,950 organization 25320 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:15:55,026 organization 25341 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:15:55,347 organization 25329 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:15:55,511 organization 25329 140382375618368 详情失败: ('The SQL contains 1 parameter markers, but 2 parameters were supplied', 'HY000')
+[ERROR] 2026-05-20 09:17:26,773 log 68363 139728238147264 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:17:28,072 log 68363 139728238147264 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:17:29,466 log 68363 139728229754560 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:42,316 log 69743 140235698591424 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:43,367 log 69743 140235698591424 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:46,115 log 69743 140235698591424 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:46,933 log 69743 140235706984128 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:48,150 log 69743 140235706984128 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:49,588 log 69743 140235698591424 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:50,815 log 69743 140235706984128 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:30:52,268 log 69743 140235706984128 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:41:57,644 log 70124 140694365165248 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:41:58,749 log 70124 140694365165248 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:42:00,091 log 70124 140694365165248 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 09:42:07,412 log 70124 140694365165248 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 11:32:20,090 log 74703 140001799956160 Internal Server Error: /archives/api/streamer/save/
+Traceback (most recent call last):
+  File "/home/hsy/myedu/main/views/archives/streamer.py", line 94, in save_api
+    cursor = conn.cursor()
+             ^^^^^^^^^^^^^
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hsy/myedu/main/views/archives/streamer.py", line 105, in save_api
+    conn.rollback()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/streamer.py", line 109, in save_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 14:26:09,597 log 77542 140350203098816 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 14:43:12,157 person 83254 140523576911552 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-20 14:43:12,158 person 83254 140523576911552 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-20 14:44:30,980 person 83254 140523576911552 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-20 14:44:30,981 person 83254 140523576911552 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-20 15:06:36,090 log 84464 140528174757568 Internal Server Error: /archives/api/streamer/print-streamer/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/PIL/ImageDraw.py", line 604, in draw_text
+    mask, offset = image_text.font.getmask2(  # type: ignore[union-attr,misc]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'getmask2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/streamer.py", line 236, in print_streamer_api
+    draw.text ((x_mid,120),'编号',fill='red',font=11)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/PIL/ImageDraw.py", line 660, in text
+    draw_text(ink)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/PIL/ImageDraw.py", line 622, in draw_text
+    mask = image_text.font.getmask(  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'getmask'
+[ERROR] 2026-05-20 15:12:06,482 log 84648 139722968630976 Internal Server Error: /archives/api/streamer/print-streamer/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/streamer.py", line 218, in print_streamer_api
+    draw.text((x0,col_w),'xy' , fill='red', font=font)
+                                                 ^^^^
+NameError: name 'font' is not defined
+[ERROR] 2026-05-20 16:42:15,581 log 88970 140426183079616 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 16:42:48,656 log 88970 140426183079616 Internal Server Error: /components/tree/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 29, in tree_root_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-20 17:11:20,169 log 91407 139706650961600 Internal Server Error: /archives/api/streamer/print-label/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/PIL/ImageDraw.py", line 604, in draw_text
+    mask, offset = image_text.font.getmask2(  # type: ignore[union-attr,misc]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'getmask2'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/streamer.py", line 300, in print_label_api
+    d.text((x, y), f"柜号:   层号:", fill='red', font=24)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/PIL/ImageDraw.py", line 660, in text
+    draw_text(ink)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/PIL/ImageDraw.py", line 622, in draw_text
+    mask = image_text.font.getmask(  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'getmask'
+[ERROR] 2026-05-21 10:06:30,252 log 142511 139818348566208 Internal Server Error: /archivesSystem/api/files/manage/upload/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/common_files_manage.py", line 124, in upload_api
+    service.insert_file(category, year, file_no, file_name, relative_path, file_size, file_type, md5_hash,
+  File "/home/hsy/myedu/main/views/archivesSystem/common_files_service.py", line 270, in insert_file
+    cursor.execute("INSERT INTO CommonFilePersons (FileID, PersonName, Summary) VALUES (?, ?, ?)",
+pyodbc.DataError: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-21 14:17:08,196 log 154745 139913135806144 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-21 14:56:31,702 log 154745 139912921740992 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-22 10:48:56,571 log 154745 139913135806144 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-22 16:57:59,043 log 154745 139913144198848 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-23 06:38:23,740 log 295312 139641392985792 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 184, in print_pdf_api
+    response['Content-Disposition'] = 'inline; filename="directory.pdf"'
+    ^^^^^^^^
+NameError: name 'response' is not defined
+[ERROR] 2026-05-23 06:39:21,812 log 295312 139641392985792 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 184, in print_pdf_api
+    response['Content-Disposition'] = 'inline; filename="directory.pdf"'
+    ^^^^^^^^
+NameError: name 'response' is not defined
+[ERROR] 2026-05-23 06:50:45,041 log 296139 140475294021312 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 289, in print_export_api
+    ws.cell(row=current_row, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 06:51:03,716 log 296139 140475294021312 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 289, in print_export_api
+    ws.cell(row=current_row, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 07:10:06,578 log 297004 140297009387200 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 163, in print_export_api
+    ws.cell(row=row, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 07:24:03,476 log 297673 140030022514368 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 138, in print_export_api
+    thin_border = Border(
+                  ^^^^^^
+NameError: name 'Border' is not defined
+[ERROR] 2026-05-23 07:44:57,446 log 298785 140494161917632 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 176, in print_export_api
+    ws.cell(row=r, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 09:13:44,682 log 303651 139850307073728 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 163, in print_export_api
+    ws.cell(row=r, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 09:14:01,231 log 303651 139850291721920 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 163, in print_export_api
+    ws.cell(row=r, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 09:50:37,015 log 305900 140041934063296 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 164, in print_export_api
+    ws.cell(row=r, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 09:51:17,829 log 306021 140192140322496 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 164, in print_export_api
+    ws.cell(row=r, column=3, value=item.get("年", ""))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 246, in cell
+    cell.value = value
+    ^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-23 10:05:45,023 log 306984 139623505053376 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 158, in print_export_api
+    ws.unmerge_cells(str(mr))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 638, in unmerge_cells
+    del self._cells[(row, col)]
+        ~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: (8, 3)
+[ERROR] 2026-05-23 10:06:12,981 log 307080 140150912411328 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 159, in print_export_api
+    ws.unmerge_cells(str(mr))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 638, in unmerge_cells
+    del self._cells[(row, col)]
+        ~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: (8, 3)
+[ERROR] 2026-05-23 10:06:25,593 log 307080 140150926116544 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 159, in print_export_api
+    ws.unmerge_cells(str(mr))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 638, in unmerge_cells
+    del self._cells[(row, col)]
+        ~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: (8, 3)
+[ERROR] 2026-05-23 10:13:50,867 log 307561 139910025574080 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 181, in print_export_api
+    print(f"save time: {time.time() - t:.2f}s")
+                        ^^^^
+NameError: name 'time' is not defined
+[ERROR] 2026-05-23 10:14:50,198 log 307761 139882601486016 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 161, in print_export_api
+    ws.unmerge_cells(str(mr))
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 638, in unmerge_cells
+    del self._cells[(row, col)]
+        ~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: (8, 3)
+[ERROR] 2026-05-23 23:27:35,812 log 650816 140356503992000 Internal Server Error: /archives/api/salary-print/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/salary.py", line 426, in salary_print_api
+    HTML(string=html).write_pdf(buf)
+    ^^^^
+NameError: name 'HTML' is not defined
+[ERROR] 2026-05-23 23:27:53,894 log 650961 140647669548736 Internal Server Error: /archives/api/salary-print/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/salary.py", line 426, in salary_print_api
+    HTML(string=html).write_pdf(buf)
+    ^^^^
+NameError: name 'HTML' is not defined
+[ERROR] 2026-05-24 06:40:19,179 log 674336 140624420169408 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 14:40:59,960 log 703513 139664062932672 Internal Server Error: /api/depart-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/system_admin/archive_users.py", line 79, in depart_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:35:48,181 log 727506 139765706266304 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:35:53,139 log 727506 139765617784512 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:39,356 log 727506 139765617784512 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:41,094 log 727506 139765617784512 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:41,157 log 727506 139765706266304 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:41,202 log 727506 139765695776448 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:43,543 log 727506 139765617784512 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:43,599 log 727506 139765695776448 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:49,471 log 727506 139765706266304 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:52,173 log 727506 139765617784512 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:52,232 log 727506 139765695776448 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:56,408 log 727506 139765617784512 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 20:38:56,467 log 727506 139765695776448 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:42:40,723 log 730748 139780708890304 Internal Server Error: /components/tree/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 29, in tree_root_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:42:56,111 log 730748 139780708890304 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:43:35,198 log 730879 139729776408256 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:43:35,259 log 730879 139729766966976 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:43:36,520 log 730879 139729766966976 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:43:39,226 log 730879 139729766966976 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:50,816 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:52,554 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:52,620 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:54,980 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:57,249 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:57,324 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:59,765 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:46:59,836 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:04,449 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:04,521 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:06,689 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:06,757 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:41,665 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:41,736 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:45,874 log 731306 140032690087616 Internal Server Error: /archivesSystem/api/transfer/suggest-bh/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 147, in suggest_bh_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 21:48:45,948 log 731306 140032698480320 Internal Server Error: /archivesSystem/api/transfer/same-xs-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 184, in same_xs_list_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-24 22:01:21,120 log 731948 140113487828672 Internal Server Error: /archivesSystem/api/transfer/save/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 164, in save_api
+    new_bm = data.get("new_bm", "").strip()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'strip'
+[ERROR] 2026-05-24 22:01:28,264 log 731948 140113487828672 Internal Server Error: /archivesSystem/api/transfer/save/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 164, in save_api
+    new_bm = data.get("new_bm", "").strip()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'strip'
+[ERROR] 2026-05-24 22:03:08,402 log 732227 140641247950528 Internal Server Error: /archivesSystem/api/transfer/save/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/archive_transfer.py", line 167, in save_api
+    if not rsid or not new_rybh or not new_bm:
+           ^^^^
+NameError: name 'rsid' is not defined
+[ERROR] 2026-05-25 06:43:57,201 log 757059 139859327956672 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 07:08:02,333 log 758891 139887353263808 Internal Server Error: /tools/piano/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 14, in piano
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:16:27,407 log 759500 139805451196096 Internal Server Error: /tools/linux/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 5, in linux
+    return render(request, "linux.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: linux.html
+[ERROR] 2026-05-25 07:17:15,660 log 759697 140135153706688 Internal Server Error: /tools/linux/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 5, in linux
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:17:30,872 log 759794 140619142956736 Internal Server Error: /tools/linux/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 5, in linux
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:19:10,038 log 759970 139974981707456 Internal Server Error: /tools/encrypt/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 10, in encrypt
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:19:11,010 log 759970 139974981707456 Internal Server Error: /tools/decrypt/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 13, in decrypt
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:19:11,819 log 759970 139974981707456 Internal Server Error: /tools/linux/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 7, in linux
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:22:18,774 log 760292 140464529508032 Internal Server Error: /tools/encrypt/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 10, in encrypt
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:22:19,433 log 760292 140464529508032 Internal Server Error: /tools/linux/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/html5piano.py", line 7, in linux
+    return render(request, "static/HTML5piano.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: static/HTML5piano.html
+[ERROR] 2026-05-25 07:35:05,329 log 761238 140095920273088 Internal Server Error: /tools/diary/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/markdown.py", line 17, in page
+    return render(request, "markdown.html")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: markdown.html
+[ERROR] 2026-05-25 08:46:01,289 log 761471 140715422107328 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 10:47:53,317 audit 768306 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 10:47:55,641 audit 768444 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 10:47:56,590 audit 768444 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 10:48:34,716 audit 768444 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 10:53:13,187 log 761471 140715915638464 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 11:40:01,415 log 761471 140715522774720 Internal Server Error: /components/tree-children/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 55, in tree_children_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 11:40:02,373 log 761471 140715915638464 Internal Server Error: /components/tree-children/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 55, in tree_children_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 11:40:03,434 log 761471 140715522774720 Internal Server Error: /components/tree-children/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 55, in tree_children_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 11:40:04,417 log 761471 140715915638464 Internal Server Error: /components/tree-children/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 55, in tree_children_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 11:54:01,103 directory 768211 140382375618368 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 59) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-25 13:59:56,752 log 761471 140715915638464 Internal Server Error: /components/tree-children/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 55, in tree_children_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 13:59:57,852 log 761471 140715531167424 Internal Server Error: /components/tree-children/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 55, in tree_children_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 14:46:35,940 log 799539 139651074418368 Internal Server Error: /components/tree-children/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/org_tree.py", line 55, in tree_children_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-25 16:05:29,910 audit 768444 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:05:31,757 audit 768211 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:05:32,293 audit 768490 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:05:32,462 audit 768352 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:05:32,689 audit 768306 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:05:32,846 audit 768306 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:05:33,032 audit 768306 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:05:33,200 audit 768306 140382375618368 专审保存失败: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-25 16:27:45,685 auth 809043 140382375618368 保存用户信息失败: {'id_card': ['请输入有效的身份证号']}
+[ERROR] 2026-05-25 19:47:30,011 log 814471 139623300658880 Internal Server Error: /business/transfer/print/excel/
+[ERROR] 2026-05-25 21:28:32,589 directory 815432 140384685520576 directory_save error: ('HY000', '[HY000] [Microsoft][ODBC Driver 18 for SQL Server]Connection is busy with results for another command (0) (SQLExecDirectW)')
+[ERROR] 2026-05-25 21:36:21,143 directory 815432 140384685520576 directory_save error: ('HY000', '[HY000] [Microsoft][ODBC Driver 18 for SQL Server]Connection is busy with results for another command (0) (SQLExecDirectW)')
+[ERROR] 2026-05-25 21:36:27,088 directory 815432 140384685520576 directory_save error: ('HY000', '[HY000] [Microsoft][ODBC Driver 18 for SQL Server]Connection is busy with results for another command (0) (SQLExecDirectW)')
+[ERROR] 2026-05-25 21:40:43,312 directory 815432 140384685520576 directory_save error: ('HY000', '[HY000] [Microsoft][ODBC Driver 18 for SQL Server]Connection is busy with results for another command (0) (SQLExecDirectW)')
+[ERROR] 2026-05-25 21:42:54,762 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:43:42,462 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:44:43,401 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:46:16,886 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:49:15,790 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:50:57,041 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:52:14,403 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:53:28,359 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 79, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:53:37,368 log 815432 140384685520576 Internal Server Error: /archives/api/directory-print-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 154, in print_export_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 58, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:56:11,231 log 817820 139712121534144 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 80, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 59, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-25 21:56:45,221 log 817921 140163673228992 Internal Server Error: /archives/api/directory-print-pdf/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 80, in print_pdf_api
+    person_name, data_map = _load_data(rsid)
+                            ^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/directory_print.py", line 59, in _load_data
+    parts = row["编号"].split("-")
+            ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'split'

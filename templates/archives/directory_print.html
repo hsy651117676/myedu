@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>档案目录打印</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; }
+    body { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+    .toolbar { padding:8px 12px; border-bottom:1px solid #ddd; display:flex; gap:10px; align-items:center; flex-shrink:0; }
+    .content { flex:1; position:relative; overflow:hidden; }
+    iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+    .loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:#999; z-index:10; background:rgba(255,255,255,0.9); padding:30px; border-radius:8px; }
+    .loading span { display:block; margin-top:8px; font-size:14px; }
+    .spinner { width:40px; height:40px; margin:0 auto; border:3px solid #f0f0f0; border-top:3px solid #409eff; border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button onclick="printPdf()">🖨️ 打印</button>
+    <button onclick="exportExcel()">📥 导出Excel</button>
+    <label>空行:</label>
+    <select id="emptyRows" onchange="reloadPdf()">
+      <option value="4">4行</option><option value="5" selected>5行</option>
+      <option value="6">6行</option><option value="7">7行</option><option value="8">8行</option>
+      <option value="9">9行</option><option value="10">10行</option>
+      <option value="12">12行</option><option value="15">15行</option><option value="20">20行</option>
+    </select>
+    <button onclick="window.close()">关闭</button>
+  </div>
+  <div class="content">
+    <iframe id="pdfFrame"></iframe>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span>正在生成PDF，请稍候...</span>
+    </div>
+  </div>
+  <script>
+    const rsid = new URLSearchParams(window.location.search).get('rsid');
+    let pdfBlobUrl = '';
+    function getUrl() {
+      return '/archives/api/directory-print-pdf/?rsid=' + rsid + '&emptyRows=' + document.getElementById('emptyRows').value;
+    }
+async function reloadPdf() {
+    const resp = await fetch(getUrl());
+    const blob = await resp.blob();
+    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    pdfBlobUrl = URL.createObjectURL(blob);
+    document.getElementById('pdfFrame').src = pdfBlobUrl;
+    document.getElementById('loading').style.display = 'none';
+}
+
+function printPdf() {
+    if (pdfBlobUrl) {
+        const win = window.open(pdfBlobUrl, '_blank');
+        if (win) win.onload = () => win.print();
+    }
+}
+    reloadPdf();
+    function exportExcel() {
+    const url = '/archives/api/directory-print-export/?rsid=' + rsid + '&emptyRows=' + document.getElementById('emptyRows').value;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+  </script>
+</body>
+</html>

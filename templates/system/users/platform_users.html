@@ -3,92 +3,121 @@
 {% block content %}
 <style>
 html, body { height:100%; margin:0; padding:0; overflow:hidden; }
-.info-table { border-collapse:collapse; width:100%; max-width:500px; font-size:13px; }
-.info-table th, .info-table td { border:1px solid #ddd; padding:6px 10px; }
-.info-table th { background:#f5f7fa; text-align:right; width:80px; }
-.info-table td input, .info-table td select { width:100%; border:1px solid #ddd; padding:4px 6px; font-size:13px; border-radius:2px; }
-.tree-node { padding:3px 8px; cursor:pointer; white-space:nowrap; font-size:13px; }
-.tree-node:hover { background:#e8f0fe; }
-.tree-person { color:#606266; }
-.tree-person.active { background:#d0e4fc; }
+.user-table { border-collapse:collapse; width:100%; font-size:12px; }
+.user-table th, .user-table td { border:1px solid #ddd; padding:4px 8px; text-align:center; white-space:nowrap; }
+.user-table th { background:#f5f7fa; position:sticky; top:0; z-index:1; }
 </style>
 
-<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
-    <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
-        <span style="font-weight:600;">👤 用户管理</span>
-        <div style="flex:1;"></div>
-        <el-button size="small" type="primary" @click="saveUser" :disabled="!currentUser.id">保存</el-button>
-        <el-button size="small" type="warning" @click="resetPwd" :disabled="!currentUser.id">重置密码</el-button>
+<div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;padding:12px;">
+    <div style="font-weight:600;margin-bottom:10px;flex-shrink:0;">👤 平台用户管理</div>
+
+    <!-- 搜索 -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0;">
+        <input v-model="keyword" placeholder="用户名/姓名/邮箱" @keyup.enter="loadUsers(1)"
+               style="width:200px;height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;">
+        <el-button size="small" @click="loadUsers(1)">查询</el-button>
     </div>
 
-    <div style="flex:1;display:flex;overflow:hidden;">
-        <div style="width:220px;border-right:1px solid #e4e7ed;overflow-y:auto;padding:4px;flex-shrink:0;">
-            <div v-for="u in userList" :key="u.id" class="tree-node tree-person"
-                 :class="{active: currentUser.id===u.id}" @click="selectUser(u)">👤 [[ u.username ]]</div>
-        </div>
-        <div style="flex:1;overflow-y:auto;padding:12px;">
-            <div v-if="!currentUser.id" style="color:#ccc;">请选择左侧用户</div>
-            <table v-if="currentUser.id" class="info-table">
-                <tr><th>用户名</th><td>[[ currentUser.username ]]</td></tr>
-                <tr><th>邮箱</th><td>[[ currentUser.email ]]</td></tr>
-                <tr><th>姓名</th><td><input v-model="currentUser.real_name" /></td></tr>
-                <tr><th>用户组</th><td>
-                    <select v-model="currentUser.group_id">
-                        <option value="">无</option>
-                        <option v-for="g in groupList" :key="g.id" :value="g.id">[[ g.name ]]</option>
-                    </select></td></tr>
-                <tr><th>档案编号</th><td><input v-model="currentUser.yhbh" /></td></tr>
-                <tr><th>启用</th><td>
-                    <select v-model="currentUser.is_active">
-                        <option :value="true">是</option><option :value="false">否</option>
-                    </select></td></tr>
-            </table>
-        </div>
+    <!-- 表格 -->
+    <div style="flex:1;overflow:auto;">
+        <table class="user-table">
+            <thead><tr>
+                <th>用户名</th><th>姓名</th><th>邮箱</th><th>用户组</th><th>档案编号</th><th>状态</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+                <tr v-for="u in userList" :key="u.id">
+                    <td>[[ u.username ]]</td>
+                    <td>[[ u.real_name ]]</td>
+                    <td>[[ u.email ]]</td>
+                    <td>[[ u.group_name ]]</td>
+                    <td>[[ u.yhbh ]]</td>
+                    <td>[[ u.is_active ? '启用' : '禁用' ]]</td>
+                    <td>
+                        <el-button size="small" @click="editUser(u)">编辑</el-button>
+                        <el-button size="small" type="warning" @click="resetPwd(u)">重置密码</el-button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+
+    <!-- 分页 -->
+    <div v-if="total>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+        <el-pagination small background layout="total, sizes, prev, pager, next"
+            :page-sizes="[20,30,50,100]" :page-size="pageSize" :total="total"
+            :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <el-dialog v-model="editVisible" title="编辑用户" width="400px">
+        <el-form label-width="80px">
+            <el-form-item label="姓名"><el-input v-model="editForm.real_name" /></el-form-item>
+            <el-form-item label="用户组">
+                <el-select v-model="editForm.group_id">
+                    <option value="">无</option>
+                    <el-option v-for="g in groupList" :key="g.id" :label="g.name" :value="g.id" />
+                </el-select>
+            </el-form-item>
+            <el-form-item label="档案编号"><el-input v-model="editForm.yhbh" /></el-form-item>
+            <el-form-item label="启用"><el-switch v-model="editForm.is_active" /></el-form-item>
+        </el-form>
+        <template #footer>
+            <el-button @click="editVisible=false">取消</el-button>
+            <el-button type="primary" @click="saveUser">保存</el-button>
+        </template>
+    </el-dialog>
 </div>
 
 <script>
-const { createApp, ref, onMounted } = Vue;
+const { createApp, ref, reactive, onMounted } = Vue;
+const { ElMessage, ElMessageBox } = ElementPlus;
 
-const app = createApp({
+createApp({
     delimiters: ['[[', ']]'],
     setup(){
+        const keyword = ref('');
         const userList = ref([]);
         const groupList = ref([]);
-        const currentUser = ref({});
+        const total = ref(0);
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+        const editVisible = ref(false);
+        const editForm = reactive({id:null,real_name:'',group_id:'',yhbh:'',is_active:true});
 
-        const loadUsers = async () => {
-            const r = await axios.get('/api/platform-users/list/');
-            if(r.data.code===0) userList.value = r.data.data||[];
+        const loadUsers = async (page) => {
+            const r = await axios.get('/api/platform-users/list/', {
+                params: { keyword: keyword.value, page: page||1, pageSize: pageSize.value }
+            });
+            if (r.data.code===0) { userList.value=r.data.data||[]; total.value=r.data.total||0; currentPage.value=page||1; }
         };
         const loadGroups = async () => {
             const r = await axios.get('/api/platform-groups/list/');
-            if(r.data.code===0) groupList.value = r.data.data||[];
+            if (r.data.code===0) groupList.value = r.data.data||[];
         };
-        const selectUser = (u) => { currentUser.value = {...u}; };
 
+        const editUser = (u) => {
+            Object.assign(editForm, {id:u.id,real_name:u.real_name,group_id:u.group_id,yhbh:u.yhbh,is_active:u.is_active});
+            editVisible.value = true;
+        };
         const saveUser = async () => {
-            const res = await axios.post('/api/platform-users/save/',{
-                action:'update', id:currentUser.value.id,
-                real_name:currentUser.value.real_name,
-                group_id:currentUser.value.group_id,
-                yhbh:currentUser.value.yhbh,
-                is_active:currentUser.value.is_active
-            });
-            if(res.data.code===0){ ElementPlus.ElMessage.success(res.data.msg); loadUsers(); }
-            else ElementPlus.ElMessage.error(res.data.msg);
+            const r = await axios.post('/api/platform-users/save/', {action:'update', ...editForm});
+            if (r.data.code===0) { ElMessage.success('保存成功'); editVisible.value=false; loadUsers(currentPage.value); }
+            else ElMessage.error(r.data.msg);
         };
-        const resetPwd = async () => {
-            await ElementPlus.ElMessageBox.confirm("确定重置密码为12345abcde ？",'确认',{type:'warning'});
-            const res = await axios.post('/api/platform-users/save/',{action:'reset_pwd',id:currentUser.value.id});
-            if(res.data.code===0) ElementPlus.ElMessage.success(res.data.msg);
-            else ElementPlus.ElMessage.error(res.data.msg);
+        const resetPwd = async (u) => {
+            await ElMessageBox.confirm('确定重置密码为 12345abcde？','确认',{type:'warning'});
+            const r = await axios.post('/api/platform-users/save/', {action:'reset_pwd', id:u.id});
+            if (r.data.code===0) ElMessage.success('密码已重置');
+            else ElMessage.error(r.data.msg);
         };
 
-        onMounted(()=>{loadUsers();loadGroups();});
-        return {userList,groupList,currentUser,selectUser,saveUser,resetPwd};
+        const onPageChange = (p) => loadUsers(p);
+        const onSizeChange = (s) => { pageSize.value=s; loadUsers(1); };
+
+        onMounted(()=>{loadUsers(1);loadGroups();});
+        return {keyword,userList,groupList,total,currentPage,pageSize,editVisible,editForm,
+                loadUsers,editUser,saveUser,resetPwd,onPageChange,onSizeChange};
     }
-});
-app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+}).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
 </script>
 {% endblock %}
