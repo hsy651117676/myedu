@@ -1,0 +1,9 @@
+{
+  "typeCheckingMode": "basic",
+  "exclude": [
+    "**/migrations/**",
+    "**/__pycache__/**",
+    "static_collect",
+    "media"
+  ]
+}

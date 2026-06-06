@@ -27,3 +27,6 @@ def home_view(request):
     }
     
     return render(request, 'index.html', context)
+
+def welcome(request):
+    return render(request, 'welcome.html')

@@ -1,0 +1,293 @@
+{% extends "layout/base.html" %}
+{% block title %}档案库存统计{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.toolbar { display:flex;align-items:center;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;gap:6px;flex-shrink:0; }
+.toolbar button { padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px; }
+.toolbar button:hover { border-color:#409EFF;color:#409EFF; }
+.toolbar button.primary { background:#409EFF;color:#fff;border:none; }
+.body-area { flex:1;display:flex;overflow:hidden; }
+.tree-panel { width:230px;border-right:1px solid #ddd;overflow-y:auto;padding:8px;flex-shrink:0; }
+.tree-node { padding:4px 8px;font-size:12px;white-space:nowrap;display:flex;align-items:center;gap:4px; }
+.tree-node:hover { background:#e8f0fe; }
+.tree-node .arrow { font-size:10px;width:12px;cursor:pointer; }
+.right-area { flex:1;display:flex;flex-direction:column;overflow:hidden;padding:10px;gap:8px; }
+.summary-cards { display:flex;gap:10px;flex-shrink:0; }
+.card { flex:1;padding:12px;background:#f8f9fa;border-radius:6px;text-align:center; }
+.card .num { font-size:24px;font-weight:bold;color:#409EFF; }
+.card .label { font-size:12px;color:#909399;margin-top:4px; }
+.tab-row { display:flex;gap:4px;flex-shrink:0; }
+.tab-btn { padding:6px 16px;border:1px solid #dcdfe6;border-radius:4px;cursor:pointer;font-size:12px;background:#fff; }
+.tab-btn:hover { border-color:#409EFF; }
+.tab-btn.active { background:#409EFF;color:#fff;border-color:#409EFF; }
+.chart-area { flex:1;display:flex;gap:10px;min-height:0; }
+.chart-box { flex:7; } .pie-box { flex:3; }
+.drag-bar { width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0; }
+.loading-overlay { display:flex;align-items:center;justify-content:center;padding:30px;color:#909399;font-size:14px;gap:8px; }
+.spinner { width:20px;height:20px;border:3px solid #e0e0e0;border-top-color:#409EFF;border-radius:50%;animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.stat-table { border-collapse:collapse;width:100%;font-size:12px; }
+.stat-table th, .stat-table td { padding:6px 10px;border:1px solid #ddd;text-align:center; }
+.stat-table th { background:#f5f5f5; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-weight:600;font-size:14px;">📊 档案库存统计</span>
+    <span style="flex:1;"></span>
+    <span style="font-size:12px;color:#606266;">已选 [[ selectedCount ]] 个节点</span>
+    <button class="primary" @click="refreshStats" :disabled="loading">[[ loading ? '统计中...' : '开始统计' ]]</button>
+    <button @click="exportSummary">导出Excel(汇总)</button>
+    <button @click="exportDetail">导出Excel(人员)</button>
+  </div>
+
+  <div class="body-area">
+    <div class="tree-panel" id="treePanel">
+      <div class="tree-node" style="font-weight:bold;">
+        <input type="checkbox" :checked="allChecked" @change="toggleAll" style="flex-shrink:0;">
+        📊 全部（[[ totalCount ]]人）
+      </div>
+      <template v-for="g in groups" :key="g.tid">
+        <div class="tree-node">
+          <span class="arrow" @click.stop="g.expanded=!g.expanded">[[ g.expanded ? '▼' : '▶' ]]</span>
+          <input type="checkbox" :checked="g._checked" @change="onGroupCheck(g, $event)" style="flex-shrink:0;">
+          <span @click.stop="g.expanded=!g.expanded" @dblclick.stop="showGroupDetail(g)" style="flex:1;">[[ g.tname ]]（[[ g.count ]]人）</span>
+        </div>
+        <template v-if="g.expanded">
+          <div v-for="c in g.children" :key="c.tid" class="tree-node" style="padding-left:28px;">
+            <input type="checkbox" v-model="c._checked" @change="onChildCheck(g)" style="flex-shrink:0;">
+            <span @dblclick.stop="showGroupDetail(c)" style="flex:1;">[[ c.tname ]]（[[ c.count ]]人）</span>
+          </div>
+        </template>
+      </template>
+    </div>
+
+    <div class="drag-bar" data-target="treePanel"></div>
+
+    <div class="right-area">
+      <div class="loading-overlay" v-show="loading">
+        <div class="spinner"></div> 正在统计...
+      </div>
+      <div class="summary-cards" v-show="!loading">
+        <div class="card"><div class="num">[[ summary.总人数 || 0 ]]</div><div class="label">总人数</div></div>
+        <div class="card"><div class="num" style="color:#67c23a;">[[ summary.男 || 0 ]]</div><div class="label">男</div></div>
+        <div class="card"><div class="num" style="color:#e6a23c;">[[ summary.女 || 0 ]]</div><div class="label">女</div></div>
+        <div class="card"><div class="num" style="color:#909399;">[[ summary.性别未知 || 0 ]]</div><div class="label">性别未知</div></div>
+      </div>
+      <div class="tab-row" v-show="!loading">
+        <div class="tab-btn" :class="{active: statType==='age'}" @click="statType='age'; renderChart()">年龄分布</div>
+        <div class="tab-btn" :class="{active: statType==='work'}" @click="statType='work'; renderChart()">工龄分布</div>
+      </div>
+      <div class="chart-area" v-show="!loading">
+        <div class="chart-box" id="barChart"></div>
+        <div class="pie-box" id="pieChart"></div>
+      </div>
+    </div>
+  </div>
+
+  <el-dialog v-model="showDetailDialog" :title="detailTitle" width="800px" top="2vh">
+    <table class="stat-table">
+      <thead><tr><th>姓名</th><th>性别</th><th>出生年月</th><th>政治面貌</th><th>职务</th><th>档案编号</th><th>参加工作时间</th></tr></thead>
+      <tbody>
+        <tr v-for="r in detailList" :key="r.RSID">
+          <td>[[ r.XM ]]</td><td>[[ r.XB ]]</td><td>[[ r.CSNY ]]</td><td>[[ r.ZZMM ]]</td><td>[[ r.JOBUNIT ]]</td><td>[[ r.RYBH ]]</td><td>[[ r.WORKTIME ]]</td>
+        </tr>
+      </tbody>
+    </table>
+  </el-dialog>
+</div>
+
+<script src="/static/lib/echarts.min.js"></script>
+<script>
+(function(){
+  const { createApp, ref, computed, onMounted, nextTick } = Vue;
+  const { ElMessage } = ElementPlus;
+
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const groups = ref([]);
+      const totalCount = ref(0);
+      const summary = ref({});
+      const statType = ref('age');
+      const ageData = ref([]);
+      const workData = ref([]);
+      const loading = ref(false);
+      const showDetailDialog = ref(false);
+      const detailTitle = ref('');
+      const detailList = ref([]);
+
+      const checkedIds = computed(() => {
+        const ids = [];
+        groups.value.forEach(g => {
+          if (g._checked) ids.push(g.tid);
+          (g.children||[]).forEach(c => { if (c._checked) ids.push(c.tid); });
+        });
+        return ids;
+      });
+      const selectedCount = computed(() => checkedIds.value.length);
+
+      const allChecked = computed({
+        get: () => groups.value.length > 0 && groups.value.every(g => g._checked && (g.children||[]).every(c => c._checked)),
+        set: (val) => groups.value.forEach(g => {
+          g._checked = val;
+          (g.children||[]).forEach(c => c._checked = val);
+        })
+      });
+
+      const onGroupCheck = (g, e) => {
+        const checked = e.target.checked;
+        g._checked = checked;
+        (g.children||[]).forEach(c => c._checked = checked);
+      };
+
+      const onChildCheck = (g) => {
+        if (!g.children || !g.children.length) return;
+        g._checked = g.children.every(c => c._checked);
+      };
+
+      const toggleAll = () => { allChecked.value = !allChecked.value; };
+
+      const loadData = async () => {
+        const r = await axios.get('/business/api/archive-stats/');
+        if (r.data.code===0) {
+          groups.value = (r.data.groups||[]).map(g => ({...g, expanded:false, children:[], _checked:true}));
+          totalCount.value = r.data.total||0;
+          await loadAllChildren();
+          refreshStats();
+        }
+      };
+
+      const loadAllChildren = async () => {
+        for (const g of groups.value) {
+          const r = await axios.get('/business/api/archive-stats/', { params: { tid: g.tid } });
+          if (r.data.code===0) g.children = (r.data.children||[]).map(c => ({...c, _checked:true}));
+        }
+      };
+
+      const refreshStats = async () => {
+        if (checkedIds.value.length === 0) { summary.value = {}; ageData.value = []; workData.value = []; return; }
+        loading.value = true;
+        try {
+          const r = await axios.post('/business/api/archive-stats/checked/', { tids: checkedIds.value });
+          if (r.data.code===0) {
+            summary.value = r.data.summary || {};
+            ageData.value = r.data.age || [];
+            workData.value = r.data.work || [];
+            nextTick(() => renderChart());
+          }
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      const showGroupDetail = async (node) => {
+        loading.value = true;
+        try {
+          const r = await axios.post('/business/api/archive-stats/checked/', { tids: [node.tid] });
+          if (r.data.code===0) {
+            summary.value = r.data.summary || {};
+            ageData.value = r.data.age || [];
+            workData.value = r.data.work || [];
+            nextTick(() => renderChart());
+          }
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      const showRangeDetail = async (rangeName) => {
+        const r = await axios.post('/business/api/archive-stats/detail-by-range/', {
+          tids: checkedIds.value,
+          type: statType.value,
+          range: rangeName
+        });
+        if (r.data.code === 0) {
+          if (r.data.total > 500) {
+            ElMessage.warning(`数据量较大（${r.data.total}条），请导出Excel查看`);
+            return;
+          }
+          detailList.value = r.data.data || [];
+          detailTitle.value = rangeName + ' - 人员名单';
+          showDetailDialog.value = true;
+        }
+      };
+
+      const renderChart = () => {
+        const data = statType.value === 'age' ? ageData.value : workData.value;
+        if (!data.length) return;
+
+        const names = data.map(d => d.name);
+        const male = data.map(d => d.男 || 0);
+        const female = data.map(d => d.女 || 0);
+        const total = data.map(d => d.人数 || 0);
+
+        const barDom = document.getElementById('barChart');
+        if (barDom._echart) barDom._echart.dispose();
+        const barChart = echarts.init(barDom);
+        barDom._echart = barChart;
+        barChart.setOption({
+          title: { text: statType.value==='age'?'年龄分布':'工龄分布', left:'center', textStyle:{fontSize:14} },
+          tooltip: { trigger:'axis' },
+          legend: { data:['男','女'], bottom:0 },
+          xAxis: { data: names, axisLabel:{fontSize:10, rotate:30} },
+          yAxis: {},
+          series: [
+            { name:'男', type:'bar', data:male, itemStyle:{color:'#67c23a'}, stack:'total' },
+            { name:'女', type:'bar', data:female, itemStyle:{color:'#e6a23c'}, stack:'total' },
+            { name:'总数', type:'bar', data:total.map(() => 0), stack:'total',
+              label: { show: true, position: 'top', formatter: (p) => total[p.dataIndex], fontSize:11, color:'#303133' },
+              itemStyle: { color: 'transparent' }, tooltip: { show: false }
+            }
+          ],
+          grid: { bottom:40, left:50, right:10, top:40 }
+        });
+        barChart.off('click');
+        barChart.on('click', (params) => showRangeDetail(params.name));
+
+        const pieDom = document.getElementById('pieChart');
+        if (pieDom._echart) pieDom._echart.dispose();
+        const pieChart = echarts.init(pieDom);
+        pieDom._echart = pieChart;
+        pieChart.setOption({
+          title: { text:'占比', left:'center', textStyle:{fontSize:14} },
+          tooltip: { trigger:'item', formatter:'{b}: {c}人 ({d}%)' },
+          series: [{ type:'pie', radius:['40%','65%'], center:['50%','55%'], data:data.map(d=>({name:d.name,value:d.人数})), label:{fontSize:10} }]
+        });
+        pieChart.off('click');
+        pieChart.on('click', (params) => showRangeDetail(params.name));
+
+        window.addEventListener('resize', () => { barChart.resize(); pieChart.resize(); });
+      };
+
+      const exportSummary = () => { window.open('/business/api/archive-stats/export/?tids=' + checkedIds.value.join(',')); };
+      const exportDetail = () => { window.open('/business/api/archive-stats/export-detail/?tids=' + checkedIds.value.join(',')); };
+
+      const initDrag = () => {
+        document.querySelectorAll('.drag-bar').forEach(bar => {
+          bar.addEventListener('mousedown', (e) => {
+            const panel = document.getElementById(bar.dataset.target);
+            if (!panel) return;
+            const startX = e.clientX, startW = panel.offsetWidth;
+            const onMove = (ev) => { let w = startW+ev.clientX-startX; if(w<80)w=80; panel.style.width=w+'px'; };
+            const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+          });
+        });
+      };
+
+      onMounted(() => { loadData(); initDrag(); });
+
+      return { groups, totalCount, summary, statType, ageData, workData, loading, selectedCount, allChecked,
+               showDetailDialog, detailTitle, detailList,
+               onGroupCheck, onChildCheck, toggleAll, refreshStats, showGroupDetail, renderChart,
+               exportSummary, exportDetail };
+    }
+  });
+
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

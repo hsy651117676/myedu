@@ -1,0 +1,192 @@
+{% extends "layout/base.html" %}
+{% block title %}党组会认定{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.toolbar { display:flex;align-items:center;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;gap:6px;flex-shrink:0;flex-wrap:wrap; }
+.toolbar button { padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap; }
+.toolbar button:hover { border-color:#409EFF;color:#409EFF; }
+.toolbar button.primary { background:#409EFF;color:#fff;border:none; }
+.toolbar button.danger { background:#f56c6c;color:#fff;border:none; }
+.toolbar input { height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;width:100px; }
+.filter-panel { width:180px;min-width:140px;border-right:1px solid #e0e0e0;overflow-y:auto;padding:10px; }
+.filter-panel .filter-title { font-weight:bold;font-size:13px;margin-bottom:8px;color:#303133; }
+.filter-panel label { display:block;padding:5px 0;cursor:pointer;font-size:12px; }
+.filter-panel label:hover { color:#409EFF; }
+.filter-panel input[type="radio"] { margin-right:4px; }
+.meeting-right { flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px; }
+.meeting-table { border-collapse:collapse;width:100%;font-size:12px; }
+.meeting-table th, .meeting-table td { padding:5px 8px;border:1px solid #ddd;text-align:center;white-space:nowrap; }
+.meeting-table th { background:#f5f5f5;position:sticky;top:0;z-index:1; }
+.meeting-table tr { cursor:pointer; }
+.meeting-table tr:hover { background:#e8f0fe; }
+.meeting-table tr.active { background:#d0e4fc; }
+.drag-bar { width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-weight:600;font-size:14px;margin-right:8px;">📋 党组会认定</span>
+    <input v-model="searchName" placeholder="姓名">
+    <button @click="search()">查询</button>
+    <button @click="viewForm" :disabled="!currentRsid" style="padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;">查看申请单</button>
+    <button class="primary" @click="showPersonPanel=true">添加人员</button>
+    <button class="danger" @click="deletePerson" :disabled="!currentRsid">删除人员</button>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+    <div class="filter-panel" id="leftPanel" style="width:18%;min-width:140px;flex-shrink:0;border-right:1px solid #e0e0e0;overflow-y:auto;padding:10px;">
+
+      <div class="filter-title">届次列表</div>
+      <label><input type="radio" v-model="selectedBatchId" value="" @change="search()"> 全部</label>
+      <label> <input type="radio" v-model="selectedBatchId" value="null" @change="search()"> 📁 新申请上会 </label>
+      <label v-for="b in batches" :key="b.batch_id">
+        <input type="radio" v-model="selectedBatchId" :value="b.batch_id" @change="search()"> 
+        [[ b.batch_date ]]（[[ b.leader || '' ]]）
+        <span v-if="!b.editable" style="color:#e6a23c;font-size:11px;"> [已备案]</span>
+      </label>
+      <label v-if="batches.length===0" style="color:#ccc;font-size:12px;">暂无届次</label>
+    </div>
+    <div class="drag-bar" data-target="leftPanel"></div>
+    <div class="meeting-right">
+      <div style="flex:1;overflow:auto;">
+        <table class="meeting-table">
+          <thead><tr>
+            <th style="width:40px;">选</th>
+            <th>姓名</th><th>学校</th><th>认定类型</th>
+            <th>出生记载</th><th>最早材料</th><th>记载值</th><th>形成时间</th><th>认定时间</th><th>涂改</th>
+            <th>参工记载</th><th>依据材料</th><th>材料值</th><th>形成时间</th><th>认定时间</th><th>涂改</th>
+            <th>入党时间</th><th>材料时间</th><th>认定时间</th>
+            <th>上会类型</th><th>届次</th><th>备注</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="r in list" :key="r.rsid" :class="{active: currentRsid===r.rsid}" @click="selectPerson(r)">
+              <td><input type="radio" :value="r.rsid" v-model="currentRsid" @click.stop></td>
+              <td>[[ r.XM ]]</td>
+              <td>[[ r.school_name ]]</td><td>[[ r.identification_type ]]</td>
+              <td>[[ r.birth_summary ]]</td><td>[[ r.birth_material_name ]]</td><td>[[ r.birth_material_time ]]</td>
+              <td>[[ r.birth_material_date ]]</td><td>[[ r.birth_decision_date ]]</td><td>[[ r.birth_alteration ]]</td>
+              <td>[[ r.work_summary ]]</td><td>[[ r.work_material_name ]]</td><td>[[ r.work_material_time ]]</td>
+              <td>[[ r.work_material_date ]]</td><td>[[ r.work_decision_date ]]</td><td>[[ r.work_alteration ]]</td>
+              <td>[[ r.party_join_time ]]</td><td>[[ r.party_material_date ]]</td><td>[[ r.party_decision_date ]]</td>
+              <td>[[ r.meeting_type ]]</td><td>[[ r.batch_name || '-' ]]</td><td>[[ r.remark ]]</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="list.length===0" style="text-align:center;color:#ccc;padding:30px;">暂无数据</div>
+      </div>
+
+      <div v-if="total>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+        <el-pagination small background layout="total, sizes, prev, pager, next"
+          :page-sizes="[30,50,100,200]" :page-size="pageSize" :total="total"
+          :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+      </div>
+    </div>
+  </div>
+
+  <el-dialog v-model="showFormDialog" :title="isReadonly ? '查看申请单' : '编辑申请单'" width="900px" top="1vh" @closed="formDialogClosed">
+    <iframe :src="'/archives/person-meeting-form/?rsid='+currentRsid+(isReadonly?'&readonly=1':'')" style="width:100%;height:620px;border:none;"></iframe>
+  </el-dialog>
+
+  <el-dialog v-model="showPersonPanel" title="选择人员" width="500px" top="1vh">
+    <iframe src="/components/person-panel-embed/" style="width:100%;height:700px;border:none;"></iframe>
+  </el-dialog>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+  const { ElMessage, ElMessageBox } = ElementPlus;
+
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const searchName = ref('');
+      const batches = ref([]);
+      const selectedBatchId = ref('');
+      const list = ref([]);
+      const total = ref(0);
+      const currentPage = ref(1);
+      const pageSize = ref(30);
+      const currentRsid = ref(null);
+      const isReadonly = ref(false);
+      const showFormDialog = ref(false);
+      const showPersonPanel = ref(false);
+
+      const search = (page) => {
+        const p = (typeof page === 'number') ? page : 1;
+        const params = { page: p, pageSize: pageSize.value, batch_id: selectedBatchId.value };
+        if (searchName.value) params.name = searchName.value;
+        axios.get('/archives/api/meeting-list/', { params }).then(res => {
+          if (res.data.code===0) { list.value = res.data.data||[]; total.value = res.data.total||0; currentPage.value = p; }
+        });
+      };
+
+      const loadBatches = () => {
+        axios.get('/archives/api/meeting-batches/').then(res => {
+          if (res.data.code===0) batches.value = res.data.data||[];
+        });
+      };
+
+      const selectPerson = (r) => {
+        currentRsid.value = r.rsid;
+        isReadonly.value = r.editable === false;
+      };
+
+      const viewForm = () => {
+        if (!currentRsid.value) { ElMessage.warning('请先选中一行'); return; }
+        showFormDialog.value = true;
+      };
+
+      const deletePerson = () => {
+        if (!currentRsid.value) { ElMessage.warning('请先选中一行'); return; }
+        if (isReadonly.value) { ElMessage.warning('该届次已备案，不可删除'); return; }
+        ElMessageBox.confirm('确定删除该人员？', '确认删除', { type:'warning', confirmButtonText:'确定', cancelButtonText:'取消' }).then(() => {
+          axios.post('/archives/api/meeting-delete/', { rsid: currentRsid.value }).then(res => {
+            ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+            if (res.data.code===0) { currentRsid.value = null; search(currentPage.value); }
+          });
+        }).catch(() => {});
+      };
+
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'person-select') {
+          showPersonPanel.value = false;
+          currentRsid.value = e.data.data.rsid;
+          isReadonly.value = false;
+          showFormDialog.value = true;
+        }
+        if (e.data && e.data.type === 'meeting-saved') { showFormDialog.value = false; search(currentPage.value); }
+        if (e.data && e.data.type === 'close-dialog') { showFormDialog.value = false; }
+      });
+
+      const onPageChange = (p) => search(p);
+      const onSizeChange = (s) => { pageSize.value = s; search(1); };
+      const formDialogClosed = () => {};
+
+      const initDrag = () => {
+        document.querySelectorAll('.drag-bar').forEach(bar => {
+          bar.addEventListener('mousedown', (e) => {
+            const panel = document.getElementById(bar.dataset.target);
+            if (!panel) return;
+            const startX = e.clientX, startW = panel.offsetWidth;
+            const onMove = (ev) => { let w = startW+ev.clientX-startX; if(w<80)w=80; panel.style.width=w+'px'; };
+            const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+          });
+        });
+      };
+
+      onMounted(() => { loadBatches(); initDrag(); });
+
+      return { searchName, batches, selectedBatchId, list, total, currentPage, pageSize,
+               currentRsid, isReadonly, showFormDialog, showPersonPanel,
+               search, selectPerson, viewForm, deletePerson, onPageChange, onSizeChange, formDialogClosed };
+    }
+  });
+
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

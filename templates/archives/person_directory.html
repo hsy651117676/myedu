@@ -6,10 +6,10 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 #app { height:100%; display:flex; }
 .dir-tree { width:250px; border-right:1px solid #ddd; overflow-y:auto; padding:8px; }
 .dir-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.dir-table { border-collapse:collapse; width:100%; font-size:13px; }
+.dir-table { border-collapse:collapse; width:100%; font-size:14px; }
 .dir-table th, .dir-table td { padding:6px 4px; border:1px solid #ddd; text-align:center; }
 .dir-table th { background:#f5f5f5; position:sticky; top:0; z-index:1; }
-.dir-table td input { width:100%; border:none; padding:2px; background:transparent; font-size:12px; text-align:center; }
+.dir-table td input { width:100%; border:none; padding:2px; background:transparent; font-size:14px; text-align:center; }
 .dir-table td input:focus { background:#fff; }
 .dir-table tr[draggable="true"] { cursor:move; }
 .dir-table tr.drag-over { background:#ffe58f !important; }
@@ -20,6 +20,13 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 .dir-table tr.row-editing { background:#fffbe6; }
 .dir-table tr.row-editing.row-selected { background:#e6f0d0; }
 .dir-table td.cell-active { outline:2px solid #409EFF; outline-offset:-2px; background:#fff; }
+.dir-table th:nth-child(1), .dir-table td:nth-child(1) { width:11.1%; }
+.dir-table th:nth-child(2), .dir-table td:nth-child(2) { width:44.4%; }
+.dir-table th:nth-child(3), .dir-table td:nth-child(3) { width:11.1%; }
+.dir-table th:nth-child(4), .dir-table td:nth-child(4) { width:5.6%; }
+.dir-table th:nth-child(5), .dir-table td:nth-child(5) { width:5.6%; }
+.dir-table th:nth-child(6), .dir-table td:nth-child(6) { width:5.6%; }
+.dir-table th:nth-child(7), .dir-table td:nth-child(7) { width:16.6%; }
 </style>
 
 <div id="app" v-if="rsid">
@@ -48,67 +55,77 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
   </div>
 
   <div class="dir-main">
-    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;">
-      <span style="font-weight:bold;color:#409EFF;">[[ currentName || '档案目录' ]]</span>
-      <el-button size="small" @click="saveAll">保存</el-button>
-      <el-button size="small" @click="refreshData">刷新</el-button>
-      <el-button size="small" @click="printDirectory">打印</el-button>
-      <el-button v-if="!sortMode" size="small" @click="enterSortMode">调整编号</el-button>
-      <el-button v-if="sortMode" size="small" type="warning" @click="saveSort">保存顺序</el-button>
-      <el-button v-if="sortMode" size="small" @click="cancelSort">取消</el-button>
-    </div>
-
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;flex-wrap:wrap;">
+  <span style="font-weight:bold;color:#409EFF;">[[ currentName || '档案目录' ]]</span>
+  
+  <!-- 保存/刷新 -->
+  <el-button size="small" type="primary" @click="saveAll">保存</el-button>
+  <el-button size="small" type="info" @click="refreshData">刷新</el-button>
+  
+  <!-- 打印 -->
+  <el-button size="small" type="success" @click="printDirectory">打印</el-button>
+  
+  <!-- 排序 -->
+  <el-button v-if="!sortMode" size="small" type="warning" @click="enterSortMode">调整编号</el-button>
+  <el-button v-if="sortMode" size="small" type="primary" @click="saveSort">保存顺序</el-button>
+  <el-button v-if="sortMode" size="small" type="info" @click="cancelSort">取消</el-button>
+  
+  <!-- 插入/新增 -->
+  <el-button size="small" type="warning" @click="insertRow('InsertUp')">↑上行插入</el-button>
+  <el-button size="small" type="warning" @click="insertRow('InsertDown')">↓下行插入</el-button>
+  <el-button size="small" type="success" @click="addNewRow">新增行</el-button>
+  
+  <!-- 删除 -->
+  <el-button size="small" type="danger" @click="deleteRow">删除行</el-button>
+  
+  <!-- 帮助/查看 -->
+  <el-button size="small" type="info" @click="help">帮助说明</el-button>
+  <el-button size="small" type="primary" @click="showAllDir=true">查看全部目录</el-button>
+</div>
     <div style="flex:1;overflow:auto;">
       <table class="dir-table" :key="tableKey">
         <thead><tr>
-          <th style="width:80px;">编号</th><th>材料名称</th>
-          <th style="width:50px;">年</th><th style="width:40px;">月</th><th style="width:40px;">日</th>
-          <th style="width:50px;">页数</th><th style="width:100px;">备注</th>
+          <th>编号</th><th>材料名称</th>
+          <th>年</th><th>月</th><th>日</th><th>页数</th><th>备注</th>
         </tr></thead>
-        <tbody @contextmenu.prevent="showContextMenu">
+        <tbody>
           <tr v-for="(r,i) in archList" :key="i" :draggable="sortMode"
               @dragstart="onDragStart(i,$event)" @dragover="onDragOver(i,$event)" @dragleave="onDragLeave" @drop="onDrop(i)" @dragend="onDragEnd"
               :class="[r._dragOver?'drag-over':'', dragIndex===i?'drag-source':'', r._selected?'row-selected':'', editCell.row===i?'row-editing':'']"
               @click="!sortMode&&onRowClick(i)">
             <td>[[ r.编号 ]]</td>
             <td style="text-align:left;position:relative;">
-              <input v-model="r.CLTM" @input="onMaterialInput(i)" @focus="onCellFocus(i,'CLTM')" @blur="onCellBlur" @keyup="onKeyUp($event)" autocomplete="off" style="text-align:left;width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='CLTM'?'cell-active':''" />
+              <input v-model="r.CLTM" @input="onMaterialInput($event, i)" @focus="onMaterialFocus($event, i)" @blur="onMaterialBlur(i)" @keyup="onKeyUp($event)" autocomplete="off" style="text-align:left;width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='CLTM'?'cell-active':''" />
               <div v-show="r._showSuggest&&r._suggestions.length&&!sortMode" style="position:absolute;top:100%;left:0;right:0;max-height:300px;overflow:auto;background:#fff;border:1px solid #409EFF;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
                 <div v-for="s in r._suggestions" :key="s" @mousedown.prevent="r.CLTM=s.replace(/^.*? - /,''); r._showSuggest=false"
                      style="padding:6px 8px;cursor:pointer;font-size:13px;border-bottom:1px solid #eee;"
                      @mouseover="$event.target.style.background='#d0e4fc'" @mouseout="$event.target.style.background='#fff'">[[ s ]]</div>
               </div>
             </td>
-            <td><input v-model="r.FYEAR" @focus="onCellFocus(i,'FYEAR')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FYEAR'?'cell-active':''" /></td>
-            <td><input v-model="r.FMONTH" @focus="onCellFocus(i,'FMONTH')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FMONTH'?'cell-active':''" /></td>
-            <td><input v-model="r.FDAY" @focus="onCellFocus(i,'FDAY')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FDAY'?'cell-active':''" /></td>
-            <td><input v-model="r.YS" @focus="onCellFocus(i,'YS')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='YS'?'cell-active':''" /></td>
-            <td><input v-model="r.BZ" @focus="onCellFocus(i,'BZ')" @blur="onCellBlur" @keyup="onKeyUp($event)" style="width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='BZ'?'cell-active':''" /></td>
+            <td><input v-model="r.FYEAR" @focus="onCellFocus(i,'FYEAR')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FYEAR'?'cell-active':''" /></td>
+            <td><input v-model="r.FMONTH" @focus="onCellFocus(i,'FMONTH')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FMONTH'?'cell-active':''" /></td>
+            <td><input v-model="r.FDAY" @focus="onCellFocus(i,'FDAY')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FDAY'?'cell-active':''" /></td>
+            <td><input v-model="r.YS" @focus="onCellFocus(i,'YS')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='YS'?'cell-active':''" /></td>
+            <td><input v-model="r.BZ" @focus="onCellFocus(i,'BZ')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='BZ'?'cell-active':''" /></td>
           </tr>
           <tr v-if="!sortMode&&currentFL" class="new-row">
             <td>[[ currentName?.split('、')[0]||'' ]] - *</td>
             <td><input v-model="newRow.CLTM" placeholder="输入材料名称" style="text-align:left;width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.FYEAR" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.FMONTH" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.FDAY" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.YS" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.BZ" style="width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.FYEAR" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.FMONTH" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.FDAY" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.YS" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td><input v-model="newRow.BZ" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
-
-  <div v-show="contextMenu.show" @click.stop :style="{position:'fixed',left:contextMenu.x+'px',top:contextMenu.y+'px',zIndex:9999,background:'#fff',border:'1px solid #ddd',padding:'4px 0',minWidth:'140px',boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}">
-    <div @click="insertRow('InsertUp');contextMenu.show=false" style="padding:6px 12px;cursor:pointer;font-size:13px;">向上插入行</div>
-    <div @click="insertRow('InsertDown');contextMenu.show=false" style="padding:6px 12px;cursor:pointer;font-size:13px;">向下插入行</div>
-    <div @click="deleteRow();contextMenu.show=false" style="padding:6px 12px;cursor:pointer;font-size:13px;">删除当前行</div>
-    <div style="border-top:1px solid #eee;"></div>
-    <div @click="addNewRow();contextMenu.show=false" style="padding:6px 12px;cursor:pointer;font-size:13px;">新增行</div>
-  </div>
+<el-dialog v-model="showAllDir" title="全部档案目录" width="900px" top="2vh">
+    <iframe :src="'/archives/person-directory-all/?rsid='+rsid" style="width:100%;height:70vh;border:none;"></iframe>
+</el-dialog>
 </div>
 <div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
-
 <script src="/static/js/archives_auto_names.js?v=3"></script>
 <script>
 (function(){
@@ -122,11 +139,10 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     const archList = ref([]);
     const currentFL = ref(0), currentName = ref('');
     const tableKey = ref(0);
-    const contextMenu = reactive({show:false,x:0,y:0});
     const newRow = reactive({CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:''});
     const sortMode = ref(false), dragIndex = ref(-1);
     const editCell = reactive({row:-1,col:''});
-
+    const showAllDir = ref(false);
     const loadTree = () => axios.get('/archives/api/directory-tree/').then(res => {
       if (res.data.code===0) {
         treeData.value = res.data.tree.map(t=>({...t,expanded:false}));
@@ -139,6 +155,42 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       axios.get('/archives/api/directory-list/',{params:{rsid:rsid.value,fl:currentFL.value}}).then(res => {
         if (res.data.code===0) archList.value = (res.data.data||[]).map(r=>({...r,_selected:false,_suggestions:[],_showSuggest:false,_dragOver:false}));
       });
+    };
+
+    const showSuggestions = (row, keyword) => {
+      const kw = (keyword || '').toLowerCase();
+      if (!kw) {
+        row._suggestions = [];
+        row._showSuggest = false;
+        return;
+      }
+      row._suggestions = (window.ARCHIVES_AUTO_FLAT||[]).filter(n=>n&&n.toLowerCase().includes(kw)).slice(0,50);
+      row._showSuggest = row._suggestions.length > 0;
+    };
+
+    const onMaterialInput = (e, i) => {
+      if (sortMode.value) return;
+      const row = archList.value[i];
+      if (!row) return;
+      showSuggestions(row, e.target.value);
+    };
+
+    const onMaterialFocus = (e, i) => {
+      if (sortMode.value) return;
+      const row = archList.value[i];
+      if (!row) return;
+      editCell.row = i;
+      editCell.col = 'CLTM';
+      showSuggestions(row, e.target.value);
+    };
+
+    const onMaterialBlur = (i) => {
+      const row = archList.value[i];
+      if (!row) return;
+      // 延迟隐藏，给点击建议项的时间
+      setTimeout(() => {
+        row._showSuggest = false;
+      }, 200);
     };
 
     const quickSave = () => {
@@ -174,7 +226,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     const onDragEnd = () => { dragIndex.value=-1; archList.value.forEach(r=>r._dragOver=false); };
 
     const insertRow = (action) => {
-      if (sortMode.value) return;
+      if (sortMode.value) { ElMessage.warning('调整编号模式下不可插入'); return; }
       const idx = editCell.row>=0 ? editCell.row : 0;
       const row = archList.value[idx];
       if (!row) { ElMessage.warning('请先选中一行'); return; }
@@ -186,7 +238,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     };
 
     const deleteRow = () => {
-      if (sortMode.value) return;
+      if (sortMode.value) { ElMessage.warning('调整编号模式下不可删除'); return; }
       const idx = editCell.row>=0 ? editCell.row : 0;
       if (!archList.value[idx]) { ElMessage.warning('请先选中一行'); return; }
       quickSave().catch(()=>{});
@@ -199,7 +251,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     };
 
     const addNewRow = () => {
-      if (sortMode.value) return;
+      if (sortMode.value) { ElMessage.warning('调整编号模式下不可新增'); return; }
       archList.value.push({ARCHID:null,XH:archList.value.length+1,CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:'',_selected:false,_suggestions:[],_showSuggest:false});
     };
 
@@ -209,7 +261,13 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       editCell.row=i;
     };
 
-    const onCellFocus = (i,col) => { editCell.row=i; editCell.col=col; };
+    const onCellFocus = (i,col) => { 
+      editCell.row=i; 
+      editCell.col=col; 
+      // 关闭材料名称的提示
+      archList.value.forEach(r => r._showSuggest = false);
+    };
+
     const onCellBlur = () => {};
 
     const moveFocus = (inp, direction) => {
@@ -256,50 +314,33 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       else if (e.key==='Tab') { e.preventDefault(); moveFocus(inp,'right'); }
     };
 
-    const showContextMenu = (e) => {
-      if (sortMode.value) return;
-      let x=e.clientX, y=e.clientY;
-      if (y+180>window.innerHeight) y=window.innerHeight-190;
-      Object.assign(contextMenu,{x,y,show:true});
-      const tr = e.target.closest('tr');
-      if (tr) {
-        const idx = Array.from(tr.parentNode.children).indexOf(tr);
-        if (idx>=0) {
-          archList.value.forEach(r=>r._selected=false);
-          if (archList.value[idx]) archList.value[idx]._selected=true;
-          editCell.row=idx;
-        }
-      }
-    };
-
     const printDirectory = () => {
-      const url = '/archives/directory-print/?rsid='+rsid.value;
-      if (!document.getElementById('printDialog')) {
-        const d = document.createElement('div');
-        d.id='printDialog';
-        d.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.3);';
-        d.innerHTML='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;flex-direction:column;"><div style="padding:8px 12px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:bold;">档案目录打印</span><span style="cursor:pointer;font-size:20px;" onclick="document.getElementById(\'printDialog\').remove();">✕</span></div><iframe src="'+url+'" style="flex:1;border:none;"></iframe></div>';
-        document.body.appendChild(d);
-      }
+      const url = '/archives/api/directory-print-pdf/?rsid='+rsid.value+'&emptyRows=5';
+      window.open(url);
     };
 
-    const onMaterialInput = (i) => {
-      if (sortMode.value) return;
-      const row = archList.value[i];
-      if (!row) return;
-      const kw = (row.CLTM||'').toLowerCase();
-      if (!kw) { row._suggestions=[]; row._showSuggest=false; return; }
-      row._suggestions = (window.ARCHIVES_AUTO_FLAT||[]).filter(n=>n&&n.toLowerCase().includes(kw)).slice(0,50);
-      row._showSuggest=true;
+    const help = () => {
+      ElMessageBox.alert(
+        '<div style="line-height:2;font-size:14px;">' +
+        '<p>1.本意是推荐使用快捷键 <b>Ctrl+C</b> 复制、<b>Ctrl+V</b> 粘贴，和日常办公习惯一致。</p>' +
+        '<p>2.但部分人员就是喜欢右击来复制、粘贴！原来右键菜单的"插入行""删除行"等功能已移至顶部按钮栏，请直接点击操作。</p>' +
+        '<p>3. 键盘 <b>↑↓←→</b> 可在单元格间移动，<b>Enter</b> 跳到右边单元格，<b>Tab</b> 同样右移。</p>' +
+        '<p>4. 调整编号模式下可<b>拖拽</b>行进行排序，完成后点击"保存顺序"。</p>' +
+        '<p>5. 材料名称列支持输入拼音首字母快速筛选提示。</p>' +
+        '<p>6. 不可能为一个右键复制、粘贴，我又要写一大堆代码!</p>' +
+        '</div>',
+        '右键菜单还给你们用了！~',
+        { dangerouslyUseHTMLString: true, confirmButtonText: '知道了' }
+      );
     };
 
     onMounted(loadTree);
 
-    return { rsid,treeData,sub4,sub9,archList,currentFL,currentName,tableKey,contextMenu,newRow,sortMode,dragIndex,editCell,
+    return { rsid,treeData,sub4,sub9,archList,currentFL,currentName,tableKey,newRow,sortMode,dragIndex,editCell,
       loadList,refreshData:loadList,saveAll,commitNewRow,enterSortMode,saveSort,cancelSort,
       onDragStart,onDragOver,onDragLeave,onDrop,onDragEnd,
-      insertRow,deleteRow,showContextMenu,addNewRow,printDirectory,onMaterialInput,
-      onRowClick,onCellFocus,onCellBlur,onKeyUp };
+      insertRow,deleteRow,addNewRow,printDirectory,onMaterialInput,onMaterialFocus,onMaterialBlur,
+      onRowClick,onCellFocus,onCellBlur,onKeyUp,help,showAllDir };
   }});
 
   app.config.compilerOptions.delimiters=['[[',']]'];

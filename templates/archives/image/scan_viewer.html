@@ -28,9 +28,9 @@
         </el-select>
 
         <el-button size="small" type="warning" plain @click="regeneratePdf"
-                   :loading="pdfStatus==='generating'" :disabled="!currentArch">
-            重新生成
-        </el-button>
+           :loading="pdfStatus==='generating'" :disabled="currentArch === null">
+    重新生成
+</el-button>
 
         <el-button size="small" type="primary" plain @click="downloadPdf" :disabled="pdfStatus!=='ready'">
             下载
@@ -142,6 +142,7 @@
 
             window.addEventListener('message', (e) => {
                 if (e.data.type === 'person-select') {
+                  console.log('archive-select data:', e.data.data);
                     const d = e.data.data;
                     if (d.rsid === rsid.value) return;
                     rsid.value = d.rsid;
@@ -150,8 +151,10 @@
                     loadStats();
                 }
                 if (e.data.type === 'archive-select') {
+                   console.log('archive-select data:', e.data.data);
                     const d = e.data.data;
                     currentArch.value = d.archid;
+                  console.log('currentArch set to:', currentArch.value);
                     currentFl.value = d.fl;
                     currentArchiveName.value = d.xh + '、' + d.cltm;
                     currentTitle.value = [personName.value, d.jbbh + '.' + d.cltm].filter(Boolean).join('_');

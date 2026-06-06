@@ -1,0 +1,176 @@
+{% extends "layout/base.html" %}
+{% block title %}工资标准维护{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.toolbar { display:flex;align-items:center;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;gap:6px;flex-shrink:0;flex-wrap:wrap; }
+.toolbar button { padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap; }
+.toolbar button:hover { border-color:#409EFF;color:#409EFF; }
+.toolbar button.primary { background:#409EFF;color:#fff;border:none; }
+.toolbar button.danger { background:#f56c6c;color:#fff;border:none; }
+.toolbar select, .toolbar input { height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px; }
+.toolbar select { min-width:100px; }
+.toolbar input { width:120px; }
+.main-table { border-collapse:collapse;width:100%;font-size:12px; }
+.main-table th, .main-table td { padding:5px 8px;border:1px solid #ddd;text-align:center;white-space:nowrap; }
+.main-table th { background:#f5f5f5;position:sticky;top:0;z-index:1; }
+.main-table tr:hover { background:#e8f0fe; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-weight:600;font-size:14px;margin-right:8px;">📋 工资标准维护</span>
+    <span>人员类别:</span>
+    <select v-model="q.rylb" @change="search(1)">
+      <option value="">全部</option>
+      <option v-for="v in filters.rylb" :key="v" :value="v">[[ v ]]</option>
+    </select>
+    <span>LB:</span>
+    <select v-model="q.lb" @change="search(1)">
+      <option value="">全部</option>
+      <option v-for="v in filters.lb" :key="v" :value="v">[[ v ]]</option>
+    </select>
+    <span>时间:</span>
+    <select v-model="q.sj" @change="search(1)">
+      <option value="">全部</option>
+      <option v-for="v in filters.sj" :key="v" :value="v">[[ v ]]</option>
+    </select>
+    <span>备注:</span>
+    <select v-model="q.bz" @change="search(1)">
+      <option value="">全部</option>
+      <option v-for="v in filters.bz" :key="v" :value="v">[[ v ]]</option>
+    </select>
+    <input v-model="q.keyword" placeholder="搜索档差/金额">
+    <button @click="search(1)">查询</button>
+    <span style="flex:1;"></span>
+    <button class="primary" @click="showDialog=true; dialogTitle='新增标准'; dialogForm={}">新增</button>
+    <button class="danger" @click="batchDelete" :disabled="checkedIds.length===0">批量删除</button>
+  </div>
+
+  <div style="flex:1;overflow:auto;padding:8px;">
+    <table class="main-table">
+      <thead><tr>
+        <th style="width:40px;"><input type="checkbox" @change="toggleAll" :checked="allChecked"></th>
+        <th>ID</th><th>人员类别</th><th>LB</th><th>执行时间</th><th>档差</th><th>金额</th><th>备注</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        <tr v-for="r in list" :key="r.id">
+          <td><input type="checkbox" :value="r.id" v-model="checkedIds"></td>
+          <td>[[ r.id ]]</td><td>[[ r.RYLB ]]</td><td>[[ r.LB ]]</td><td>[[ r.SJ ]]</td><td>[[ r.DC ]]</td><td>[[ r.JE ]]</td><td>[[ r.bz ]]</td>
+          <td>
+            <button @click="editRow(r)" style="padding:2px 8px;">编辑</button>
+            <button @click="deleteRow(r.id)" style="padding:2px 8px;color:#f56c6c;">删除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div v-if="list.length===0" style="text-align:center;color:#ccc;padding:30px;">暂无数据</div>
+  </div>
+
+  <div v-if="total>0" style="padding:6px;display:flex;justify-content:center;flex-shrink:0;">
+    <el-pagination small background layout="total, sizes, prev, pager, next"
+      :page-sizes="[30,50,100,200]" :page-size="pageSize" :total="total"
+      :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+  </div>
+
+  <el-dialog v-model="showDialog" :title="dialogTitle" width="450px">
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:80px;">人员类别:</span><input v-model="dialogForm.RYLB" style="flex:1;border:1px solid #ddd;padding:4px 8px;border-radius:3px;"></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:80px;">LB:</span><input v-model="dialogForm.LB" style="flex:1;border:1px solid #ddd;padding:4px 8px;border-radius:3px;"></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:80px;">执行时间:</span><input v-model="dialogForm.SJ" type="number" style="flex:1;border:1px solid #ddd;padding:4px 8px;border-radius:3px;"></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:80px;">档差:</span><input v-model="dialogForm.DC" style="flex:1;border:1px solid #ddd;padding:4px 8px;border-radius:3px;"></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:80px;">金额:</span><input v-model="dialogForm.JE" type="number" style="flex:1;border:1px solid #ddd;padding:4px 8px;border-radius:3px;"></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:80px;">备注:</span><input v-model="dialogForm.bz" style="flex:1;border:1px solid #ddd;padding:4px 8px;border-radius:3px;"></div>
+    </div>
+    <template #footer>
+      <el-button @click="showDialog=false">取消</el-button>
+      <el-button type="primary" @click="saveRow">保存</el-button>
+    </template>
+  </el-dialog>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, reactive, computed, onMounted } = Vue;
+  const { ElMessage, ElMessageBox } = ElementPlus;
+
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const q = reactive({ rylb:'', lb:'', sj:'', bz:'', keyword:'' });
+      const filters = reactive({ rylb:[], lb:[], sj:[], bz:[] });
+      const list = ref([]);
+      const total = ref(0);
+      const currentPage = ref(1);
+      const pageSize = ref(30);
+      const checkedIds = ref([]);
+      const showDialog = ref(false);
+      const dialogTitle = ref('');
+      const dialogForm = reactive({});
+
+      const allChecked = computed(() => list.value.length > 0 && checkedIds.value.length === list.value.length);
+
+      const search = (page) => {
+        const p = (typeof page === 'number') ? page : 1;
+        axios.get('/archivesSystem/api/salary-standard-list/', {
+          params: { ...q, page: p, pageSize: pageSize.value }
+        }).then(res => {
+          if (res.data.code===0) { list.value = res.data.data||[]; total.value = res.data.total||0; currentPage.value = p; checkedIds.value = []; }
+        });
+      };
+
+      const loadFilters = () => {
+        axios.get('/archivesSystem/api/salary-standard-filters/').then(res => {
+          if (res.data.code===0) Object.assign(filters, res.data.data);
+        });
+      };
+
+      const toggleAll = (e) => { checkedIds.value = e.target.checked ? list.value.map(r => r.id) : []; };
+
+      const editRow = (r) => {
+        dialogForm.id = r.id; dialogForm.RYLB = r.RYLB; dialogForm.LB = r.LB;
+        dialogForm.SJ = r.SJ; dialogForm.DC = r.DC; dialogForm.JE = r.JE; dialogForm.bz = r.bz;
+        dialogTitle.value = '编辑标准'; showDialog.value = true;
+      };
+
+      const saveRow = () => {
+        axios.post('/archivesSystem/api/salary-standard-save/', { ...dialogForm }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+          if (res.data.code===0) { showDialog.value = false; search(currentPage.value); loadFilters(); }
+        });
+      };
+
+      const deleteRow = (id) => {
+        ElMessageBox.confirm('确定删除？','确认',{type:'warning'}).then(() => {
+          axios.post('/archivesSystem/api/salary-standard-delete/', { ids: [id] }).then(res => {
+            ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+            if (res.data.code===0) { search(currentPage.value); loadFilters(); }
+          });
+        }).catch(() => {});
+      };
+
+      const batchDelete = () => {
+        ElMessageBox.confirm(`确定删除选中的 ${checkedIds.value.length} 条？`,'确认',{type:'warning'}).then(() => {
+          axios.post('/archivesSystem/api/salary-standard-delete/', { ids: checkedIds.value }).then(res => {
+            ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+            if (res.data.code===0) { search(currentPage.value); loadFilters(); }
+          });
+        }).catch(() => {});
+      };
+
+      const onPageChange = (p) => search(p);
+      const onSizeChange = (s) => { pageSize.value = s; search(1); };
+
+      onMounted(() => { search(1); loadFilters(); });
+
+      return { q, filters, list, total, currentPage, pageSize, checkedIds, allChecked,
+               showDialog, dialogTitle, dialogForm,
+               search, toggleAll, editRow, saveRow, deleteRow, batchDelete, onPageChange, onSizeChange };
+    }
+  });
+
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

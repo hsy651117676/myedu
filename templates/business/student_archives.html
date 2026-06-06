@@ -1,0 +1,172 @@
+{% extends "layout/base.html" %}
+{% block title %}学生档案{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.toolbar { display:flex;align-items:center;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;gap:6px;flex-shrink:0;flex-wrap:wrap; }
+.toolbar button { padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px; }
+.toolbar button:hover { border-color:#409EFF;color:#409EFF; }
+.toolbar button.primary { background:#409EFF;color:#fff;border:none; }
+.toolbar button.danger { background:#f56c6c;color:#fff;border:none; }
+.toolbar input { height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;width:140px; }
+.arch-table { border-collapse:collapse;width:100%;font-size:12px; }
+.arch-table th, .arch-table td { padding:4px 6px;border:1px solid #ddd;text-align:center;white-space:nowrap; }
+.arch-table th { background:#f5f5f5;position:sticky;top:0;z-index:1; }
+.arch-table tr:hover { background:#e8f0fe;cursor:pointer; }
+.arch-table tr.active { background:#d0e4fc; }
+.form-row { display:flex;align-items:center;gap:8px;margin:6px 0; }
+.form-row label { width:70px;text-align:right;flex-shrink:0;font-size:13px; }
+.form-row input { flex:1;border:1px solid #ddd;padding:4px 8px;border-radius:3px;font-size:13px; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-weight:600;font-size:14px;margin-right:8px;">🎓 学生档案</span>
+    <button class="primary" @click="openAdd">新增</button>
+    <button @click="editSelected" :disabled="!currentId">编辑</button>
+    <button class="danger" @click="deleteRecord" :disabled="!currentId">删除</button>
+    <button @click="openPrint" :disabled="!currentId">学生档案转递单</button>
+    <span style="flex:1;"></span>
+    <input v-model="keyword" placeholder="姓名/学校" @keyup.enter="search()">
+    <button @click="search()">查询</button>
+  </div>
+
+  <div style="flex:1;overflow:auto;padding:8px;">
+    <table class="arch-table">
+  <thead><tr>
+    <th style="width:40px;">选</th>
+    <th>学校</th><th>姓名</th><th>毕业时间</th><th>编号</th><th>转递号</th>
+    <th>转出时间</th><th>转出地点</th><th>转出人</th><th>经办人</th><th>备注</th>
+  </tr></thead>
+  <tbody>
+    <tr v-for="r in list" :key="r.ID" :class="{active: currentId===r.ID}" @click="currentId=r.ID">
+      <td @click.stop><input type="radio" :value="r.ID" v-model="currentId"></td>
+      <td>[[ r.School ]]</td><td>[[ r.Name ]]</td><td>[[ r.GraduationYear ]]</td>
+      <td>[[ r.SerialNo ]]</td><td>[[ r.TransferNo ]]</td>
+      <td>[[ r.TransferOutDate ]]</td><td>[[ r.TransferOutPlace ]]</td>
+      <td>[[ r.TransferOutPerson ]]</td><td>[[ r.Handler ]]</td><td>[[ r.Remark ]]</td>
+    </tr>
+  </tbody>
+</table>
+    <div v-if="list.length===0" style="text-align:center;color:#ccc;padding:30px;">暂无数据</div>
+  </div>
+
+  <div v-if="total>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+    <el-pagination small background layout="total, sizes, prev, pager, next"
+      :page-sizes="[30,50,100]" :page-size="pageSize" :total="total"
+      :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+  </div>
+
+  <el-dialog v-model="showDialog" :title="editId ? '编辑' : '新增'" width="700px" @closed="resetForm">
+    <div class="form-row">
+      <label>学校</label><input v-model="form.School">
+      <label>姓名</label><input v-model="form.Name">
+    </div>
+    <div class="form-row">
+      <label>毕业时间</label><input v-model="form.GraduationYear">
+      <label>编号</label><input v-model="form.SerialNo">
+    </div>
+    <div class="form-row">
+      <label>转递号</label><input v-model="form.TransferNo">
+      <label>转出时间</label><input v-model="form.TransferOutDate">
+    </div>
+    <div class="form-row">
+      <label>转出地点</label><input v-model="form.TransferOutPlace">
+    </div>
+    <div class="form-row">
+      <label>转出人</label><input v-model="form.TransferOutPerson">
+      <label>经办人</label><input v-model="form.Handler">
+    </div>
+    <div class="form-row">
+      <label>备注</label><input v-model="form.Remark">
+    </div>
+    <template #footer>
+      <el-button @click="showDialog=false">取消</el-button>
+      <el-button type="primary" @click="save">保存</el-button>
+    </template>
+  </el-dialog>
+  <el-dialog v-model="showPrintDialog" title="学生档案转递单" width="900px" top="2vh" fullscreen>
+    <iframe :src="'/business/student-archives/print/?id='+currentId" style="width:100%;height:85vh;border:none;"></iframe>
+</el-dialog>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, reactive, onMounted } = Vue;
+  const { ElMessage, ElMessageBox } = ElementPlus;
+
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const keyword = ref('');
+      const list = ref([]);
+      const total = ref(0);
+      const currentPage = ref(1);
+      const pageSize = ref(30);
+      const currentId = ref(null);
+      const showDialog = ref(false);
+      const editId = ref(null);
+      const form = reactive({School:'',Name:'',GraduationYear:'',SerialNo:'',TransferNo:'',TransferOutDate:'',TransferOutPlace:'',TransferOutPerson:'',Handler:'',Remark:''});
+
+      const search = (page) => {
+        const p = (typeof page==='number') ? page : 1;
+        axios.get('/business/api/student-archives/list/', { params: { page:p, pageSize:pageSize.value, keyword:keyword.value } }).then(res => {
+          if (res.data.code===0) { list.value = res.data.data||[]; total.value = res.data.total||0; currentPage.value = p; }
+        });
+      };
+
+      const openAdd = () => { editId.value = null; resetForm(); showDialog.value = true; };
+
+      const editRecord = (r) => {
+        currentId.value = r.ID;
+        editId.value = r.ID;
+        Object.keys(form).forEach(k => form[k] = r[k] || '');
+        showDialog.value = true;
+      };
+
+      const resetForm = () => { Object.keys(form).forEach(k => form[k] = ''); };
+
+      const save = () => {
+        if (!form.Name) { ElMessage.warning('姓名不能为空'); return; }
+        const data = { ID: editId.value, ...form };
+        axios.post('/business/api/student-archives/save/', data).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+          if (res.data.code===0) { showDialog.value = false; search(currentPage.value); }
+        });
+      };
+
+      const deleteRecord = () => {
+        if (!currentId.value) { ElMessage.warning('请先选中一条记录'); return; }
+        ElMessageBox.confirm('确定删除？','确认',{type:'warning'}).then(() => {
+          axios.post('/business/api/student-archives/delete/', { ID: currentId.value }).then(res => {
+            ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+            if (res.data.code===0) { currentId.value = null; search(currentPage.value); }
+          });
+        }).catch(()=>{});
+      };
+
+      const onPageChange = (p) => search(p);
+      const onSizeChange = (s) => { pageSize.value = s; search(1); };
+      const showPrintDialog = ref(false);
+      const openPrint = () => {
+          if (!currentId.value) { ElMessage.warning('请先选中一条记录'); return; }
+          showPrintDialog.value = true;
+      };
+
+      const editSelected = () => {
+    const r = list.value.find(item => item.ID === currentId.value);
+    if (r) editRecord(r);
+};
+      onMounted(() => search(1));
+
+      return { keyword, list, total, currentPage, pageSize, currentId, showDialog, editId, form,
+               search, openAdd, editRecord, resetForm, save, deleteRecord, onPageChange, onSizeChange,
+      showPrintDialog, openPrint, editSelected, };
+    }
+  });
+
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

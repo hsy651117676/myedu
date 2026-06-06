@@ -1,3 +1,4 @@
+'''任前联审登记表'''
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -60,7 +61,6 @@ def preaudit_data_api(request):
         if conn:
             conn.close()
 
-
 @login_required
 def preaudit_export_api(request):
     """导出任前联审登记表"""
@@ -93,40 +93,40 @@ def preaudit_export_api(request):
 
         def yn(v, default=1):
             if default == 0 and not v:
-                return ''
-            return '☑' if v else '☐'
+                return '是 ☐  否 ☐'
+            return '是 ☑  否 ☐' if v else '是 ☐  否 ☑'
 
         rdsj = 0 if data.get('rqls14', '') in ('群众', '') else 1
 
-        ws.cell(row=3, column=2).value = data.get('rqls1', '')   # 姓名
-        ws.cell(row=3, column=9).value = data.get('rqls2', '')   # 工作单位及职务
-        ws.cell(row=6, column=2).value = yn(data.get('rqls3'))   # 出生时间是否一致
-        ws.cell(row=7, column=2).value = yn(data.get('rqls4'))
-        ws.cell(row=8, column=2).value = yn(data.get('rqls5'), rdsj)
-        ws.cell(row=6, column=8).value = yn(data.get('rqls6'))   # 是否涂改
-        ws.cell(row=7, column=8).value = yn(data.get('rqls7'))
-        ws.cell(row=8, column=8).value = yn(data.get('rqls8'), rdsj)
-        ws.cell(row=6, column=11).value = yn(data.get('rqls9'))  # 是否认定
-        ws.cell(row=7, column=11).value = yn(data.get('rqls10'))
-        ws.cell(row=8, column=11).value = yn(data.get('rqls11'))
-        ws.cell(row=6, column=14).value = data.get('rqls12', '') or ''
-        ws.cell(row=7, column=14).value = data.get('rqls13', '') or ''
-        ws.cell(row=8, column=14).value = data.get('rqls14', '') or ''
-        ws.cell(row=9, column=4).value = data.get('rqls15', '') or ''
-        ws.cell(row=10, column=4).value = data.get('rqls16', '') or ''
-        ws.cell(row=9, column=12).value = data.get('rqls17', '') or ''
-        ws.cell(row=10, column=12).value = data.get('rqls18', '') or ''
-        ws.cell(row=11, column=2).value = data.get('rqls19', '') or ''
-        ws.cell(row=11, column=9).value = data.get('rqls20', '') or ''
-        ws.cell(row=11, column=14).value = data.get('rqls21', '') or ''
-        ws.cell(row=12, column=4).value = yn(data.get('rqls22'))
-        ws.cell(row=12, column=12).value = yn(data.get('rqls23'))
-        ws.cell(row=13, column=4).value = data.get('rqls24', '') or ''
-        ws.cell(row=13, column=12).value = data.get('rqls25', '') or ''
-        ws.cell(row=14, column=4).value = data.get('rqls26', '') or ''
-        ws.cell(row=15, column=4).value = data.get('rqls27', '') or ''
-        ws.cell(row=17, column=3).value = data.get('rqls28', '') or ''
-        ws.cell(row=17, column=13).value = data.get('rqls29', '') or ''
+        ws['B3'] = data.get('rqls1', '')      # 姓名
+        ws['I3'] = data.get('rqls2', '')      # 工作单位及职务
+        ws['B6'] = yn(data.get('rqls3'))      # 出生时间是否一致
+        ws['B7'] = yn(data.get('rqls4'))
+        ws['B8'] = yn(data.get('rqls5'), rdsj)
+        ws['H6'] = yn(data.get('rqls6'))      # 是否涂改
+        ws['H7'] = yn(data.get('rqls7'))
+        ws['H8'] = yn(data.get('rqls8'), rdsj)
+        ws['K6'] = yn(data.get('rqls9'))      # 是否认定
+        ws['K7'] = yn(data.get('rqls10'))
+        ws['K8'] = yn(data.get('rqls11'))
+        ws['N6'] = data.get('rqls12', '') or ''
+        ws['N7'] = data.get('rqls13', '') or ''
+        ws['N8'] = data.get('rqls14', '') or ''
+        ws['D9'] = data.get('rqls15', '') or ''
+        ws['D10'] = data.get('rqls16', '') or ''
+        ws['L9'] = data.get('rqls17', '') or ''
+        ws['L10'] = data.get('rqls18', '') or ''
+        ws['B11'] = data.get('rqls19', '') or ''
+        ws['I11'] = data.get('rqls20', '') or ''
+        ws['N11'] = data.get('rqls21', '') or ''
+        ws['D12'] = yn(data.get('rqls22'))
+        ws['L12'] = yn(data.get('rqls23'))
+        ws['D13'] = data.get('rqls24', '') or ''
+        ws['L13'] = data.get('rqls25', '') or ''
+        ws['D14'] = data.get('rqls26', '') or ''
+        ws['D15'] = data.get('rqls27', '') or ''
+        ws['C17'] = data.get('rqls28', '') or ''
+        ws['M17'] = data.get('rqls29', '') or ''
 
         for mr in merged:
             ws.merge_cells(str(mr))

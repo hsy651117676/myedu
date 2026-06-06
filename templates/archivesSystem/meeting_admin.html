@@ -1,0 +1,352 @@
+{% extends "layout/base.html" %}
+{% block title %}党组会管理{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.toolbar { display:flex;align-items:center;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;gap:6px;flex-shrink:0;flex-wrap:wrap; }
+.toolbar button { padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap; }
+.toolbar button:hover { border-color:#409EFF;color:#409EFF; }
+.toolbar button.primary { background:#409EFF;color:#fff;border:none; }
+.toolbar button.danger { background:#f56c6c;color:#fff;border:none; }
+.toolbar input { height:28px;border:1px solid #dcdfe6;border-radius:4px;padding:0 8px;font-size:12px;width:100px; }
+.filter-panel { width:180px;min-width:140px;flex-shrink:0;border-right:1px solid #e0e0e0;overflow-y:auto;padding:10px; }
+.filter-panel .filter-title { font-weight:bold;font-size:13px;margin-bottom:8px;color:#303133; }
+.filter-panel label { display:block;padding:5px 0;cursor:pointer;font-size:12px; }
+.filter-panel label:hover { color:#409EFF; }
+.filter-panel input[type="radio"] { margin-right:4px; }
+.main-right { flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px; }
+.meeting-table { border-collapse:collapse;width:100%;font-size:12px; }
+.meeting-table th, .meeting-table td { padding:5px 8px;border:1px solid #ddd;text-align:center;white-space:nowrap; }
+.meeting-table th { background:#f5f5f5;position:sticky;top:0;z-index:1; }
+.meeting-table tr { cursor:pointer; }
+.meeting-table tr:hover { background:#e8f0fe; }
+.meeting-table tr.active { background:#d0e4fc; }
+.drag-bar { width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0; }
+.batch-form { display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px;background:#fafafa;border:1px solid #e0e0e0;border-radius:4px;margin-bottom:8px;font-size:12px; }
+.batch-form input { height:28px;border:1px solid #ddd;border-radius:3px;padding:0 8px;font-size:12px; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-weight:600;font-size:14px;margin-right:8px;">📋 党组会管理（管理员）</span>
+    <button class="primary" @click="openAssignDialog" :disabled="checkedIds.length===0">批量分配到届次</button>
+    <button class="danger" @click="batchDelete" :disabled="checkedIds.length===0">批量删除</button>
+    <button class="primary" @click="exportExcel">导出Excel</button>
+    <button @click="exportTemplate">导出模板</button>
+    <span style="flex:1;"></span>
+    <input v-model="searchName" placeholder="姓名" @keyup.enter="search()">
+    <button @click="search()">查询</button>
+    <button @click="openBatchManage">届次管理</button>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+    <div class="filter-panel" id="leftPanel" style="width:15%;min-width:100px;overflow:hidden;">
+      <div class="filter-title">届次列表</div>
+      <label><input type="radio" v-model="selectedBatchId" value="" @change="search()"> 全部</label>
+      <label>
+        <input type="radio" v-model="selectedBatchId" value="null" @change="search()"> 
+        📁 新申请上会
+      </label>
+      <label v-for="b in batches" :key="b.batch_id">
+      <input type="radio" v-model="selectedBatchId" :value="b.batch_id" @change="search()"> 
+      [[ b.batch_date ]]（[[ b.leader || '' ]]）
+      <span v-if="!b.editable" style="color:#e6a23c;font-size:11px;"> [已备案]</span>
+      </label>
+    </div>
+    <div class="drag-bar" data-target="leftPanel"></div>
+
+    <div class="main-right">
+      <div style="flex:1;overflow:auto;">
+        <table class="meeting-table">
+          <thead><tr>
+            <th style="width:40px;"><input type="checkbox" @change="toggleAll" :checked="allChecked"></th>
+            <th>姓名</th><th>学校</th><th>认定类型</th>
+            <th>出生记载</th><th>最早材料</th><th>记载值</th><th>形成时间</th><th>认定时间</th>
+            <th>参工记载</th><th>依据材料</th><th>材料值</th><th>形成时间</th><th>认定时间</th>
+            <th>入党时间</th><th>届次</th><th>备注</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="r in list" :key="r.rsid" :class="{active: checkedIds.includes(r.rsid)}" @click="editPerson(r)">
+              <td @click.stop><input type="checkbox" :value="r.rsid" v-model="checkedIds"></td>
+              <td>[[ r.XM ]]</td>
+              <td>[[ r.school_name ]]</td><td>[[ r.identification_type ]]</td>
+              <td>[[ r.birth_summary ]]</td><td>[[ r.birth_material_name ]]</td><td>[[ r.birth_material_time ]]</td>
+              <td>[[ r.birth_material_date ]]</td><td>[[ r.birth_decision_date ]]</td>
+              <td>[[ r.work_summary ]]</td><td>[[ r.work_material_name ]]</td><td>[[ r.work_material_time ]]</td>
+              <td>[[ r.work_material_date ]]</td><td>[[ r.work_decision_date ]]</td>
+              <td>[[ r.party_join_time ]]</td>
+              <td>[[ r.batch_name || '-' ]]</td><td>[[ r.remark ]]</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="list.length===0" style="text-align:center;color:#ccc;padding:30px;">暂无数据</div>
+      </div>
+
+      <div v-if="total>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">
+        <el-pagination small background layout="total, sizes, prev, pager, next"
+          :page-sizes="[30,50,100,200]" :page-size="pageSize" :total="total"
+          :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量分配到届次弹窗 -->
+  <el-dialog v-model="showAssignDialog" title="批量分配到届次" width="400px">
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+      <span style="width:80px;">选择届次：</span>
+      <el-select v-model="assignTargetBatchId" placeholder="选择届次" style="flex:1;">
+        <el-option v-for="b in batches" :key="b.batch_id" :label="b.batch_name" :value="b.batch_id" />
+      </el-select>
+    </div>
+    <div style="color:#909399;font-size:12px;margin-top:8px;">已选 [[ checkedIds.length ]] 人</div>
+    <template #footer>
+      <el-button @click="showAssignDialog=false">取消</el-button>
+      <el-button type="primary" @click="submitAssign">确定</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 编辑申请单弹窗 -->
+  <el-dialog v-model="showEditDialog" title="编辑申请单" width="900px" top="1vh" @closed="showEditDialog=false">
+    <iframe :src="'/archives/person-meeting-form/?rsid='+editRsid+'&admin=1'" style="width:100%;height:620px;border:none;"></iframe>
+  </el-dialog>
+
+  <!-- 届次管理弹窗 -->
+  <el-dialog v-model="showBatchDialog" title="届次管理" width="800px" top="2vh">
+    <div class="batch-form">
+      <span style="font-weight:bold;">[[ batchForm.batch_id ? '编辑届次' : '新增届次' ]]</span>
+      <input v-model="batchForm.batch_name" placeholder="届次名称" style="width:220px;">
+      <input v-model="batchForm.batch_date" placeholder="日期" style="width:100px;">
+      <input v-model="batchForm.leader" placeholder="领导" style="width:90px;">
+      <input v-model="batchForm.applicant" placeholder="申请人" style="width:90px;">
+      <label><input type="checkbox" v-model="batchForm.editable"> 可修改</label>
+      <label><input type="checkbox" v-model="batchForm.batch_status_checked"> 已完成</label>
+      <button class="primary" @click="saveBatch">[[ batchForm.batch_id ? '更新' : '新增' ]]</button>
+      <button @click="resetBatchForm">清空</button>
+    </div>
+    <div class="batch-form">
+      <span style="font-weight:bold;">文件上传（先选中届次）</span>
+      <span>Word:</span><input type="file" @change="uploadFile('word',$event)" accept=".doc,.docx">
+      <span>Excel:</span><input type="file" @change="uploadFile('excel',$event)" accept=".xls,.xlsx">
+      <span>PDF:</span><input type="file" @change="uploadFile('pdf',$event)" accept=".pdf">
+    </div>
+    <table class="meeting-table">
+      <thead><tr>
+        <th>ID</th><th>届次名称</th><th>日期</th><th>领导</th><th>申请人</th><th>状态</th><th>文件</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        <tr v-for="b in allBatches" :key="b.batch_id" :class="{active: batchForm.batch_id===b.batch_id}">
+          <td>[[ b.batch_id ]]</td>
+          <td @click="editBatch(b)" style="cursor:pointer;">[[ b.batch_name ]]</td>
+          <td>[[ b.batch_date ]]</td>
+          <td>[[ b.leader ]]</td>
+          <td>[[ b.applicant ]]</td>
+          <td>[[ b.batch_status || '-' ]]</td>
+          <td>
+            <a v-if="b.file_name_word" :href="'/archivesSystem/api/meeting-admin-file/?id='+b.batch_id+'&type=word'" target="_blank">Word</a>
+            <a v-if="b.file_name_excel" :href="'/archivesSystem/api/meeting-admin-file/?id='+b.batch_id+'&type=excel'" target="_blank" style="margin-left:4px;">Excel</a>
+            <a v-if="b.file_name_pdf" :href="'/archivesSystem/api/meeting-admin-file/?id='+b.batch_id+'&type=pdf'" target="_blank" style="margin-left:4px;">PDF</a>
+            <span v-if="!b.file_name_word&&!b.file_name_excel&&!b.file_name_pdf">-</span>
+          </td>
+          <td>
+            <button @click="editBatch(b)">编辑</button>
+            <button class="danger" @click="deleteBatch(b.batch_id)">删除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </el-dialog>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, reactive, computed, onMounted } = Vue;
+  const { ElMessage, ElMessageBox } = ElementPlus;
+
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const searchName = ref('');
+      const batches = ref([]);
+      const allBatches = ref([]);
+      const selectedBatchId = ref('');
+      const list = ref([]);
+      const total = ref(0);
+      const currentPage = ref(1);
+      const pageSize = ref(30);
+      const checkedIds = ref([]);
+      const showAssignDialog = ref(false);
+      const showEditDialog = ref(false);
+      const showBatchDialog = ref(false);
+      const assignTargetBatchId = ref('');
+      const editRsid = ref('');
+      const batchForm = reactive({ batch_id:'', batch_name:'', batch_date:'', leader:'', applicant:'', editable:true, batch_status_checked:false });
+
+      const allChecked = computed(() => list.value.length > 0 && checkedIds.value.length === list.value.length);
+
+      const search = (page) => {
+        const p = (typeof page === 'number') ? page : 1;
+        const params = { page: p, pageSize: pageSize.value, batch_id: selectedBatchId.value };
+        if (searchName.value) params.name = searchName.value;
+        axios.get('/archivesSystem/api/meeting-admin-list/', { params }).then(res => {
+          if (res.data.code===0) { list.value = res.data.data||[]; total.value = res.data.total||0; currentPage.value = p; checkedIds.value = []; }
+        });
+      };
+
+      const toggleAll = (e) => {
+        checkedIds.value = e.target.checked ? list.value.map(r => r.rsid) : [];
+      };
+
+      const loadBatches = () => {
+        axios.get('/archivesSystem/api/meeting-admin-batches/').then(res => {
+          if (res.data.code===0) batches.value = res.data.data||[];
+        });
+        axios.get('/archivesSystem/api/meeting-admin-all-batches/').then(res => {
+          if (res.data.code===0) allBatches.value = res.data.data||[];
+        });
+      };
+
+      const editPerson = (r) => {
+        editRsid.value = r.rsid;
+        showEditDialog.value = true;
+      };
+
+      const openAssignDialog = () => {
+        if (!checkedIds.value.length) return;
+        loadBatches();
+        assignTargetBatchId.value = '';
+        showAssignDialog.value = true;
+      };
+
+      const resetBatchForm = () => {
+        batchForm.batch_id = '';
+        batchForm.batch_name = '';
+        batchForm.batch_date = '';
+        batchForm.leader = '';
+        batchForm.applicant = '';
+        batchForm.editable = true;
+        batchForm.batch_status_checked = false;
+      };
+
+      const openBatchManage = () => {
+        loadBatches();
+        resetBatchForm();
+        showBatchDialog.value = true;
+      };
+
+      const editBatch = (b) => {
+        batchForm.batch_id = b.batch_id;
+        batchForm.batch_name = b.batch_name || '';
+        batchForm.batch_date = b.batch_date || '';
+        batchForm.leader = b.leader || '';
+        batchForm.applicant = b.applicant || '';
+        batchForm.editable = b.editable !== false;
+        batchForm.batch_status_checked = b.batch_status === '已完成';
+      };
+
+      const saveBatch = () => {
+        if (!batchForm.batch_name) { ElMessage.warning('请输入届次名称'); return; }
+        axios.post('/archivesSystem/api/meeting-admin-save-batch/', {
+          batch_id: batchForm.batch_id,
+          batch_name: batchForm.batch_name,
+          batch_date: batchForm.batch_date,
+          leader: batchForm.leader,
+          applicant: batchForm.applicant,
+          editable: batchForm.editable ? 1 : 0,
+          batch_status: batchForm.batch_status_checked ? '已完成' : '进行中'
+        }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+          if (res.data.code===0) { resetBatchForm(); loadBatches(); }
+        });
+      };
+
+      const deleteBatch = (id) => {
+        ElMessageBox.confirm('确定删除该届次？', '确认', { type:'warning' }).then(() => {
+          axios.post('/archivesSystem/api/meeting-admin-delete-batch/', { batch_id: id }).then(res => {
+            ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+            if (res.data.code===0) { resetBatchForm(); loadBatches(); }
+          });
+        }).catch(() => {});
+      };
+
+      const uploadFile = (type, e) => {
+        const file = e.target.files[0];
+        if (!file || !batchForm.batch_id) { ElMessage.warning('请先选中届次再上传文件'); return; }
+        const formData = new FormData();
+        formData.append('batch_id', batchForm.batch_id);
+        formData.append('file_type', type);
+        formData.append('file', file);
+        axios.post('/archivesSystem/api/meeting-admin-upload-file/', formData).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+          if (res.data.code===0) loadBatches();
+        });
+      };
+
+      const submitAssign = () => {
+        if (!assignTargetBatchId.value) { ElMessage.warning('请选择届次'); return; }
+        axios.post('/archivesSystem/api/meeting-admin-batch-file/', {
+          rsids: checkedIds.value,
+          batch_id: assignTargetBatchId.value
+        }).then(res => {
+          ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+          if (res.data.code===0) { showAssignDialog.value = false; assignTargetBatchId.value = ''; search(currentPage.value); loadBatches(); }
+        });
+      };
+
+      const batchDelete = () => {
+        if (!checkedIds.value.length) return;
+        ElMessageBox.confirm(`确定删除选中的 ${checkedIds.value.length} 人？`, '确认删除', { type:'warning' }).then(() => {
+          axios.post('/archivesSystem/api/meeting-admin-batch-delete/', { rsids: checkedIds.value }).then(res => {
+            ElMessage[res.data.code===0?'success':'error'](res.data.msg);
+            if (res.data.code===0) search(currentPage.value);
+          });
+        }).catch(() => {});
+      };
+
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'meeting-saved') { showEditDialog.value = false; search(currentPage.value); }
+        if (e.data && e.data.type === 'close-dialog') { showEditDialog.value = false; }
+      });
+
+      const onPageChange = (p) => search(p);
+      const onSizeChange = (s) => { pageSize.value = s; search(1); };
+
+      const initDrag = () => {
+        document.querySelectorAll('.drag-bar').forEach(bar => {
+          bar.addEventListener('mousedown', (e) => {
+            const panel = document.getElementById(bar.dataset.target);
+            if (!panel) return;
+            const startX = e.clientX, startW = panel.offsetWidth;
+            const onMove = (ev) => { let w = startW+ev.clientX-startX; if(w<80)w=80; panel.style.width=w+'px'; };
+            const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+          });
+        });
+      };
+      const exportExcel = () => {
+          if (!selectedBatchId.value || selectedBatchId.value === '') {
+              ElMessage.warning('请先选择届次，不能导出全部数据');
+              return;
+          }
+          window.open('/archivesSystem/api/meeting-admin-export/?batch_id=' + selectedBatchId.value);
+      };
+      const exportTemplate = () => {
+    if (!selectedBatchId.value || selectedBatchId.value === '') {
+        ElMessage.warning('请先选择届次，不能导出全部数据');
+        return;
+    }
+    window.open('/archivesSystem/api/meeting-admin-export-template/?batch_id=' + selectedBatchId.value);
+};
+      onMounted(() => { search(1); loadBatches(); initDrag(); });
+
+      return { searchName, batches, allBatches, selectedBatchId, list, total, currentPage, pageSize, checkedIds, allChecked,
+               showAssignDialog, showEditDialog, showBatchDialog, assignTargetBatchId, editRsid, batchForm,
+               search, toggleAll, editPerson, openAssignDialog, resetBatchForm, openBatchManage, editBatch, saveBatch, deleteBatch, uploadFile,
+               submitAssign, batchDelete, onPageChange, onSizeChange,exportExcel,exportTemplate };
+    }
+  });
+
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

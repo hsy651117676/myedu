@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>全部档案目录:可升序降序，快速定位问题</title>
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/element-plus.min.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-size:13px; padding:10px; }
+    table { border-collapse:collapse; width:100%; font-size:12px; }
+    th, td { border:1px solid #ddd; padding:5px 8px; text-align:center; white-space:nowrap; }
+    th { background:#f5f5f5; cursor:pointer; user-select:none; position:sticky; top:0; }
+    th:hover { background:#e8f0fe; }
+    th .arrow { margin-left:4px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div v-if="rows.length===0" style="text-align:center;color:#ccc;padding:30px;">暂无数据</div>
+  <table v-else>
+        <thead>
+  <tr>
+    <th style="width:40px;">序号</th>
+    <th @click="sort('类别序号')">类别 <span class="arrow">[[ sortKey==='类别序号' ? (sortAsc?'▲':'▼') : '' ]]</span></th>
+    <th @click="sort('材料名称')">材料名称 <span class="arrow">[[ sortKey==='材料名称' ? (sortAsc?'▲':'▼') : '' ]]</span></th>
+    <th @click="sort('年')">年 <span class="arrow">[[ sortKey==='年' ? (sortAsc?'▲':'▼') : '' ]]</span></th>
+    <th @click="sort('月')">月 <span class="arrow">[[ sortKey==='月' ? (sortAsc?'▲':'▼') : '' ]]</span></th>
+    <th @click="sort('日')">日 <span class="arrow">[[ sortKey==='日' ? (sortAsc?'▲':'▼') : '' ]]</span></th>
+    <th @click="sort('页数')">页数 <span class="arrow">[[ sortKey==='页数' ? (sortAsc?'▲':'▼') : '' ]]</span></th>
+    <th>备注</th>
+  </tr>
+</thead>
+<tbody>
+  <tr v-for="(r,i) in sortedRows" :key="i">
+    <td>[[ i+1 ]]</td>
+    <td>[[ r.类别序号 ]]</td>
+    <td style="text-align:left;">[[ r.材料名称 ]]</td>
+    <td>[[ r.年 ]]</td><td>[[ r.月 ]]</td><td>[[ r.日 ]]</td>
+    <td>[[ r.页数 ]]</td>
+    <td style="text-align:left;">[[ r.备注 ]]</td>
+  </tr>
+</tbody>
+  </table>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+createApp({
+  delimiters: ['[[', ']]'],
+  setup(){
+    const params = new URLSearchParams(window.location.search);
+    const rsid = ref(params.get('rsid')||'');
+    const rows = ref([]);
+    const sortKey = ref('');
+    const sortAsc = ref(true);
+
+    const sortedRows = computed(() => {
+      if (!sortKey.value) return rows.value;
+      return [...rows.value].sort((a, b) => {
+        const va = (a[sortKey.value] || '').toString();
+        const vb = (b[sortKey.value] || '').toString();
+        const cmp = va.localeCompare(vb, 'zh-CN', {numeric: true});
+        return sortAsc.value ? cmp : -cmp;
+      });
+    });
+
+    const sort = (key) => {
+      if (sortKey.value === key) {
+        sortAsc.value = !sortAsc.value;
+      } else {
+        sortKey.value = key;
+        sortAsc.value = true;
+      }
+    };
+
+    onMounted(async () => {
+      if (!rsid.value) return;
+      const r = await axios.get('/archives/api/directory-all/', { params: { rsid: rsid.value } });
+      if (r.data.code===0) rows.value = r.data.data||[];
+    });
+
+    return { rows, sortedRows, sortKey, sortAsc, sort };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

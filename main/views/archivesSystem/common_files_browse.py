@@ -1,11 +1,14 @@
 """
 常用文件 - 浏览
 """
+
 import logging
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, FileResponse, Http404
+from django.http import JsonResponse, FileResponse, Http404, HttpResponse
 from . import common_files_service as service
+from urllib.parse import quote
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +32,10 @@ def years_api(request):
     try:
         conn = service._get_conn_safe()
         cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT Year FROM CommonFiles WHERE Category=? AND IsActive=1 ORDER BY Year", (category,))
+        cursor.execute(
+            "SELECT DISTINCT Year FROM CommonFiles WHERE Category=? AND IsActive=1 ORDER BY Year",
+            (category,),
+        )
         return JsonResponse({"code": 0, "data": [r[0] for r in cursor.fetchall()]})
     except:
         return JsonResponse({"code": 0, "data": []})
@@ -58,9 +64,14 @@ def download_api(request):
         if not file_path:
             raise Http404("文件不存在")
         full_path = service.build_full_path(file_path)
-        if not full_path or not __import__('os').path.exists(full_path):
+        if not full_path or not __import__("os").path.exists(full_path):
             raise Http404("文件未找到")
-        return FileResponse(open(full_path, 'rb'), filename=file_name)
+
+        with open(full_path, "rb") as f:
+            resp = HttpResponse(f.read(), content_type="application/pdf")
+        resp["Content-Disposition"] = f'inline; filename="{file_name}"'
+        resp["Content-Length"] = __import__("os").path.getsize(full_path)
+        return resp
     except Http404:
         raise
     except:

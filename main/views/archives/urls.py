@@ -1,111 +1,158 @@
 from django.urls import path, include
 from django.contrib.auth.decorators import login_required
 
-from . import person as person_views
-from . import salary as salary_views
-from . import position as position_views
-from . import audit as audit_views
-from . import identify as identify_views
-from . import preaudit as preaudit_views
-from . import supplement as supplement_views
-from . import family as family_views
-from . import directory as directory_views
-from . import cadre as cadre_views
-from . import log_query as log_views
+from . import person
+from . import salary
+from . import position
+from . import audit
+from . import identify
+from . import preaudit
+from . import supplement
+from . import family
+from . import directory
+from . import cadre
+from . import log_query
 from . import streamer
 from . import directory_print
+from . import meeting
 
 urlpatterns = [
     # ==================== 人员维护 ====================
-    path("person", person_views.person_view, name="archives-person"),
-    path("person-basic/", person_views.person_basic_view, name="person-basic"),
-    path("person-salary/", person_views.person_salary_view, name="person-salary"),
-    path("api/person-detail/", person_views.person_detail_api, name="archives-person-detail"),
-    path("api/person-save/", person_views.person_save_api, name="archives-person-save"),
-    path("api/unit-list/", person_views.unit_list_api, name="archives-unit-list"),
-
+    path("person", person.person_view, name="archives-person"),
+    path("person-basic/", person.person_basic_view, name="person-basic"),
+    path("person-salary/", person.person_salary_view, name="person-salary"),
+    path("api/person-detail/", person.person_detail_api, name="archives-person-detail"),
+    path("api/person-save/", person.person_save_api, name="archives-person-save"),
+    path("api/unit-list/", person.unit_list_api, name="archives-unit-list"),
+    path("api/person-photo/", person.person_photo_api, name="person-photo"),
     # ==================== 工资 ====================
-    path("api/salary/", salary_views.salary_data_api, name="salary-data"),
-    path("api/salary-save/", salary_views.salary_save_api, name="salary-save"),
-    path("api/salary-delete/", salary_views.salary_delete_api, name="salary-delete"),
-    path("api/salary-auto/", salary_views.salary_auto_api, name="salary-auto"),
-    path("api/salary-export/", salary_views.salary_export_api, name="salary-export"),
-    path("api/salary-bzfind/", salary_views.salary_bzfind_api, name="salary-bzfind"),
-    path("api/salary-dcfind/", salary_views.salary_dcfind_api, name="salary-dcfind"),
-    path("api/salary-print/", salary_views.salary_print_api, name="salary-print"),
-
+    path("api/salary/", salary.salary_data_api, name="salary-data"),
+    path("api/salary-save/", salary.salary_save_api, name="salary-save"),
+    path("api/salary-delete/", salary.salary_delete_api, name="salary-delete"),
+    path("api/salary-auto/", salary.salary_auto_api, name="salary-auto"),
+    path("api/salary-export/", salary.salary_export_api, name="salary-export"),
+    path("api/salary-bzfind/", salary.salary_bzfind_api, name="salary-bzfind"),
+    path("api/salary-dcfind/", salary.salary_dcfind_api, name="salary-dcfind"),
+    path("api/salary-print/", salary.salary_print_api, name="salary-print"),
     # ==================== 职务变动 ====================
-    path("person-position/", position_views.person_position_view, name="person-position"),
-    path("api/position/", position_views.position_data_api, name="position-data"),
-    path("api/position-save/", position_views.position_save_api, name="position-save"),
-    path("api/position-export/", position_views.position_export_api, name="position-export"),
-
+    path("person-position/", position.person_position_view, name="person-position"),
+    path("api/position/", position.position_data_api, name="position-data"),
+    path("api/position-save/", position.position_save_api, name="position-save"),
+    path("api/position-export/", position.position_export_api, name="position-export"),
     # ==================== 档案专审 ====================
-    path("person-audit/", audit_views.person_audit_view, name="person-audit"),
-    path("api/audit/", audit_views.audit_data_api, name="audit-data"),
-    path("api/audit-save/", audit_views.audit_save_api, name="audit-save"),
-    path("api/audit-proof-check/", audit_views.audit_proof_check_api, name="audit-proof-check"),
-    path("api/audit-proof-print/", audit_views.audit_proof_print_api, name="audit-proof-print"),
-    path("api/zs/", audit_views.audit_proof_print_admin_api, name="zs"),
-
+    path("person-audit/", audit.person_audit_view, name="person-audit"),
+    path("api/audit/", audit.audit_data_api, name="audit-data"),
+    path("api/audit-save/", audit.audit_save_api, name="audit-save"),
+    path(
+        "api/audit-proof-check/", audit.audit_proof_check_api, name="audit-proof-check"
+    ),
+    path(
+        "api/audit-proof-print/", audit.audit_proof_print_api, name="audit-proof-print"
+    ),
+    path("api/zs/", audit.audit_proof_print_admin_api, name="zs"),
+    path("api/audit-export/", audit.audit_export_api, name="audit-export"),
     # ==================== 认定表 ====================
-    path("person-identify/", identify_views.person_identify_view, name="person-identify"),
-    path("api/identify/", identify_views.identify_data_api, name="identify-data"),
-    path("api/identify-save/", identify_views.identify_save_api, name="identify-save"),
-    path("api/identify-generate/", identify_views.identify_generate_api, name="identify-generate"),
-    path("api/identify-export/", identify_views.identify_export_api, name="identify-export"),
-    path("api/alteration-save/", identify_views.alteration_save_api, name="alteration-save"),
-    path("api/alteration-delete/", identify_views.alteration_delete_api, name="alteration-delete"),
-    path("api/alteration-clear/", identify_views.alteration_clear_api, name="alteration-clear"),
-
+    path("person-identify/", identify.person_identify_view, name="person-identify"),
+    path("api/identify/", identify.identify_data_api, name="identify-data"),
+    path("api/identify-save/", identify.identify_save_api, name="identify-save"),
+    path(
+        "api/identify-generate/",
+        identify.identify_generate_api,
+        name="identify-generate",
+    ),
+    path("api/identify-export/", identify.identify_export_api, name="identify-export"),
+    path("api/alteration-save/", identify.alteration_save_api, name="alteration-save"),
+    path(
+        "api/alteration-delete/",
+        identify.alteration_delete_api,
+        name="alteration-delete",
+    ),
+    path(
+        "api/alteration-clear/", identify.alteration_clear_api, name="alteration-clear"
+    ),
     # ==================== 任前联审 ====================
-    path("person-preaudit/", preaudit_views.person_preaudit_view, name="person-preaudit"),
-    path("api/preaudit/", preaudit_views.preaudit_data_api, name="preaudit-data"),
-    path("api/preaudit-export/", preaudit_views.preaudit_export_api, name="preaudit-export"),
-
+    path("person-preaudit/", preaudit.person_preaudit_view, name="person-preaudit"),
+    path("api/preaudit/", preaudit.preaudit_data_api, name="preaudit-data"),
+    path("api/preaudit-export/", preaudit.preaudit_export_api, name="preaudit-export"),
     # ==================== 补充信息 ====================
-    path("person-supplement/", supplement_views.person_supplement_view, name="person-supplement"),
-    path("api/supplement/", supplement_views.supplement_data_api, name="supplement-data"),
-    path("api/supplement-save/", supplement_views.supplement_save_api, name="supplement-save"),
-
+    path(
+        "person-supplement/",
+        supplement.person_supplement_view,
+        name="person-supplement",
+    ),
+    path("api/supplement/", supplement.supplement_data_api, name="supplement-data"),
+    path(
+        "api/supplement-save/", supplement.supplement_save_api, name="supplement-save"
+    ),
     # ==================== 家庭成员 ====================
-    path("person-family/", family_views.person_family_view, name="person-family"),
-    path("api/family/", family_views.family_data_api, name="family-data"),
-    path("api/family-save/", family_views.family_save_api, name="family-save"),
-
+    path("person-family/", family.person_family_view, name="person-family"),
+    path("api/family/", family.family_data_api, name="family-data"),
+    path("api/family-save/", family.family_save_api, name="family-save"),
     # ==================== 档案目录 ====================
-    path("person-directory/", directory_views.person_directory_view, name="person-directory"),
-    path("api/directory-tree/", directory_views.directory_tree_api, name="directory-tree"),
-    path("api/directory-list/", directory_views.directory_list_api, name="directory-list"),
-    path("api/directory-save/", directory_views.directory_save_api, name="directory-save"),
+    path("person-directory/", directory.person_directory_view, name="person-directory"),
+    path("api/directory-tree/", directory.directory_tree_api, name="directory-tree"),
+    path("api/directory-list/", directory.directory_list_api, name="directory-list"),
+    path("api/directory-save/", directory.directory_save_api, name="directory-save"),
     path("directory-print/", directory_print.print_page, name="directory-print"),
-    path("api/directory-print-pdf/", directory_print.print_pdf_api, name="directory-print-pdf"),
-    path("api/directory-print-export/", directory_print.print_export_api, name="directory-print-export"),
-
+    path(
+        "api/directory-print-pdf/",
+        directory_print.print_pdf_api,
+        name="directory-print-pdf",
+    ),
+    path("api/directory-all/", directory.all_directory_api, name="directory-all"),
+    path(
+        "person-directory-all/",
+        directory.all_directory_page,
+        name="person-directory-all-page",
+    ),
+    path(
+        "api/directory-print-export/",
+        directory_print.print_export_api,
+        name="directory-print-export",
+    ),
     # ==================== 干部任免表 ====================
-    path("person-cadre/", cadre_views.person_cadre_view, name="person-cadre"),
-    path("api/cadre-list/", cadre_views.cadre_list_api, name="cadre-list"),
-    path("api/cadre-detail/", cadre_views.cadre_detail_api, name="cadre-detail"),
-    path("api/cadre-save/", cadre_views.cadre_save_api, name="cadre-save"),
-    path("api/cadre-add/", cadre_views.cadre_add_api, name="cadre-add"),
-    path("api/cadre-delete/", cadre_views.cadre_delete_api, name="cadre-delete"),
-    path("api/cadre-extract/", cadre_views.cadre_extract_api, name="cadre-extract"),
-
+    path("person-cadre/", cadre.person_cadre_view, name="person-cadre"),
+    path("api/cadre-list/", cadre.cadre_list_api, name="cadre-list"),
+    path("api/cadre-detail/", cadre.cadre_detail_api, name="cadre-detail"),
+    path("api/cadre-save/", cadre.cadre_save_api, name="cadre-save"),
+    path("api/cadre-add/", cadre.cadre_add_api, name="cadre-add"),
+    path("api/cadre-delete/", cadre.cadre_delete_api, name="cadre-delete"),
+    path("api/cadre-extract/", cadre.cadre_extract_api, name="cadre-extract"),
+    path("api/cadre-export/", cadre.cadre_export_api, name="cadre-export"),
+    path("api/directory-all/", directory.all_directory_api, name="directory-all"),
     # ==================== 日志查询 ====================
-    path("log", log_views.log_query_view, name="log-query"),
-    path("api/log-types/", log_views.log_types_api, name="log-types"),
-    path("api/log-query/", log_views.log_query_api, name="log-query-api"),
-
-
+    path("log", log_query.log_query_view, name="log-query"),
+    path("api/log-types/", log_query.log_types_api, name="log-types"),
+    path("api/log-query/", log_query.log_query_api, name="log-query-api"),
     # ==================== 扫描查看 ====================
-    path('image/', include('main.views.archives.image.urls')),
-
+    path("image/", include("main.views.archives.image.urls")),
     # ==================== 档案标签打印 ====================
     path("streamer/", streamer.page, name="streamer"),
     path("api/streamer/units/", streamer.unit_list_api, name="streamer-units"),
     path("api/streamer/table/", streamer.table_api, name="streamer-table"),
     path("api/streamer/save/", streamer.save_api, name="streamer-save"),
-    path("api/streamer/print-streamer/", streamer.print_streamer_api, name="streamer-print"),
+    path(
+        "api/streamer/print-streamer/",
+        streamer.print_streamer_api,
+        name="streamer-print",
+    ),
     path("api/streamer/print-label/", streamer.print_label_api, name="streamer-label"),
-    path("api/streamer/print-cabinet/", streamer.print_cabinet_api, name="streamer-cabinet"),
+    path(
+        "api/streamer/print-cabinet/",
+        streamer.print_cabinet_api,
+        name="streamer-cabinet",
+    ),
+    # 党组会认定
+    path("person-meeting/", meeting.person_meeting_view, name="person-meeting"),
+    path(
+        "person-meeting-form/",
+        meeting.person_meeting_form_view,
+        name="person-meeting-form",
+    ),
+    path("api/meeting-list/", meeting.meeting_list_api, name="meeting-list"),
+    path("api/meeting-detail/", meeting.meeting_detail_api, name="meeting-detail"),
+    path("api/meeting-save/", meeting.meeting_save_api, name="meeting-save"),
+    path("api/meeting-delete/", meeting.meeting_delete_api, name="meeting-delete"),
+    path("api/meeting-extract/", meeting.meeting_extract_api, name="meeting-extract"),
+    path("api/meeting-batches/", meeting.batch_list_api, name="meeting-batches"),
 ]

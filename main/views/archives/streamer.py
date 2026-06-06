@@ -303,7 +303,7 @@ def print_label_api(request):
             xm = r.get('XM', '')
             if len(xm) == 2:
                 xm = xm[0] + '  ' + xm[1]
-            d.text((x, y + cell_h/4), "姓名:", fill='red', font=font2)
+            d.text((x, y + cell_h/3), "姓名:", fill='red', font=font2)
             d.text((x + 70, y + cell_h/4), f"{xm}", fill='black', font=font2)
 
         buf_img = BytesIO()

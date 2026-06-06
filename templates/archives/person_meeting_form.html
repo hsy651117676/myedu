@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>党组会认定申请单</title>
+  <link rel="stylesheet" href="/static/lib/element-plus.css">
+  <script src="/static/lib/vue.global.prod.js"></script>
+  <script src="/static/lib/element-plus.min.js"></script>
+  <script src="/static/lib/axios.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:"Microsoft YaHei",sans-serif; font-size:16px; background:#fff; padding:0 16px 16px 16px; }
+    .header { position:sticky; top:0; background:#fff; z-index:10; padding:12px 0 8px 0; }
+    .form-title { text-align:center; font-size:22pt; font-weight:bold; margin-bottom:8px; color:#303133; }
+    .btn-row { display:flex; justify-content:flex-end; gap:8px; margin-bottom:12px; }
+    button { padding:6px 16px; border:1px solid #dcdfe6; border-radius:4px; background:#fff; cursor:pointer; font-size:14px; }
+    button:hover { border-color:#409EFF; color:#409EFF; }
+    button.primary { background:#409EFF; color:#fff; border:none; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    .section { font-weight:bold; color:#409EFF; margin:10px 0 4px 0; padding-bottom:4px; border-bottom:1px solid #e0e0e0; font-size:16pt; }
+    .form-row { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:16px; }
+    .form-row label { width:120px; text-align:right; color:#606266; flex-shrink:0; font-size:14px; }
+    .form-row label.req { color:#f56c6c; }
+    .form-row input, .form-row select, .form-row textarea { flex:1; border:1px solid #ddd; padding:4px 8px; border-radius:3px; font-size:16px; }
+    .form-row input:disabled, .form-row select:disabled, .form-row textarea:disabled { background:#f5f5f5; color:#909399; }
+    .form-row textarea { min-height:60px; resize:vertical; }
+    .info-row { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:16px; }
+    .info-row label { width:120px; text-align:right; color:#606266; flex-shrink:0; font-size:14px; }
+    .info-row span { flex:1; font-size:16px; color:#303133; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+      <div class="form-title">党组会认定申请单（[[ form.XM ]]）</div>
+    <div class="btn-row">
+      <button @click="extractInfo" :disabled="readonly">提取数据</button>
+      <button class="primary" @click="save" v-if="!readonly">保存</button>
+      <button @click="cancel">关闭</button>
+    </div>
+  </div>
+
+  <div class="section">党组会信息</div>
+  <div class="info-row"><label>届次名称</label><span>[[ form.batch_name || '未分配' ]]</span></div>
+  <div class="form-row">
+    <label>上党组会时间</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.batch_date || '未分配' ]]</span>
+    <label>分管领导</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.leader || '未填写' ]]</span>
+  </div>
+  <div class="form-row">
+    <label>申请人</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.applicant || '未填写' ]]</span>
+    <label>届次状态</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.batch_status || '未填写' ]]</span>
+  </div>
+
+  <div class="form-row">
+    <label class="req">学校名称</label><input v-model="form.school_name" placeholder="必填" :disabled="readonly">
+    <label class="req">认定类型</label>
+    <select v-model="form.identification_type" :disabled="readonly" style="flex:0 0 200px;width:200px;">
+      <option value="">请选择</option>
+      <option>新参加工作认定</option>
+      <option>出生年月记载不一致</option>
+      <option>参加工作时间记载不一致</option>
+      <option>入党时间记载不一致</option>
+      <option>三龄不一致</option>
+      <option>两龄不一致</option>
+      <option>综合研判</option>
+    </select>
+  </div>
+
+  <div class="section">出生年月认定</div>
+  <div class="form-row">
+    <label class="req">最早材料名称</label><input v-model="form.birth_material_name" :disabled="readonly">
+  </div>
+  <div class="form-row">
+    <label class="req">记载出生时间</label><input v-model="form.birth_material_time" @input="formatYm('birth_material_time')" placeholder="yyyyMM" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+    <label class="req">材料形成时间</label><input v-model="form.birth_material_date" @input="formatYmd('birth_material_date')" placeholder="yyyyMMdd" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+    <label class="req">认定时间</label><input v-model="form.birth_decision_date" @input="formatYm('birth_decision_date')" placeholder="yyyyMM" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+  </div>
+  <div class="form-row"><label>档案中出现的记载</label><textarea v-model="form.birth_summary" rows="2" :disabled="readonly"></textarea></div>
+  <div class="form-row"><label>涂改情况</label><textarea v-model="form.birth_alteration" rows="2" :disabled="readonly"></textarea></div>
+
+  <div class="section">参加工作时间认定</div>
+  <div class="form-row">
+    <label class="req">依据材料名称</label><input v-model="form.work_material_name" :disabled="readonly">
+  </div>
+  <div class="form-row">
+    <label class="req">记载参工时间</label><input v-model="form.work_material_time" @input="formatYm('work_material_time')" placeholder="yyyyMM" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+    <label class="req">材料形成时间</label><input v-model="form.work_material_date" @input="formatYmd('work_material_date')" placeholder="yyyyMMdd" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+    <label class="req">认定时间</label><input v-model="form.work_decision_date" @input="formatYm('work_decision_date')" placeholder="yyyyMM" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+  </div>
+  <div class="form-row"><label>档案中出现的记载</label><textarea v-model="form.work_summary" rows="2" :disabled="readonly"></textarea></div>
+  <div class="form-row"><label>涂改情况</label><textarea v-model="form.work_alteration" rows="2" :disabled="readonly"></textarea></div>
+
+  <div class="section">入党时间认定</div>
+  <div class="form-row">
+    <label>入党志愿书时间</label><input v-model="form.party_join_time" @input="formatYmd('party_join_time')" placeholder="yyyyMMdd" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+    <label>材料形成时间</label><input v-model="form.party_material_date" @input="formatYmd('party_material_date')" placeholder="yyyyMMdd" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+    <label>认定时间</label><input v-model="form.party_decision_date" @input="formatYmd('party_decision_date')" placeholder="yyyyMMdd" :disabled="readonly" style="flex:0 0 150px;width:150px;">
+  </div>
+
+  <div class="form-row"><label>上会类型</label><input v-model="form.meeting_type" :disabled="readonly"></div>
+  <div class="form-row"><label>备注</label><textarea v-model="form.remark" rows="3" :disabled="readonly"></textarea></div>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, reactive } = Vue;
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const params = new URLSearchParams(window.location.search);
+      const rsid = ref(params.get('rsid')||'');
+      const readonly = ref(params.get('readonly')==='1');
+      const form = reactive({});
+
+      if (rsid.value) {
+        axios.get('/archives/api/meeting-detail/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code===0) Object.assign(form, res.data.data||{});
+        });
+      }
+
+      const extractInfo = () => {
+        if (!rsid.value) return;
+        axios.get('/archives/api/meeting-extract/', { params: { rsid: rsid.value } }).then(res => {
+          if (res.data.code===0) Object.assign(form, res.data.data||{});
+        });
+      };
+
+      const formatYm = (key) => { form[key] = (form[key]||'').replace(/[^0-9]/g,'').slice(0,6); };
+      const formatYmd = (key) => { form[key] = (form[key]||'').replace(/[^0-9]/g,'').slice(0,8); };
+
+      const isValidYm = (v) => {
+        if (!/^\d{6}$/.test(v)) return false;
+        var y = parseInt(v.slice(0,4)), m = parseInt(v.slice(4,6));
+        return y >= 1900 && y <= 2100 && m >= 1 && m <= 12;
+      };
+      const isValidYmd = (v) => {
+        if (!/^\d{8}$/.test(v)) return false;
+        var y = parseInt(v.slice(0,4)), m = parseInt(v.slice(4,6)), d = parseInt(v.slice(6,8));
+        if (y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return false;
+        var days = new Date(y, m, 0).getDate();
+        return d <= days;
+      };
+
+      const save = () => {
+        if (!form.school_name) { alert('请输入学校名称'); return; }
+        if (!form.identification_type) { alert('请选择认定类型'); return; }
+        if (!form.birth_material_name) { alert('请输入出生最早材料名称'); return; }
+        if (!isValidYm(form.birth_material_time)) { alert('记载出生时间格式应为yyyyMM'); return; }
+        if (!isValidYmd(form.birth_material_date)) { alert('出生材料形成时间格式应为yyyyMMdd'); return; }
+        if (!isValidYm(form.birth_decision_date)) { alert('出生认定时间格式应为yyyyMM'); return; }
+        if (!form.work_material_name) { alert('请输入参工依据材料名称'); return; }
+        if (!isValidYm(form.work_material_time)) { alert('记载参工时间格式应为yyyyMM'); return; }
+        if (!isValidYmd(form.work_material_date)) { alert('参工材料形成时间格式应为yyyyMMdd'); return; }
+        if (!isValidYm(form.work_decision_date)) { alert('参工认定时间格式应为yyyyMM'); return; }
+
+        const admin = params.get('admin') === '1';
+        const url = admin ? '/archivesSystem/api/meeting-admin-save/' : '/archives/api/meeting-save/';
+
+        axios.post(url, { rsid: rsid.value, ...form }).then(res => {
+          if (res.data.code===0) { window.parent.postMessage({type:'meeting-saved'},'*'); alert('保存成功'); }
+          else alert(res.data.msg);
+        });
+      };
+
+      const cancel = () => { window.parent.postMessage({type:'close-dialog'},'*'); };
+
+      return { form, readonly, save, cancel, extractInfo, formatYm, formatYmd };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.mount('#app');
+})();
+</script>
+</body>
+</html>

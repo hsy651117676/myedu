@@ -12,19 +12,19 @@
   <div style="flex:1;display:flex;overflow:hidden;">
 
     <!-- 左侧面板 -->
-    <div id="leftPanel" style="width:280px;border:1px solid #e4e7ed;flex-shrink:0;overflow:hidden;">
-      <iframe src="/components/person-panel-embed/" style="width:100%;height:100%;border:none;"></iframe>
-    </div>
+    <div id="leftPanel" style="width:280px;border:1px solid #e4e7ed;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;">
+  <iframe src="/components/person-panel-embed/" style="width:100%;flex:1;border:none;"></iframe>
+  <div style="padding:6px 10px;border-top:1px solid #e4e7ed;flex-shrink:0;background:#fafafa;">
+    <span style="font-weight:bold;font-size:28px;">[[ currentPerson.tname || currentPerson.displayName || '请选择人员' ]]</span>
+    <span v-if="currentPerson.rsid" style="color:#909399;font-size:12px;margin-left:6px;">RSID:[[ currentPerson.rsid ]]</span>
+</div>
+</div>
 
     <!-- 拖动条 -->
     <div id="dragBar" style="width:6px;background:#e4e7ed;cursor:col-resize;flex-shrink:0;margin:0 2px;"></div>
 
     <!-- 右侧 -->
     <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
-      <div style="margin-bottom:4px;font-weight:bold;font-size:14px;flex-shrink:0;">
-        [[ currentPerson.tname || currentPerson.displayName || '请选择人员' ]]
-        <span v-if="currentPerson.rsid" style="color:#909399;font-size:12px;">RSID:[[ currentPerson.rsid ]]</span>
-      </div>
       <el-tabs v-model="activeTab" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
         <el-tab-pane label="基本信息" name="basic">
           <iframe v-if="activeTab==='basic' && currentPerson.rsid" :src="'/archives/person-basic/?rsid='+currentPerson.rsid"

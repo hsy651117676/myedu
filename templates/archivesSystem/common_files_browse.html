@@ -42,13 +42,17 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         <div id="midPanel" class="resize-panel" style="width:40%;min-width:250px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;">
             <div style="flex:1;overflow:auto;">
                 <table class="file-table">
-                    <thead><tr><th>文号</th><th>姓名</th><th>概要</th><th>文件名</th><th>大小</th></tr></thead>
-                    <tbody>
-                        <tr v-for="r in list" :key="r.PersonID || r.ID" :class="{active: selectedFileId===r.ID}" @click="selectFile(r)">
-                            <td>[[ r.FileNo ]]</td><td>[[ r.PersonName ]]</td><td>[[ r.Summary ]]</td>
-                            <td>[[ r.FileName ]]</td><td>[[ (r.FileSize/1024).toFixed(1) ]] KB</td>
-                        </tr>
-                    </tbody>
+                  <thead><tr><th>文号</th><th>年度</th><th>姓名</th><th>概要</th><th>文件名</th><th>大小</th></tr></thead>
+                  <tbody>
+                      <tr v-for="r in list" :key="r.PersonID || r.ID" :class="{active: selectedFileId===r.ID}" @click="selectFile(r)">
+                          <td>[[ r.FileNo ]]</td>
+                          <td>[[ r.Year ]]</td>
+                          <td>[[ r.PersonName ]]</td>
+                          <td>[[ r.Summary ]]</td>
+                          <td>[[ r.FileName ]]</td>
+                          <td>[[ (r.FileSize/1024).toFixed(1) ]] KB</td>
+                      </tr>
+                  </tbody>
                 </table>
             </div>
             <div v-if="total>0" style="padding:6px 0;display:flex;justify-content:center;flex-shrink:0;">

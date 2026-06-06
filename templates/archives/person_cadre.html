@@ -43,20 +43,24 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
   </div>
 
   <div class="cadre-right" v-if="currentID">
-    <div style="display:flex;gap:6px;margin-bottom:8px;">
+    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
       <el-button type="primary" size="small" @click="saveCadre">保存</el-button>
+      <el-button size="small" @click="extractCadre">提取数据</el-button>
       <el-button size="small" @click="getImage">获取照片</el-button>
       <el-button size="small" @click="calcAge">计算年龄</el-button>
-      <el-button size="small" @click="printCadre">打印（专审专用）</el-button>
-      <el-button size="small" @click="printCadreNormal">打印（普通）</el-button>
-    <div class="form-row"><label>表名称</label><input v-model="form.BMMC"></div>
+      <el-button size="small" @click="exportCadre('special')">导出Excel（专审专用）</el-button>
+      <el-button size="small" @click="exportCadre('normal')">导出Excel（普通）</el-button>
+      <div class="form-row"><label>表名称</label><input v-model="form.BMMC"></div>
     </div>
-<div style="float:right;width:120px;height:150px;border:1px solid #ddd;margin-left:10px;text-align:center;">
-  <img v-if="form.DQZP" :src="'data:image/jpeg;base64,' + form.DQZP" style="width:100%;height:100%;object-fit:cover;">
-  <span v-else style="color:#ccc;line-height:150px;">无照片</span>
-</div>
-    <div style="font-weight:bold;margin:10px 0 6px 0;">基本信息</div>
 
+    <div style="float:right;width:120px;height:150px;border:1px solid #ddd;margin-left:10px;text-align:center;cursor:pointer;" @click="getImage">
+      <img v-if="form.DQZP" :src="form.DQZP.startsWith('data:') ? form.DQZP : 'data:image/jpeg;base64,' + form.DQZP" style="width:100%;height:100%;object-fit:cover;">
+      <span v-else style="color:#ccc;line-height:150px;">无照片</span>
+      <div style="font-size:12px;color:#409EFF;">点击更换</div>
+    </div>
+    <input type="file" ref="photoInput" accept="image/*" style="display:none;" @change="handlePhotoChange">
+
+    <div style="font-weight:bold;margin:10px 0 6px 0;">基本信息</div>
     <div class="form-row"><label>姓名</label><input v-model="form.XM"><label style="width:60px;">性别</label><input v-model="form.XB" style="width:80px;"><label style="width:60px;">民族</label><input v-model="form.MZ" style="width:100px;"></div>
     <div class="form-row"><label>出生年月</label><input v-model="form.CSNY"><label style="width:60px;">年龄</label><input v-model="form.NL" style="width:80px;"></div>
     <div class="form-row"><label>籍贯</label><input v-model="form.JG"><label style="width:60px;">出生地</label><input v-model="form.CHUSHENGDI"></div>
@@ -100,7 +104,6 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       <input v-model="form['UNITANDZHIWU'+n]" placeholder="工作单位" class="wide">
       <input v-model="form['csny'+n]" placeholder="出生年月" style="width:80px;">
     </div>
-
     <div style="height:40px;"></div>
   </div>
 </div>
@@ -117,14 +120,13 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       const cadreList = ref([]);
       const currentID = ref(null);
       const form = reactive({});
-
+      const photoInput = ref(null);
       const years = Array.from({length: 50}, (_, i) => String(new Date().getFullYear() - i));
 
       const loadList = () => {
         axios.get('/archives/api/cadre-list/', { params: { rsid: rsid.value } }).then(res => {
           if (res.data.code === 0) cadreList.value = res.data.data || [];
-          else ElMessage.error(res.data.msg);
-        }).catch(() => ElMessage.error('加载列表失败'));
+        });
       };
 
       const selectCadre = (row) => {
@@ -133,16 +135,15 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
           if (res.data.code === 0) {
             Object.keys(form).forEach(k => delete form[k]);
             Object.assign(form, res.data.data || {});
-          } else ElMessage.error(res.data.msg);
-        }).catch(() => ElMessage.error('加载详情失败'));
+          }
+        });
       };
 
       const addCadre = () => {
         if (!rsid.value) { ElMessage.warning('未选择人员'); return; }
         axios.get('/archives/api/cadre-add/', { params: { rsid: rsid.value } }).then(res => {
           if (res.data.code === 0) cadreList.value = res.data.data || [];
-          else ElMessage.error(res.data.msg);
-        }).catch(() => ElMessage.error('新增失败'));
+        });
       };
 
       const deleteCadre = () => {
@@ -150,8 +151,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         ElMessageBox.confirm('确定删除？','确认',{type:'warning'}).then(() => {
           axios.get('/archives/api/cadre-delete/', { params: { rsid: rsid.value, id: currentID.value } }).then(res => {
             if (res.data.code === 0) { cadreList.value = res.data.data || []; currentID.value = null; Object.keys(form).forEach(k => delete form[k]); }
-            else ElMessage.error(res.data.msg);
-          }).catch(() => ElMessage.error('删除失败'));
+          });
         });
       };
 
@@ -159,15 +159,13 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         if (!currentID.value) { ElMessage.warning('请先选中一条'); return; }
         axios.get('/archives/api/cadre-extract/', { params: { rsid: rsid.value, id: currentID.value } }).then(res => {
           if (res.data.code === 0) { Object.keys(form).forEach(k => delete form[k]); Object.assign(form, res.data.data || {}); }
-          else ElMessage.error(res.data.msg);
-        }).catch(() => ElMessage.error('提取失败'));
+        });
       };
 
       const saveCadre = () => {
         axios.post('/archives/api/cadre-save/', { rsid: rsid.value, id: currentID.value, ...form }).then(res => {
-          if (res.data.code === 0) ElMessage.success(res.data.msg);
-          else ElMessage.error(res.data.msg);
-        }).catch(() => ElMessage.error('保存失败'));
+          ElMessage[res.data.code === 0 ? 'success' : 'error'](res.data.msg);
+        });
       };
 
       const calcAge = () => {
@@ -180,12 +178,29 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         ElMessage.success('年龄计算完成');
       };
 
-      const getImage = () => { ElMessage.info('照片功能待完善'); };
-      const printCadre = () => { ElMessage.info('打印功能待完善'); };
-      const printCadreNormal = () => { ElMessage.info('打印功能待完善'); };
+      const getImage = () => {
+        if (photoInput.value) photoInput.value.click();
+      };
+
+      const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 300 * 1024) { ElMessage.error('照片不能超过300KB'); return; }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          form.DQZP = ev.target.result;
+          ElMessage.success('照片已选择，保存时生效');
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const exportCadre = (type) => {
+        if (!currentID.value) { ElMessage.warning('请先选中一条'); return; }
+        window.open('/archives/api/cadre-export/?rsid=' + rsid.value + '&id=' + currentID.value + '&type=' + type, '_blank');
+      };
 
       onMounted(loadList);
-      return { rsid, cadreList, currentID, form, years, loadList, selectCadre, addCadre, deleteCadre, extractCadre, saveCadre, calcAge, getImage, printCadre, printCadreNormal };
+      return { rsid, cadreList, currentID, form, photoInput, years, loadList, selectCadre, addCadre, deleteCadre, extractCadre, saveCadre, calcAge, getImage, handlePhotoChange, exportCadre };
     }
   });
   app.config.compilerOptions.delimiters = ['[[', ']]'];

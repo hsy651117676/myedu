@@ -61,7 +61,7 @@
   <div class="login-box" id="app">
     <div v-if="showCertWarning" style="background:#fff8e1;border:1px solid #ffc107;padding:12px;margin-bottom:20px;border-radius:4px;font-size:13px;color:#795548;">
       ⚠️ 浏览器提示"不安全"？请安装根证书<br>
-      <a href="/static/ca.crt" download style="color:#409EFF;">📥 点击下载 CA 根证书</a>
+          <a href="/static/ca.crt" download @click.stop style="color:#409EFF;">📥 点击下载 CA 根证书</a>
     </div>
     <div class="login-title">系统登录</div>
 
@@ -133,7 +133,7 @@
 </div>
 
 <script>
-// 如果在 iframe 中，跳出到父窗口
+    // 如果在 iframe 中，跳出到父窗口
 if (window.top !== window.self) {
   window.top.location.href = window.location.href;
 }
@@ -150,20 +150,9 @@ const app = createApp({
       isArchiveUser: true,
     });
 
-    const showCertWarning = ref(false);
+    const showCertWarning = ref(true);
     const loading = ref(false);
     const captchaUrl = ref('/captcha/?' + Date.now());
-
-    // 检测证书
-    const checkCert = async () => {
-      try {
-        await fetch('/static/favicon.ico', { cache: 'reload' });
-        showCertWarning.value = false;
-      } catch (e) {
-        showCertWarning.value = true;
-      }
-    };
-    checkCert();
 
     const rules = {
       username: [

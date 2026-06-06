@@ -2,11 +2,12 @@ from django.urls import path, re_path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from main.system_admin.views import placeholder
-from .views.home import home_view
+from .views.home import *
 
 urlpatterns = [
     # ==================== 主页 ====================
     path("", home_view, name="home"),
+    path("welcome/", welcome, name="welcome"),
 
     # ==================== 人口管理 ====================
     path("population/", include("main.views.population.urls")),

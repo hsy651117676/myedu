@@ -1,0 +1,388 @@
+<!-- image_editor.html -->
+{% extends "layout/base.html" %}
+{% block title %}图像修图工具{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.toolbar { display:flex;align-items:center;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;gap:6px;flex-shrink:0; }
+.toolbar button { padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap; }
+.toolbar button:hover { border-color:#409EFF;color:#409EFF; }
+.page-list { width:7%;min-width:70px;border-right:1px solid #e0e0e0;overflow-y:auto;padding:4px; }
+.page-list div { padding:4px 8px;cursor:pointer;font-size:12px;border-radius:2px;white-space:nowrap; }
+.page-list div:hover { background:#e8f0fe; }
+.page-list div.active { background:#d0e4fc;font-weight:bold; }
+.page-list div.processed { color:#67c23a; }
+.preview-panel { display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:6px; }
+.preview-panel img { max-width:100%;max-height:70vh;object-fit:contain;box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+.preview-panel .label { font-size:12px;color:#909399;margin-bottom:4px; }
+.preview-panel .placeholder { color:#ccc;text-align:center;padding:40px 20px;border:2px dashed #e0e0e0;border-radius:8px;min-width:200px; }
+.drag-bar { width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0; }
+.drag-bar:hover { background:#c0c4cc; }
+.status-bar { display:flex;align-items:center;gap:16px;padding:4px 10px;border-top:1px solid #e0e0e0;background:#fafafa;font-size:12px;color:#909399;flex-shrink:0; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-weight:600;font-size:14px;margin-right:8px;">📷 图像修图工具</span>
+    <button @click="selectBaseDir">📁 选择D:\das_image目录</button>
+    <span v-if="basePath" style="font-size:11px;color:#67c23a;">已连接：[[ basePath ]]</span>
+    <span v-else style="font-size:11px;color:#e6a23c;">⚠ 请选择D:\das_image目录</span>
+  </div>
+
+  <div style="flex:1;display:flex;overflow:hidden;">
+    <div id="col1" class="resize-panel" style="width:9%;min-width:100px;overflow:hidden;">
+      <iframe src="/components/person-panel-embed/" style="width:100%;height:100%;border:none;"></iframe>
+    </div>
+    <div class="drag-bar" data-target="col1"></div>
+
+    <div id="col2" class="resize-panel" style="width:9%;min-width:90px;overflow:hidden;">
+      <iframe :src="'/components/archive-tree-embed/?rsid='+(rsid||'')" style="width:100%;height:100%;border:none;"></iframe>
+    </div>
+    <div class="drag-bar" data-target="col2"></div>
+
+    <div class="page-list" id="col3">
+      <div v-for="(f,i) in files" :key="f.name"
+           :class="{active: currentIndex===i, processed: processedFiles[f.name]}"
+           @click="selectFile(i)">
+        [[ f.name ]]
+      </div>
+      <div v-if="files.length===0" style="color:#ccc;text-align:center;padding:20px;font-size:12px;">请选择材料</div>
+    </div>
+    <div class="drag-bar" data-target="col3"></div>
+
+    <div class="preview-panel" id="col4" style="width:27%;min-width:150px;">
+      <div class="label">📷 原图</div>
+      <img v-if="originalUrl" :src="originalUrl" />
+      <div v-else class="placeholder">选择图片</div>
+    </div>
+    <div class="drag-bar" data-target="col4"></div>
+
+    <div class="preview-panel" id="col5" style="width:40%;min-width:180px;background:#fafafa;">
+      <div class="label" style="color:#409EFF;font-weight:bold;">✨ 修图后</div>
+      <img v-if="processedUrl" :src="processedUrl" style="border:2px solid #409EFF;" />
+      <div v-else class="placeholder">修图后显示</div>
+    </div>
+    <div class="drag-bar" data-target="col5"></div>
+
+    <div id="col6" style="width:8%;min-width:110px;border-left:1px solid #e0e0e0;overflow:hidden;">
+      <iframe ref="processFrame" src="/archives/image/process/" style="width:100%;height:100%;border:none;"></iframe>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span v-if="basePath">📁 [[ basePath ]]</span>
+    <span style="flex:1;"></span>
+    <span>[[ statusText ]]</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, onMounted } = Vue;
+
+  const DB_NAME = 'ImageEditorDB';
+  const DB_VERSION = 1;
+  const STORE_NAME = 'dirHandles';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        if (!e.target.result.objectStoreNames.contains(STORE_NAME)) {
+          e.target.result.createObjectStore(STORE_NAME);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function saveHandleToDB(handle) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put(handle, 'baseDir');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function loadHandleFromDB() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get('baseDir');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function verifyPermission(handle) {
+    const opts = { mode: 'read' };
+    if (await handle.queryPermission(opts) === 'granted') return true;
+    if (await handle.requestPermission(opts) === 'granted') return true;
+    return false;
+  }
+
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const rsid = ref('');
+      const currentFL = ref('');
+      const currentArchId = ref('');
+      const files = ref([]);
+      const fileHandles = ref([]);
+      const currentIndex = ref(-1);
+      const currentFile = ref(null);
+      const originalUrl = ref(null);
+      const processedUrl = ref(null);
+      const processedFiles = ref({});
+      const baseDirHandle = ref(null);
+      const sourceDirHandle = ref(null);
+      const workDirHandle = ref(null);
+      const basePath = ref('');
+      const processFrame = ref(null);
+      const statusText = ref('就绪');
+
+      const initBaseDir = async () => {
+        try {
+          const saved = await loadHandleFromDB();
+          if (saved) {
+            const hasPermission = await verifyPermission(saved);
+            if (hasPermission) {
+              baseDirHandle.value = saved;
+              basePath.value = saved.name;
+              await initSubDirs();
+              return;
+            }
+          }
+        } catch(e) {
+          console.log('恢复目录句柄失败');
+        }
+      };
+
+      const selectBaseDir = async () => {
+        try {
+          const handle = await window.showDirectoryPicker();
+          baseDirHandle.value = handle;
+          basePath.value = handle.name;
+          await saveHandleToDB(handle);
+          await initSubDirs();
+          if (rsid.value && currentFL.value && currentArchId.value) {
+            loadFilesFromSource();
+          }
+        } catch(e) {
+          console.log('用户取消选择');
+        }
+      };
+
+      const initSubDirs = async () => {
+        if (!baseDirHandle.value) return;
+        try {
+          sourceDirHandle.value = await baseDirHandle.value.getDirectoryHandle('原始');
+        } catch(e) {
+          sourceDirHandle.value = await baseDirHandle.value.getDirectoryHandle('原始', { create: true });
+        }
+        try {
+          workDirHandle.value = await baseDirHandle.value.getDirectoryHandle('修图后');
+        } catch(e) {
+          workDirHandle.value = await baseDirHandle.value.getDirectoryHandle('修图后', { create: true });
+        }
+      };
+
+      const loadFilesFromSource = async () => {
+        if (!sourceDirHandle.value || !rsid.value || !currentFL.value || !currentArchId.value) return;
+        try {
+          let handle = sourceDirHandle.value;
+          for (const part of [String(rsid.value).padStart(8,'0'), String(currentFL.value), String(currentArchId.value)]) {
+            handle = await handle.getDirectoryHandle(part);
+          }
+          const newFiles = [];
+          const newHandles = [];
+          for await (const [name, fileHandle] of handle.entries()) {
+            if (fileHandle.kind === 'file' && /\.(jpg|jpeg|png|bmp|tiff?)$/i.test(name)) {
+              newFiles.push({ name, archid: currentArchId.value, page: newFiles.length + 1 });
+              newHandles.push(fileHandle);
+            }
+          }
+          newFiles.sort((a, b) => a.name.localeCompare(b.name));
+          if (newFiles.length > 0) {
+            files.value = newFiles;
+            fileHandles.value = newHandles;
+            processedFiles.value = {};
+            selectFile(0);
+          }
+        } catch(e) {
+          console.error('加载文件列表失败:', e);
+        }
+      };
+
+      const sendToProcessFrame = (msg) => {
+        if (processFrame.value && processFrame.value.contentWindow) {
+          processFrame.value.contentWindow.postMessage(msg, '*');
+        }
+      };
+
+      window.addEventListener('message', async (e) => {
+        if (e.data.type === 'person-select') {
+          rsid.value = e.data.data.rsid;
+          currentFL.value = ''; 
+          currentArchId.value = '';
+          files.value = []; 
+          fileHandles.value = []; 
+          processedFiles.value = {};
+          if (originalUrl.value) URL.revokeObjectURL(originalUrl.value);
+          if (processedUrl.value) URL.revokeObjectURL(processedUrl.value);
+          originalUrl.value = null;
+          processedUrl.value = null;
+          sendToProcessFrame({ type: 'reset' });
+        }
+        
+        if (e.data.type === 'archive-select') {
+          currentFL.value = e.data.data.fl;
+          currentArchId.value = e.data.data.archid;
+          const ys = parseInt(e.data.data.ys) || 0;
+          files.value = []; 
+          fileHandles.value = []; 
+          processedFiles.value = {};
+          sendToProcessFrame({ type: 'reset' });
+          
+          if (sourceDirHandle.value) {
+            await loadFilesFromSource();
+          } else {
+            for (let i = 1; i <= ys; i++) {
+              files.value.push({ 
+                name: String(i).padStart(3, '0') + '.JPG', 
+                archid: e.data.data.archid, 
+                page: i 
+              });
+            }
+            if (files.value.length > 0) selectFile(0);
+          }
+        }
+
+        // 处理来自修图iframe的消息
+        if (e.data.type === 'process-status') {
+          statusText.value = e.data.text;
+        }
+        if (e.data.type === 'process-done') {
+          processedFiles.value[e.data.fileName] = true;
+        }
+        if (e.data.type === 'preview-update') {
+          if (processedUrl.value) URL.revokeObjectURL(processedUrl.value);
+          processedUrl.value = e.data.url;
+        }
+        if (e.data.type === 'save-request') {
+          await handleSaveRequest(e.data.blobs);
+        }
+      });
+
+      const handleSaveRequest = async (blobs) => {
+        if (!workDirHandle.value) {
+          alert('请先选择D:\\das_image目录');
+          sendToProcessFrame({ type: 'save-done', success: false, msg: '未选择目录' });
+          return;
+        }
+        let saveCount = 0;
+        for (const item of blobs) {
+          try {
+            let handle = workDirHandle.value;
+            const pathParts = [String(rsid.value).padStart(8,'0'), String(currentFL.value), String(currentArchId.value)];
+            for (const part of pathParts) {
+              try { handle = await handle.getDirectoryHandle(part); }
+              catch { handle = await handle.getDirectoryHandle(part, { create: true }); }
+            }
+            const fh = await handle.getFileHandle(item.name, { create: true });
+            const writable = await fh.createWritable();
+            await writable.write(item.blob);
+            await writable.close();
+            saveCount++;
+          } catch(e) { 
+            console.error('保存失败:', item.name, e); 
+          }
+        }
+        statusText.value = `保存完成：${saveCount} 个文件`;
+        sendToProcessFrame({ type: 'save-done', success: true, count: saveCount });
+      };
+
+      const selectFile = async (i) => {
+        currentIndex.value = i;
+        const fi = files.value[i];
+        if (!fi) return;
+        
+        if (originalUrl.value) URL.revokeObjectURL(originalUrl.value);
+        originalUrl.value = null;
+        if (processedUrl.value) { URL.revokeObjectURL(processedUrl.value); processedUrl.value = null; }
+        sendToProcessFrame({ type: 'reset' });
+        
+        if (fileHandles.value[i]) {
+          try {
+            const file = await fileHandles.value[i].getFile();
+            currentFile.value = file;
+            originalUrl.value = URL.createObjectURL(file);
+            sendToProcessFrame({ type: 'set-file', file: file, fileName: fi.name });
+            return;
+          } catch(e) {
+            console.error('获取文件失败:', e);
+          }
+        }
+        
+        if (sourceDirHandle.value && rsid.value && currentFL.value && fi.archid) {
+          try {
+            let handle = sourceDirHandle.value;
+            for (const part of [String(rsid.value).padStart(8,'0'), String(currentFL.value), String(fi.archid)]) {
+              handle = await handle.getDirectoryHandle(part);
+            }
+            const fh = await handle.getFileHandle(fi.name);
+            fileHandles.value[i] = fh;
+            const file = await fh.getFile();
+            currentFile.value = file;
+            originalUrl.value = URL.createObjectURL(file);
+            sendToProcessFrame({ type: 'set-file', file: file, fileName: fi.name });
+          } catch(e) {
+            console.error('加载图片失败:', fi.name, e);
+          }
+        }
+      };
+
+      const initDrag = () => {
+        document.querySelectorAll('.drag-bar').forEach(bar => {
+          bar.addEventListener('mousedown', (e) => {
+            const panel = document.getElementById(bar.dataset.target);
+            if (!panel) return;
+            const startX = e.clientX, startW = panel.offsetWidth;
+            const onMove = (ev) => { 
+              let w = startW+ev.clientX-startX; 
+              if(w<60) w=60; 
+              panel.style.width=w+'px'; 
+            };
+            const onUp = () => { 
+              document.removeEventListener('mousemove', onMove); 
+              document.removeEventListener('mouseup', onUp); 
+            };
+            document.addEventListener('mousemove', onMove); 
+            document.addEventListener('mouseup', onUp);
+          });
+        });
+      };
+
+      onMounted(async () => {
+        initDrag();
+        await initBaseDir();
+      });
+
+      return { 
+        rsid, files, currentIndex, originalUrl, processedUrl, processedFiles,
+        basePath, processFrame, statusText,
+        selectBaseDir, selectFile
+      };
+    }
+  });
+
+  app.mount('#app');
+})();
+</script>
+{% endblock %}

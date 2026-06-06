@@ -85,47 +85,37 @@ def get_pdf_page_size(size_name, vertical=True):
 
 
 # ==================== 图片解密 ====================
-
 def decrypt_image(encrypted_path):
     """
     解密FTS加密的图片文件
-    算法: AES-128-ECB
-    头部: 8/12/16/20字节，自动检测
+    格式: 4字节原始长度(小端) + 4字节保留 + AES-128-ECB加密数据
     """
+    import struct
+
     with open(encrypted_path, 'rb') as f:
         data = f.read()
 
-    plain_bytes = None
+    if len(data) < 8:
+        raise ValueError(f"文件太小: {encrypted_path}")
 
-    for head_size in [8, 12, 16, 20]:
-        enc = data[head_size:]
-        if len(enc) % 16 != 0:
-            continue
+    original_size = struct.unpack('<I', data[:4])[0]
+    enc = data[8:]
 
-        try:
-            cipher = AES.new(_AES_KEY, AES.MODE_ECB)
-            decrypted = cipher.decrypt(enc)
+    # 计算加密数据的实际大小（对齐到16字节）
+    encrypted_size = ((original_size + 15) // 16) * 16
+    if len(enc) > encrypted_size:
+        enc = enc[:encrypted_size]
 
-            try:
-                plain = unpad(decrypted, 16)
-            except ValueError:
-                end = decrypted.find(b'\xff\xd9')
-                if end > 0:
-                    plain = decrypted[:end + 2]
-                else:
-                    continue
+    cipher = AES.new(_AES_KEY, AES.MODE_ECB)
+    decrypted = cipher.decrypt(enc)
 
-            if plain[:2] == b'\xff\xd8' or plain[:4] == b'\x89PNG':
-                plain_bytes = plain
-                break
-        except Exception:
-            continue
+    # 截取原始长度
+    plain = decrypted[:original_size]
 
-    if plain_bytes is None:
-        raise ValueError(f"解密失败: {encrypted_path}")
+    if plain[:2] != b'\xff\xd8' and plain[:4] != b'\x89PNG':
+        raise ValueError(f"解密后不是有效图片: {encrypted_path}")
 
-    return Image.open(io.BytesIO(plain_bytes))
-
+    return Image.open(io.BytesIO(plain))
 
 # ==================== 路径构建 ====================
 

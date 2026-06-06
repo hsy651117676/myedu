@@ -67,7 +67,7 @@
           try {
             const r = await axios.get('/components/tree-children/', {params:{tid:node.tid}});
             if (r.data.code===0) {
-              node.children = r.data.data.map(normalizeNode);
+              node.children = r.data.data.map(normalizeNode ;
               node.expanded = true;
             }
           } catch(e) {

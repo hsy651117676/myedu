@@ -1,6 +1,7 @@
 """
 档案转递打印
 """
+
 import os
 import logging
 from io import BytesIO
@@ -16,7 +17,9 @@ from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
-TEMPLATE_PATH = os.path.join(settings.BASE_DIR, "static", "excel_templates", "干部档案传递单.xlsx")
+TEMPLATE_PATH = os.path.join(
+    settings.BASE_DIR, "static", "excel_templates", "干部档案传递单.xlsx"
+)
 
 
 def _get_print_data(rid):
@@ -37,12 +40,15 @@ def _get_print_data(rid):
         person_rsid = str(record.get("RSID", ""))
         person_info = {}
         if person_rsid:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT XM AS 姓名, XB AS 性别, CSNY AS 出生年月,
                        MZ AS 民族, RYBH AS 档案编号,
                        JOBUNIT AS 单位及职务, IDCARD AS 身份证号
                 FROM RS_INFO WHERE RSID=?
-            """, (int(person_rsid),))
+            """,
+                (int(person_rsid),),
+            )
             pcols = [c[0] for c in cursor.description]
             prow = cursor.fetchone()
             if prow:
@@ -53,7 +59,9 @@ def _get_print_data(rid):
         zdsj_year = zdsj[:4] if len(zdsj) >= 4 else ""
         wjh = record.get("WJH", "") or ""
         zdwh = f"盘教档传递【{zdsj_year}】{wjh}号"
-        zdsj_display = f"{zdsj[:4]}年{zdsj[4:6]}月{zdsj[6:8]}日" if len(zdsj) == 8 else zdsj
+        zdsj_display = (
+            f"{zdsj[:4]}年{zdsj[4:6]}月{zdsj[6:8]}日" if len(zdsj) == 8 else zdsj
+        )
         zwdw = record.get("ZWDW", "") or ""
         fb = record.get("FB", "") or ""
         person_job = person_info.get("单位及职务", "")
@@ -77,17 +85,21 @@ def print_page(request):
         return HttpResponse("记录不存在", status=404)
     record, person_info, zdwh, zdsj_display, zwdw, fb, person_job = result
 
-    return render(request, "business/archive_transfer_print.html", {
-        "record": record,
-        "person_info": person_info,
-        "zdwh": zdwh,
-        "zdsj_display": zdsj_display,
-        "zwdw": zwdw,
-        "fb": fb,
-        "person_job": person_job,
-        "rid": rid,
-        "zdyy": record.get("ZDYY", "") or "",
-    })
+    return render(
+        request,
+        "business/archive_transfer_print.html",
+        {
+            "record": record,
+            "person_info": person_info,
+            "zdwh": zdwh,
+            "zdsj_display": zdsj_display,
+            "zwdw": zwdw,
+            "fb": fb,
+            "person_job": person_job,
+            "rid": rid,
+            "zdyy": record.get("ZDYY", "") or "",
+        },
+    )
 
 
 @login_required
@@ -119,7 +131,9 @@ def export_excel(request):
     sheet.cell(row=8, column=1).value = f"{zwdw}："
 
     # Row 9: 等同志的档案材料转出
-    sheet.cell(row=9, column=1).value = f"  {fb}等同志的档案材料转出，请按档案内所列目录清点查收，并将回执退回。"
+    sheet.cell(
+        row=9, column=1
+    ).value = f"  {fb}等同志的档案材料转出，请按档案内所列目录清点查收，并将回执退回。"
 
     # Row 11 Col 3: 转递日期
     sheet.cell(row=11, column=3).value = zdsj_display
@@ -135,8 +149,11 @@ def export_excel(request):
     wb.save(buf)
     buf.seek(0)
     filename = f"{zdwh}_{fb}.xlsx"
-    resp = HttpResponse(buf, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    resp['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(filename)}"
+    resp = HttpResponse(
+        buf,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(filename)}"
     return resp
 
 
@@ -172,10 +189,11 @@ td{{border:1px solid #000;padding:6px 8px;font-size:14pt;vertical-align:middle;t
 <h1>干部档案传递存根</h1>
 <div class="file-no">{zdwh}</div>
 <table>
-<tr><td class="c1">姓名：{fb}</td><td class="c2">工作单位：{person_job}</td><td class="c3">调往何单位：{zwdw}</td><td class="c4">档案卷数<br>壹卷</td></tr>
+<tr><td class="c1">姓名</td><td class="c2">工作单位</td><td class="c3">调往何单位</td><td class="c4">档案卷数</td></tr>
+<tr><td class="c1">{fb}</td><td class="c2">{person_job}</td><td class="c3">{zwdw}</td><td class="c4">壹卷</td></tr>
 </table>
-<div class="sep">…………………………………………………………………………………………</div>
 
+<div class="sep">…………………………………………………………………………………………</div>
 <h2>干部档案传递通知单</h2>
 <div class="file-no">{zdwh}</div>
 <div style="font-size:14pt;">{zwdw}：</div>
@@ -185,12 +203,11 @@ td{{border:1px solid #000;padding:6px 8px;font-size:14pt;vertical-align:middle;t
 <div class="right">盘州市教育局档案室</div>
 <div class="right">{zdsj_display}</div>
 
-<div class="sep">…………………………………………………………………………………………</div>
 
 <table>
-<tr><td class="c1">姓名：{fb}</td><td class="c2">工作单位：{person_job}</td><td class="c3">调往何单位：{zwdw}</td><td class="c4">档案卷数<br>壹卷</td></tr>
+<tr><td class="c1">姓名</td><td class="c2">工作单位</td><td class="c3">调往何单位</td><td class="c4">档案卷数</td></tr>
+<tr><td class="c1">{fb}</td><td class="c2">{person_job}</td><td class="c3">{zwdw}</td><td class="c4">壹卷</td></tr>
 </table>
-<div class="sep">…………………………………………………………………………………………</div>
 
 <div style="font-size:14pt;margin:4px 0;">盘州市教育局：</div>
 <div class="return-title">回&emsp;执</div>
@@ -211,6 +228,6 @@ td{{border:1px solid #000;padding:6px 8px;font-size:14pt;vertical-align:middle;t
     buf = BytesIO()
     HTML(string=html).write_pdf(buf)
     buf.seek(0)
-    resp = HttpResponse(buf, content_type='application/pdf')
-    resp['Content-Disposition'] = f'inline; filename="干部档案传递单_{fb}.pdf"'
+    resp = HttpResponse(buf, content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="干部档案传递单_{fb}.pdf"'
     return resp

@@ -1,3 +1,4 @@
+'''人员基本信息'''
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -266,3 +267,25 @@ def person_basic_view(request):
 @archive_perm_required
 def person_salary_view(request):
     return render(request, "archives/person_salary.html")
+
+@login_required
+@csrf_exempt
+def person_photo_api(request):
+    if request.method != "POST":
+        return JsonResponse({"code": 405, "msg": "仅支持POST"})
+
+    rsid = request.POST.get("rsid")
+    photo = request.FILES.get("photo")
+    if not rsid or not photo:
+        return JsonResponse({"code": 400, "msg": "缺少参数"})
+
+    if photo.size > 300 * 1024:
+        return JsonResponse({"code": 400, "msg": "照片不能超过300KB"})
+
+    try:
+        img_bytes = photo.read()
+        with db() as c:
+            c.execute("UPDATE RS_INFO SET DQZP=? WHERE RSID=?", (img_bytes, int(rsid)))
+        return JsonResponse({"code": 0, "msg": "照片已保存"})
+    except Exception as e:
+        return JsonResponse({"code": 500, "msg": str(e)})

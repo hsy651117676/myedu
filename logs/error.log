@@ -7825,3 +7825,1254 @@ Traceback (most recent call last):
     parts = row["编号"].split("-")
             ^^^^^^^^^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'split'
+[ERROR] 2026-05-26 09:49:37,116 directory 844352 140178943047488 directory_save error: ('22018', "[22018] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Conversion failed when converting the nvarchar value '2025 0' to data type int. (245) (SQLExecDirectW)")
+[ERROR] 2026-05-26 09:56:39,009 directory 840235 139708998854336 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 88) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 09:56:39,471 directory 840235 139709016688320 directory_save error: ('HY000', '[HY000] [Microsoft][ODBC Driver 18 for SQL Server]Connection is busy with results for another command (0) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:20:54,311 log 840235 139709008295616 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:21:32,387 log 840235 139709008295616 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:23:33,499 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:23:35,223 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:23:41,227 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:23:50,994 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:23:58,701 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:05,169 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:12,264 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:23,752 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:32,716 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:43,071 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:48,290 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:55,613 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:24:59,147 log 840235 139709016688320 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 10:35:45,852 directory 840235 139708998854336 directory_save error: ('HY000', '[HY000] [Microsoft][ODBC Driver 18 for SQL Server]Connection is busy with results for another command (0) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:35:59,404 directory 840235 139709016688320 directory_save error: ('HY000', '[HY000] [Microsoft][ODBC Driver 18 for SQL Server]Connection is busy with results for another command (0) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:48:52,765 directory 844351 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 55) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:54:48,096 directory 844350 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 61) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:54:53,205 directory 844347 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 56) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:55:59,568 directory 844346 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 58) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:56:04,664 directory 844350 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 61) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:56:11,141 directory 844345 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 61) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 10:56:13,231 directory 844349 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 54) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 11:23:29,242 directory 844346 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 58) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 11:23:37,004 directory 844351 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 55) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 11:23:39,121 directory 844350 140178943047488 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 59) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 11:37:02,635 log 840235 139708998854336 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 11:37:03,335 log 840235 139708998854336 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 11:48:34,719 log 840235 139709025081024 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 11:51:14,036 log 840235 139708621379264 Internal Server Error: /components/scan-stats/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/components/scan_stats.py", line 50, in scan_stats_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 12:17:05,211 auth 844347 140178943047488 保存用户信息失败: {'id_card': ['请输入有效的身份证号']}
+[ERROR] 2026-05-26 13:10:58,111 directory 861570 139765013804736 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 58) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 13:11:03,160 directory 861570 139765102913216 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 58) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-26 13:32:59,371 auth 862914 139670723340096 保存用户信息失败: {'id_card': ['请输入有效的身份证号']}
+[ERROR] 2026-05-26 15:49:16,840 log 867907 140533678732992 Internal Server Error: /archives/api/audit-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/audit.py", line 306, in audit_export_api
+    cursor.execute("{CALL ZXSH_DAZSQKDJB(?, 'SELECT', ?)}", (int(rsid), yhbh))
+pyodbc.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function 'ZXSH_DAZSQKDJB' expects parameter '@cssj1A', which was not supplied. (201) (SQLExecDirectW)")
+[ERROR] 2026-05-26 18:15:41,007 audit 890270 139962179647168 专审保存失败: ('42000', '[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Procedure or function ZXSH_DAZSQKDJB_WEB has too many arguments specified. (8144) (SQLExecDirectW)')
+[ERROR] 2026-05-26 19:38:45,076 log 897465 140242426263232 Internal Server Error: /archives/api/audit-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/audit.py", line 342, in audit_export_api
+    conn.close()
+pyodbc.ProgrammingError: Attempt to use a closed connection.
+[ERROR] 2026-05-26 19:40:40,689 log 897735 140055241987776 Internal Server Error: /archives/api/audit-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/audit.py", line 462, in audit_export_api
+    ws.cell(row=46, column=5).value = ynn(data.get('xlxw13A'))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-26 20:08:46,501 log 899683 140274463196864 Internal Server Error: /archives/api/audit-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/audit.py", line 543, in audit_export_api
+    ws.cell(row=72, column=5).value = gv('qtwt')
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-26 20:12:09,460 log 899941 139682201466560 Internal Server Error: /archives/api/audit-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/audit.py", line 543, in audit_export_api
+    ws.cell(row=72, column=5).value = gv('qtwt')
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-26 20:26:55,370 log 900853 140359175120576 Internal Server Error: /archives/api/audit-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/audit.py", line 543, in audit_export_api
+    ws.cell(row=72, column=5).value = gv('qtwt')
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-26 20:34:31,077 log 901321 139781534049984 Internal Server Error: /archives/api/audit-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 30, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/audit.py", line 547, in audit_export_api
+    ws['B74']= f"初审人：{shr1}         初审时间：{shrtime}         复审人：{shr2}     复审时间：{shrtime}"
+                          ^^^^
+NameError: name 'shr1' is not defined
+[ERROR] 2026-05-27 08:38:10,390 log 930414 139627431196352 Internal Server Error: /archives/api/cadre-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/cadre.py", line 328, in cadre_export_api
+    template_path = os.path.join(settings.BASE_DIR, 'static', 'excel_templates', '干部任免审批表.xlsx')
+                    ^^
+NameError: name 'os' is not defined
+[ERROR] 2026-05-27 08:39:04,226 log 930599 140442579904192 Internal Server Error: /archives/api/cadre-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/cadre.py", line 329, in cadre_export_api
+    template_path = os.path.join(settings.BASE_DIR, 'static', 'excel_templates', '干部任免审批表.xlsx')
+                                 ^^^^^^^^
+NameError: name 'settings' is not defined
+[ERROR] 2026-05-27 08:40:45,952 log 930715 139646012135104 Internal Server Error: /archives/api/cadre-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/cadre.py", line 342, in cadre_export_api
+    ws['B4'] = gv('XM')
+    ~~^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 317, in __setitem__
+    self[key].value = value
+    ^^^^^^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-27 08:45:41,488 log 930898 139876089513664 Internal Server Error: /archives/api/cadre-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/cadre.py", line 343, in cadre_export_api
+    ws['B4'] = gv('XM')
+    ~~^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 317, in __setitem__
+    self[key].value = value
+    ^^^^^^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-27 08:50:54,634 log 931126 139964796892864 Internal Server Error: /archives/api/cadre-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/cadre.py", line 380, in cadre_export_api
+    resp = HttpResponse(buf, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+           ^^^^^^^^^^^^
+NameError: name 'HttpResponse' is not defined
+[ERROR] 2026-05-27 08:51:30,598 log 931227 140036797363904 Internal Server Error: /archives/api/cadre-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/cadre.py", line 346, in cadre_export_api
+    ws['G7'] = gv('ZHUANCHANG')
+    ~~^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/openpyxl/worksheet/worksheet.py", line 317, in __setitem__
+    self[key].value = value
+    ^^^^^^^^^^^^^^^
+AttributeError: 'MergedCell' object attribute 'value' is read-only
+[ERROR] 2026-05-27 09:00:53,083 log 932046 140030140556992 Internal Server Error: /archives/api/cadre-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/cadre.py", line 379, in cadre_export_api
+    resp = HttpResponse(buf, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+           ^^^^^^^^^^^^
+NameError: name 'HttpResponse' is not defined
+[ERROR] 2026-05-27 10:30:18,288 person 940512 139861054314304 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:30:18,289 person 940512 139861054314304 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:30:23,378 person 940509 139861054314304 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:30:23,387 person 940509 139861054314304 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:31:23,959 person 940512 139861054314304 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:31:23,961 person 940512 139861054314304 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:31:46,876 person 940510 139861054314304 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:31:46,877 person 940510 139861054314304 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:33:48,621 person 940514 139861054314304 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:33:48,622 person 940514 139861054314304 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-27 10:46:51,524 cadre 940513 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:47:09,001 cadre 940509 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:47:15,013 cadre 940512 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:48:01,435 cadre 940516 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:48:48,065 cadre 940512 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:48:53,103 cadre 940514 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:49:24,805 cadre 940512 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:49:52,865 cadre 943725 140038659491520 任免表保存失败: ('22018', '[22018] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Operand type clash: ntext is incompatible with image (206) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:50:00,559 cadre 943725 140038647215808 任免表保存失败: ('22018', '[22018] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Operand type clash: ntext is incompatible with image (206) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:50:13,112 directory 940514 139861054314304 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 58) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 10:58:08,803 cadre 940514 139861054314304 任免表保存失败: ('22001', '[22001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]String or binary data would be truncated. (8152) (SQLExecDirectW)')
+[ERROR] 2026-05-27 14:51:07,811 directory 955648 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 77) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 14:51:12,955 directory 955651 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 56) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 14:51:14,456 directory 955650 140006222706496 directory_save error: ('HYT00', '[HYT00] [Microsoft][ODBC Driver 18 for SQL Server]Query timeout expired (0) (SQLExecDirectW)')
+[ERROR] 2026-05-27 14:52:34,229 directory 955654 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 63) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 14:52:46,797 directory 955651 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 56) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 14:52:59,348 directory 955651 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 54) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 15:45:47,544 directory 955650 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 57) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 15:46:05,114 directory 955653 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 57) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 15:46:22,712 directory 955656 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 58) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 16:03:25,475 directory 955653 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 54) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 16:03:53,047 directory 955649 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 61) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 16:03:58,159 directory 955654 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 59) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 16:03:59,186 directory 955650 140006222706496 directory_save error: ('HYT00', '[HYT00] [Microsoft][ODBC Driver 18 for SQL Server]Query timeout expired (0) (SQLExecDirectW)')
+[ERROR] 2026-05-27 16:08:19,548 directory 955648 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 56) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-27 16:50:52,605 directory 955650 140006222706496 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 59) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-28 06:58:04,236 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:05,291 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:05,767 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:06,410 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:06,805 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:07,191 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:11,570 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:12,030 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:15,267 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:16,097 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 06:58:32,522 log 1008935 140550546110144 Internal Server Error: /archives/api/meeting-list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archives/meeting.py", line 36, in meeting_list_api
+    page = int(request.GET.get("page", 1))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '[object Event]'
+[ERROR] 2026-05-28 09:42:11,858 person 1014632 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:42:11,863 person 1014632 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:42:19,634 person 1014634 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:42:19,636 person 1014634 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:55:05,469 person 1014633 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:55:05,482 person 1014633 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:55:11,583 person 1014628 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:55:11,584 person 1014628 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:55:15,290 person 1014631 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 09:55:15,291 person 1014631 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 10:12:11,080 person 1014631 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 10:12:11,090 person 1014631 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 10:12:19,803 person 1014625 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 10:12:19,804 person 1014625 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 10:12:25,065 person 1014633 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 10:12:25,066 person 1014633 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:02,252 person 1014633 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:02,253 person 1014633 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:14,739 person 1014633 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:14,740 person 1014633 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:26,996 person 1014634 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:26,997 person 1014634 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:37,501 person 1014631 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:45:37,502 person 1014631 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:47:53,549 person 1014633 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:47:53,551 person 1014633 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:49:12,170 person 1014632 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:49:12,171 person 1014632 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:49:20,633 person 1014627 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:49:20,634 person 1014627 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:49:24,957 person 1014633 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:49:24,959 person 1014633 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:50:15,901 person 1014630 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 14:50:15,902 person 1014630 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 15:38:20,870 person 1014628 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 15:38:20,872 person 1014628 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 15:38:27,386 person 1014633 140116167849792 DB Error: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 15:38:27,387 person 1014633 140116167849792 保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 15:39:11,481 identify 1014632 140116167849792 认定表保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-28 15:39:19,891 identify 1014632 140116167849792 认定表保存失败: ('23000', "[23000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Cannot insert the value NULL into column 'id', table 'rs_new.dbo.Z_Log_rsinfo'; column does not allow nulls. INSERT fails. (515) (SQLExecDirectW)")
+[ERROR] 2026-05-29 10:42:22,160 directory 1075419 140634938935104 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 56) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-29 10:43:49,743 directory 1075416 140634938935104 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 55) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-29 10:44:17,320 directory 1075416 140634938935104 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 55) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-05-29 11:02:55,041 directory 1075418 140634938935104 directory_save error: ('40001', '[40001] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Transaction (Process ID 58) was deadlocked on lock | communication buffer resources with another process and has been chosen as the deadlock victim. Rerun the transaction. (1205) (SQLExecDirectW)')
+[ERROR] 2026-06-02 13:30:48,324 log 1344667 139750828668608 Internal Server Error: /archivesSystem/api/meeting-admin-export/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/decorators.py", line 92, in wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/archivesSystem/meeting_admin.py", line 552, in export_excel_api
+    resp = HttpResponse(
+           ^^^^^^^^^^^^
+NameError: name 'HttpResponse' is not defined
+[ERROR] 2026-06-06 09:31:59,989 log 1675796 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    cursor.execute(f"SELECT COUNT(*) FROM {table} {where}", params)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+[ERROR] 2026-06-06 09:32:01,760 log 1675799 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    cursor.execute(f"SELECT COUNT(*) FROM {table} {where}", params)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+[ERROR] 2026-06-06 09:32:02,920 log 1675793 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    cursor.execute(f"SELECT COUNT(*) FROM {table} {where}", params)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+[ERROR] 2026-06-06 09:32:08,533 log 1675798 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    cursor.execute(f"SELECT COUNT(*) FROM {table} {where}", params)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+[ERROR] 2026-06-06 09:32:50,035 log 1675798 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    cursor.execute(f"SELECT COUNT(*) FROM {table} {where}", params)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+[ERROR] 2026-06-06 09:34:06,139 log 1675796 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    where += " AND (Title LIKE %s OR Director LIKE %s)"
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+[ERROR] 2026-06-06 09:37:00,149 log 1675793 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    where += " AND (Title LIKE %s OR Director LIKE %s)"
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+[ERROR] 2026-06-06 09:37:03,838 log 1675794 140243180394304 Internal Server Error: /tools/api/media/list/
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/myedu/main/views/tools/mediaplayer.py", line 78, in list_api
+    where += " AND (Title LIKE %s OR Director LIKE %s)"
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/django/db/backends/mysql/base.py", line 76, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/cursors.py", line 330, in _query
+    db.query(q)
+  File "/home/hsy/miniconda3/envs/django_env/lib/python3.11/site-packages/MySQLdb/connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'Director' in 'where clause'")

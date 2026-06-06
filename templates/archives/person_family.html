@@ -13,6 +13,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 8px;background:#fff;border-bottom:1px solid #e0e0e0;position:sticky;top:0;z-index:10;">
     <span style="font-weight:bold;color:#409EFF;">家庭成员</span>
     <el-button type="primary" size="small" @click="saveData">保存</el-button>
+    <el-button size="small" @click="addRow">+ 添加行</el-button>
     <el-button size="small" @click="loadData">刷新</el-button>
   </div>
   <div style="flex:1;overflow:auto;">
@@ -71,6 +72,10 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
           if (res.data.code === 0) list.value = res.data.data || [];
         });
       };
+      const addRow = () => {
+    const maxSn = list.value.reduce((max, r) => Math.max(max, r.serialNumber || 0), 0);
+    list.value.push({ serialNumber: maxSn + 1, 称谓:'', 姓名:'', 性别:'', 身份证号:'', 工作单位及职务:'' });
+};
       const saveData = () => {
         let rows = list.value.map((r,i) => ({ ...r, serialNumber: r.serialNumber || i+1 }));
         axios.post('/archives/api/family-save/', { rsid: rsid.value, rows }).then(res => {
@@ -78,7 +83,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         });
       };
       onMounted(loadData);
-      return { rsid, list, loadData, saveData,appellationOptions};
+      return { rsid, list, loadData, saveData,appellationOptions,addRow};
     }
   });
   app.config.compilerOptions.delimiters = ['[[', ']]'];

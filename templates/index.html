@@ -83,8 +83,8 @@ const app = createApp({
     const menuKey = ref(0);
     const isCollapse = ref(false);
     const tabs = ref([
-      { title: '欢迎页', name: '/welcome/', url: '/static/welcome.html' }
-    ]);
+  { title: '欢迎页', name: '/welcome/', url: '/welcome/' }
+]);
 
     const findTitle = (url, list) => {
       if (!list || list.length === 0) return url;
@@ -104,6 +104,7 @@ const app = createApp({
         if (res.data.code === 0) menus.value = res.data.data;
       } catch (e) {}
     };
+    const loadUser = () => {};
     onMounted(() => { loadMenus(); loadUser(); });
     const onMenuOpen = (index) => { openeds.value = [index.toString()]; menuKey.value++; };
     const onMenuClose = () => {};

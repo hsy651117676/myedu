@@ -30,6 +30,8 @@
     <el-tag v-if="isMulti" type="warning">多人文件</el-tag>
     <el-tag v-else type="info">单人文件</el-tag>
   </div>
+  <el-button size="small" @click="persons.push({personName:'',summary:''})" style="margin-top:8px;">+ 添加人员</el-button>
+  <el-button size="small" type="danger" @click="persons=[]" style="margin-top:8px;margin-left:8px;">清空所有人员</el-button>
 
   <div style="margin-bottom:8px;">
     <div style="font-size:12px;color:#909399;margin-bottom:4px;">批量添加：从Excel复制姓名和概要（Tab分隔），每行一人</div>
@@ -37,18 +39,16 @@
   </div>
 
   <div style="font-weight:bold;margin-bottom:6px;">人员列表（[[ persons.length ]]人）</div>
-  <table class="edit-table">
-    <thead><tr><th>姓名</th><th>概要</th><th>操作</th></tr></thead>
+<table class="edit-table">
+    <thead><tr><th style="width:10%;">姓名</th><th style="width:80%;">概要</th><th style="width:10%;">操作</th></tr></thead>
     <tbody>
       <tr v-for="(p,i) in persons" :key="i">
-        <td><input v-model="p.personName" /></td>
-        <td><input v-model="p.summary" /></td>
-        <td><el-button size="small" type="danger" @click="persons.splice(i,1)">删除</el-button></td>
+        <td style="width:10%;"><input v-model="p.personName" /></td>
+        <td style="width:80%;"><input v-model="p.summary" /></td>
+        <td style="width:10%;"><el-button size="small" type="danger" @click="persons.splice(i,1)">删除</el-button></td>
       </tr>
     </tbody>
-  </table>
-  <el-button size="small" @click="persons.push({personName:'',summary:''})" style="margin-top:8px;">+ 添加人员</el-button>
-
+</table>
   <div style="text-align:right;margin-top:12px;">
     <el-button @click="closeDialog">取消</el-button>
     <el-button type="primary" @click="saveEdit">保存</el-button>

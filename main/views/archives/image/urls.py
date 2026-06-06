@@ -1,5 +1,6 @@
 from django.urls import path
 from main.views.archives.image import scan_viewer
+from . import image_editor
 
 app_name = 'archive_image'
 
@@ -8,4 +9,8 @@ urlpatterns = [
     path('api/scan-check/', scan_viewer.api_check_scan, name='scan_check'),
     path('api/scan-generate-pdf/', scan_viewer.api_generate_pdf, name='scan_generate_pdf'),
     path('api/scan-pdf/', scan_viewer.serve_pdf, name='scan_pdf'),
+
+
+    path('editor/', image_editor.page, name='image-editor'),
+    path('process/', image_editor.process_page, name='image-process'),
 ]

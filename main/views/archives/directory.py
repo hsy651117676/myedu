@@ -6,7 +6,7 @@ from main.db_utils import _get_conn
 import json
 import logging
 from main.decorators import archive_perm_required
-#@archive_perm_required
+# @archive_perm_required
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +87,7 @@ def directory_list_api(request):
     finally:
         if conn:
             conn.close()
+
 
 @login_required
 @csrf_exempt
@@ -260,3 +261,42 @@ def directory_save_api(request):
         if conn:
             conn.close()
 
+
+@login_required
+def all_directory_api(request):
+    rsid = request.GET.get("rsid", "")
+    if not rsid:
+        return JsonResponse({"code": 400, "msg": "缺少rsid"})
+
+    conn = None
+    try:
+        conn = _get_conn()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT c.JBBH + '、' + c.FLSM + '-' + CAST(a.FL AS VARCHAR) + '-' + CAST(a.XH AS VARCHAR) AS 类别序号,
+                   a.CLTM AS 材料名称, 
+                   a.FYEAR AS 年, a.FMONTH AS 月, a.FDAY AS 日, a.YS AS 页数, a.BZ AS 备注
+            FROM RS_ARCHINFO a
+            LEFT JOIN CATETREE c ON a.FL = c.FL
+            WHERE a.RSID = ?
+              AND a.FL > 0
+              AND a.CLTM IS NOT NULL AND a.CLTM != ''
+            ORDER BY a.FL, a.XH
+        """,
+            (int(rsid),),
+        )
+        cols = [c[0] for c in cursor.description]
+        rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
+        cursor.close()
+        return JsonResponse({"code": 0, "data": rows})
+    except Exception as e:
+        return JsonResponse({"code": 500, "msg": str(e)})
+    finally:
+        if conn:
+            conn.close()
+
+
+@login_required
+def all_directory_page(request):
+    return render(request, "archives/person_directory_all.html")

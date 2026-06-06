@@ -26,6 +26,8 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         <el-button size="small" type="success" @click="editSelected" :disabled="!selectedFileNo">编辑人员</el-button>
         <el-button size="small" type="warning" @click="renameSelected" :disabled="!selectedFileNo">修改信息</el-button>
         <el-button size="small" type="danger" @click="deleteSelected" :disabled="!selectedFileNo">删除</el-button>
+        <el-button size="small" type="info" @click="updatePdfVisible = true" :disabled="!selectedFileNo">更新PDF</el-button>
+        <el-button size="small" @click="showAddCategory = true">新增类别</el-button>
     </div>
 
     <div style="flex:1;display:flex;overflow:hidden;">
@@ -43,11 +45,11 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
         <div id="midPanel" class="resize-panel" style="width:40%;min-width:250px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e4e7ed;">
             <div style="flex:1;overflow:auto;">
                 <table class="file-table">
-                    <thead><tr><th style="width:40px;">选</th><th>文号</th><th>人数</th><th>年度</th></tr></thead>
+                  <thead><tr><th style="width:40px;">选</th><th>文号</th><th>文件名称</th><th>人数</th><th>年度</th></tr></thead>
                     <tbody>
                         <tr v-for="r in list" :key="r.FileNo" :class="{active: selectedFileNo===r.FileNo}" @click="selectedFileNo=r.FileNo">
                             <td><input type="radio" :value="r.FileNo" v-model="selectedFileNo" @click.stop /></td>
-                            <td>[[ r.FileNo ]]</td><td>[[ r.PersonCount ]]</td><td>[[ r.Year ]]</td>
+                            <td>[[ r.FileNo ]]</td><td>[[ r.FileName ]]</td><td>[[ r.PersonCount ]]</td><td>[[ r.Year ]]</td>
                         </tr>
                     </tbody>
                 </table>
@@ -91,6 +93,40 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     <template #footer>
         <el-button @click="renameVisible=false">取消</el-button>
         <el-button type="primary" @click="doRename">保存</el-button>
+    </template>
+</el-dialog>
+<!-- 更新PDF弹窗 -->
+<el-dialog v-model="updatePdfVisible" title="更新PDF文件" width="450px" draggable @closed="uploadFile=null; if($refs.uploadRef) $refs.uploadRef.clearFiles()">
+    <div style="margin-bottom:12px;color:#606266;">
+        当前文件：<b>[[ selectedFileNo ]]</b>
+    </div>
+    <el-upload
+        ref="uploadRef"
+        :auto-upload="false"
+        :limit="1"
+        accept=".pdf"
+        drag
+        action="#"
+        :on-change="(file) => uploadFile = file.raw"
+        :on-remove="() => uploadFile = null"
+    >
+        <el-icon><upload-filled /></el-icon>
+        <div class="el-upload__text">拖拽PDF文件到此处或<em>点击上传</em></div>
+        <template #tip>
+            <div class="el-upload__tip">仅支持PDF文件，上传后将替换原文件</div>
+        </template>
+    </el-upload>
+    <template #footer>
+        <el-button @click="updatePdfVisible = false">取消</el-button>
+        <el-button type="primary" @click="doUpdatePdf" :loading="uploading" :disabled="!uploadFile">确认替换</el-button>
+    </template>
+</el-dialog>
+<!-- 新增类别弹窗 -->
+<el-dialog v-model="showAddCategory" title="新增类别" width="350px">
+    <el-input v-model="newCategoryName" placeholder="输入类别名称" @keyup.enter="doAddCategory" />
+    <template #footer>
+        <el-button @click="showAddCategory = false">取消</el-button>
+        <el-button type="primary" @click="doAddCategory">确定</el-button>
     </template>
 </el-dialog>
 </div>
@@ -214,12 +250,66 @@ createApp({
             });
         };
         onMounted(initDrag);
+        const updatePdfVisible = ref(false);
+        const uploadFile = ref(null);
+        const uploading = ref(false);
+
+        const doUpdatePdf = async () => {
+            if (!uploadFile.value) {
+                ElMessage.warning('请选择PDF文件');
+                return;
+            }
+            uploading.value = true;
+            try {
+                const formData = new FormData();
+                formData.append('file', uploadFile.value);
+                formData.append('file_no', selectedFileNo.value);
+                
+                const r = await axios.post('/archivesSystem/api/files/manage/update-pdf/', formData);
+                if (r.data.code === 0) {
+                    ElMessage.success('PDF更新成功');
+                    updatePdfVisible.value = false;
+                    uploadFile.value = null;
+                    // 刷新预览，添加时间戳避免缓存
+                    if (pdfUrl.value) {
+                        pdfUrl.value = pdfUrl.value.split('&t=')[0] + '&t=' + Date.now();
+                    }
+                } else {
+                    ElMessage.error(r.data.msg || '更新失败');
+                }
+            } catch (e) {
+                ElMessage.error('更新失败');
+            } finally {
+                uploading.value = false;
+            }
+        };
+      const showAddCategory = ref(false);
+      const newCategoryName = ref('');
+
+      const doAddCategory = async () => {
+          if (!newCategoryName.value.trim()) {
+              ElMessage.warning('请输入类别名称');
+              return;
+          }
+          const r = await axios.post('/archivesSystem/api/files/categories/add/', {
+              category: newCategoryName.value.trim()
+          });
+          if (r.data.code === 0) {
+              ElMessage.success('新增成功');
+              categories.value.push(newCategoryName.value.trim());
+              categories.value.sort();
+              showAddCategory.value = false;
+              newCategoryName.value = '';
+          } else {
+              ElMessage.error(r.data.msg || '新增失败');
+          }
+      };
 
         return { categories, selectedCategory, q, list, total, currentPage, pageSize,
-                 selectedFileNo, pdfUrl,
-                 addVisible, editVisible, renameVisible, renameForm,
+                 selectedFileNo, pdfUrl, addVisible, editVisible, renameVisible, renameForm,
                  selectCategory, loadList, editSelected, renameSelected, doRename, deleteSelected,
-                 onPageChange, onSizeChange };
+                 onPageChange, onSizeChange, updatePdfVisible, uploadFile, uploading, doUpdatePdf, 
+                 showAddCategory, newCategoryName, doAddCategory,};
     }
 }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
 </script>

@@ -96,10 +96,8 @@ def upload_api(request):
     file_no = request.POST.get("fileNo", "").strip()
     uploaded_file = request.FILES.get("file")
     persons_str = request.POST.get("persons", "")
-
     if not category or not year or not uploaded_file:
-        return JsonResponse({"code": 400})
-
+        return JsonResponse({"code": 400, "msg": "类别、年度和文件不能为空"})
     md5 = hashlib.md5()
     for chunk in uploaded_file.chunks():
         md5.update(chunk)
@@ -124,3 +122,33 @@ def upload_api(request):
     service.insert_file(category, year, file_no, file_name, relative_path, file_size, file_type, md5_hash,
                         request.user.username, persons)
     return JsonResponse({"code": 0, "msg": "上传成功"})
+
+@login_required
+@csrf_exempt
+def update_pdf_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'code': 1, 'msg': '方法不允许'})
+    
+    file_no = request.POST.get('file_no', '')
+    uploaded_file = request.FILES.get('file')
+    
+    if not file_no or not uploaded_file:
+        return JsonResponse({'code': 1, 'msg': '参数不完整'})
+    
+    success, msg = service.update_pdf_file(file_no, uploaded_file)
+    return JsonResponse({'code': 0 if success else 1, 'msg': msg})
+
+@login_required
+@csrf_exempt
+def add_category_api(request):
+    if request.method != "POST":
+        return JsonResponse({"code": 405, "msg": "方法不允许"})
+    try:
+        data = json.loads(request.body)
+        category_name = data.get("category", "").strip()
+        if not category_name:
+            return JsonResponse({"code": 400, "msg": "类别名称不能为空"})
+        success, msg = service.add_category(category_name)
+        return JsonResponse({"code": 0 if success else 1, "msg": msg})
+    except Exception as e:
+        return JsonResponse({"code": 500, "msg": str(e)})
