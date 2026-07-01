@@ -1,61 +1,93 @@
-'''9-1-1_干部工资变动情况表'''
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse, FileResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
+"""9-1-1_干部工资变动情况表"""
+
 import json
 import logging
-import pyodbc
-from django.core.cache import cache
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
 from io import BytesIO
-import openpyxl
-from openpyxl.styles import Font, Alignment, Border, Side
 from urllib.parse import quote
+
+import openpyxl
+import pyodbc
 import xlrd
-from xlutils.copy import copy
-from main.db_utils import _get_conn
-from main.decorators import archive_perm_required
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.http import JsonResponse, HttpResponse, FileResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from openpyxl.styles import Alignment, Border, Font, Side
 from weasyprint import HTML
-from io import BytesIO
+from xlutils.copy import copy
+
+from main.utils import _get_conn, execute_sql
+from main.utils.decorators import archive_perm_required
+
+logger = logging.getLogger(__name__)
+
 
 def fmt6(s):
     if s and len(s) >= 6:
-        return s[:4] + '.' + s[4:6]
-    return s or ''
+        return s[:4] + "." + s[4:6]
+    return s or ""
+
 
 @contextmanager
 def db():
+    """数据库上下文管理器，自动 commit/rollback + 死锁重试"""
     conn = cursor = None
-    try:
-        conn = _get_conn()
-        cursor = conn.cursor()
-        yield cursor
-        conn.commit()
-    except Exception as e:
-        logger.error(f"DB Error: {e}")
-        if conn:
-            try: conn.rollback()
-            except: pass
-        raise
-    finally:
-        if cursor: cursor.close()
+    last_error = None
+    for attempt in range(3):
+        try:
+            conn = _get_conn()
+            cursor = conn.cursor()
+            yield cursor
+            conn.commit()
+            return
+        except pyodbc.Error as e:
+            error_code = e.args[0] if e.args else ""
+            if "1205" in str(error_code) and attempt < 2:
+                logger.warning(f"db() 死锁，第{attempt + 1}次重试: {e}")
+                import time
+
+                time.sleep(0.5 * (attempt + 1))
+                last_error = e
+                continue
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            raise
+        except Exception as e:
+            logger.error(f"DB Error: {e}")
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            raise
+        finally:
+            if cursor:
+                cursor.close()
+
+    if last_error:
+        raise last_error
 
 
 @login_required
 @archive_perm_required
 def person_salary_view(request):
-    return render(request, 'archives/person_salary.html')
+    return render(request, "archives/person_salary.html")
+
 
 @login_required
 def salary_dcfind_api(request):
-    lb = request.GET.get('lb', '')
+    lb = request.GET.get("lb", "")
     if not lb:
         return JsonResponse({"code": 400})
 
-    lbs = [x.strip() for x in lb.split(',') if x.strip()]
+    lbs = [x.strip() for x in lb.split(",") if x.strip()]
     result = {}
 
     conn = None
@@ -70,7 +102,7 @@ def salary_dcfind_api(request):
                 continue
             cursor.execute("SELECT dc FROM Z_GZBZ WHERE lb=?", (one_lb,))
             row = cursor.fetchone()
-            val = row[0] if row else ''
+            val = row[0] if row else ""
             result[one_lb] = val
             cache.set(cache_key, val, 3600)
         cursor.close()
@@ -81,10 +113,11 @@ def salary_dcfind_api(request):
         if conn:
             conn.close()
 
+
 @login_required
 @csrf_exempt
 def salary_bzfind_api(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
             items = json.loads(request.body) if request.body else []
         except:
@@ -96,9 +129,9 @@ def salary_bzfind_api(request):
             conn = _get_conn()
             cursor = conn.cursor()
             for item in items:
-                dc = item.get('dc', '')
-                sj = item.get('sj', '')
-                bz = item.get('bz', '')
+                dc = item.get("dc", "")
+                sj = item.get("sj", "")
+                bz = item.get("bz", "")
                 key = f"bz_{dc}_{sj}_{bz}"
 
                 cached = cache.get(key)
@@ -109,7 +142,8 @@ def salary_bzfind_api(request):
                 cursor.execute("{CALL Z_gzbzfind(?, ?, ?)}", (dc, sj, bz))
                 row = cursor.fetchone()
                 val = row[0] if row else 0
-                while cursor.nextset(): pass
+                while cursor.nextset():
+                    pass
                 results[key] = val
                 cache.set(key, val, 3600)
             cursor.close()
@@ -120,9 +154,9 @@ def salary_bzfind_api(request):
             if conn:
                 conn.close()
 
-    dc = request.GET.get('dc', '')
-    sj = request.GET.get('sj', '')
-    bz = request.GET.get('bz', '')
+    dc = request.GET.get("dc", "")
+    sj = request.GET.get("sj", "")
+    bz = request.GET.get("bz", "")
 
     cache_key = f"bz_{dc}_{sj}_{bz}"
     result = cache.get(cache_key)
@@ -135,7 +169,8 @@ def salary_bzfind_api(request):
         cursor = conn.cursor()
         cursor.execute("{CALL Z_gzbzfind(?, ?, ?)}", (dc, sj, bz))
         row = cursor.fetchone()
-        while cursor.nextset(): pass
+        while cursor.nextset():
+            pass
         result = row[0] if row else 0
         cursor.close()
         cache.set(cache_key, result, 3600)
@@ -146,9 +181,10 @@ def salary_bzfind_api(request):
         if conn:
             conn.close()
 
+
 @login_required
 def salary_data_api(request):
-    rsid = request.GET.get('rsid', '')
+    rsid = request.GET.get("rsid", "")
     if not rsid:
         return JsonResponse({"code": 400, "msg": "缺少RSID"})
 
@@ -158,25 +194,31 @@ def salary_data_api(request):
             cols_new = [col[0] for col in c.description]
             rows_new = [dict(zip(cols_new, r)) for r in c.fetchall()]
 
-            c.execute("SELECT SXH AS 序号, WH AS 变动原因, ZXSJ AS 执行时间, ZWGZ AS 职务档次, ZWJE AS 职务金额, JBGZ AS 级别档次, JBJE AS 级别金额, BZ AS 备注 FROM YW_GZBD WHERE RSID = ? AND SXH <> 0 ORDER BY SXH", (int(rsid),))
+            c.execute(
+                "SELECT SXH AS 序号, WH AS 变动原因, ZXSJ AS 执行时间, ZWGZ AS 职务档次, ZWJE AS 职务金额, JBGZ AS 级别档次, JBJE AS 级别金额, BZ AS 备注 FROM YW_GZBD WHERE RSID = ? AND SXH <> 0 ORDER BY SXH",
+                (int(rsid),),
+            )
             cols_old = [col[0] for col in c.description]
             rows_old = [dict(zip(cols_old, r)) for r in c.fetchall()]
 
-            c.execute("SELECT WH AS 单位及职务, ZXSJ AS 任职时间, ZWGZ AS 职务档次, ZWJE AS 职务金额, JBGZ AS 级别档次, JBJE AS 级别金额 FROM YW_GZBD WHERE RSID = ? AND SXH = 0", (int(rsid),))
+            c.execute(
+                "SELECT WH AS 单位及职务, ZXSJ AS 任职时间, ZWGZ AS 职务档次, ZWJE AS 职务金额, JBGZ AS 级别档次, JBJE AS 级别金额 FROM YW_GZBD WHERE RSID = ? AND SXH = 0",
+                (int(rsid),),
+            )
             cols_93 = [col[0] for col in c.description]
             rows_93 = [dict(zip(cols_93, r)) for r in c.fetchall()]
 
-        return JsonResponse({
-            "code": 0,
-            "data": {"newData": rows_new, "oldData": rows_old, "data93": rows_93}
-        })
+        return JsonResponse(
+            {
+                "code": 0,
+                "data": {"newData": rows_new, "oldData": rows_old, "data93": rows_93},
+            }
+        )
     except Exception as e:
         logger.error(f"工资查询失败: {e}")
         return JsonResponse({"code": 500, "msg": str(e)})
 
 
-@login_required
-@csrf_exempt
 @login_required
 @csrf_exempt
 def salary_save_api(request):
@@ -203,37 +245,29 @@ def salary_save_api(request):
         jbgz = row.get("级别档次") or ""
         jbje = row.get("级别金额") or ""
         bz = (row.get("备注") or "").replace("'", "''")
-        values.append(f"({rsid},{sxh},'{wh}','{zxsj}','{zwgz}','{zwje}','{jbgz}','{jbje}','{bz}')")
+        values.append(
+            f"({rsid},{sxh},'{wh}','{zxsj}','{zwgz}','{zwje}','{jbgz}','{jbje}','{bz}')"
+        )
 
     sql = f"""
         MERGE YW_GZBD AS t
-        USING (VALUES {','.join(values)}) AS s(RSID, sXH, WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE, BZ)
+        USING (VALUES {",".join(values)}) AS s(RSID, sXH, WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE, BZ)
         ON t.RSID = s.RSID AND t.sXH = s.sXH
         WHEN MATCHED THEN UPDATE SET WH=s.WH, ZXSJ=s.ZXSJ, ZWGZ=s.ZWGZ, ZWJE=s.ZWJE, JBGZ=s.JBGZ, JBJE=s.JBJE, BZ=s.BZ
         WHEN NOT MATCHED THEN INSERT (RSID, sXH, WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE, BZ) VALUES (s.RSID, s.sXH, s.WH, s.ZXSJ, s.ZWGZ, s.ZWJE, s.JBGZ, s.JBJE, s.BZ);
     """
 
-    conn = None
     try:
-        conn = _get_conn()
-        cursor = conn.cursor()
-        cursor.execute(sql)
-        conn.commit()
+        execute_sql(sql)
         return JsonResponse({"code": 0, "msg": "保存成功"})
     except Exception as e:
         logger.error(f"保存失败: {e}")
-        if conn:
-            try: conn.rollback()
-            except: pass
         return JsonResponse({"code": 500, "msg": str(e)})
-    finally:
-        if conn:
-            try: conn.close()
-            except: pass
+
 
 @login_required
 def salary_delete_api(request):
-    rsid = request.GET.get('rsid', '')
+    rsid = request.GET.get("rsid", "")
     if not rsid:
         return JsonResponse({"code": 400})
     try:
@@ -243,9 +277,10 @@ def salary_delete_api(request):
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
 
+
 @login_required
 def salary_auto_api(request):
-    rsid = request.GET.get('rsid', '')
+    rsid = request.GET.get("rsid", "")
     if not rsid:
         return JsonResponse({"code": 400})
     try:
@@ -257,25 +292,35 @@ def salary_auto_api(request):
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
 
-import openpyxl
-import copy
+
 @login_required
 def salary_export_api(request):
-    rsid = request.GET.get('rsid', '')
+    rsid = request.GET.get("rsid", "")
     if not rsid:
         return JsonResponse({"code": 400})
 
-    template_path = os.path.join(settings.BASE_DIR, 'static', 'excel_templates', '9_1_1.xlsx')
+    template_path = os.path.join(
+        settings.BASE_DIR, "static", "excel_templates", "9_1_1.xlsx"
+    )
 
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
-        cursor.execute("SELECT XM, WORKTIME, JOBUNIT, APPOINTTIME FROM RS_INFO WHERE RSID=?", (int(rsid),))
+        cursor.execute(
+            "SELECT XM, WORKTIME, JOBUNIT, APPOINTTIME FROM RS_INFO WHERE RSID=?",
+            (int(rsid),),
+        )
         p = cursor.fetchone()
-        cursor.execute("SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH=0", (int(rsid),))
+        cursor.execute(
+            "SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH=0",
+            (int(rsid),),
+        )
         gz93 = cursor.fetchone()
-        cursor.execute("SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH<>0 ORDER BY sXH", (int(rsid),))
+        cursor.execute(
+            "SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH<>0 ORDER BY sXH",
+            (int(rsid),),
+        )
         rows = cursor.fetchall()
         cursor.close()
 
@@ -292,30 +337,31 @@ def salary_export_api(request):
         def safe_set(r, c, v):
             ws.cell(row=r, column=c).value = v
 
-        safe_set(3, 2, p[0] or '')
+        safe_set(3, 2, p[0] or "")
         safe_set(3, 6, fmt6(p[1]))
-        safe_set(4, 2, p[2] or '')
-        safe_set(5, 3, p[3] or '')
+        safe_set(4, 2, p[2] or "")
+        safe_set(5, 3, p[3] or "")
         safe_set(6, 3, fmt6(p[3]))
         safe_set(6, 7, fmt6(p[3]))
 
         if gz93:
-            safe_set(10, 1, gz93[0] or '')
-            safe_set(10, 4, gz93[1] or '')
-            safe_set(10, 5, gz93[2] or '')
-            safe_set(10, 6, gz93[3] or '')
-            safe_set(10, 7, gz93[4] or '')
-            safe_set(10, 8, gz93[5] or '')
+            safe_set(10, 1, gz93[0] or "")
+            safe_set(10, 4, gz93[1] or "")
+            safe_set(10, 5, gz93[2] or "")
+            safe_set(10, 6, gz93[3] or "")
+            safe_set(10, 7, gz93[4] or "")
+            safe_set(10, 8, gz93[5] or "")
 
         for i, rd in enumerate(rows):
             r = 14 + i if i < 18 else 36 + (i - 18)
-            if r > 61: break
-            safe_set(r, 2, rd[0] if rd[0] else '')
-            safe_set(r, 4, rd[1] if rd[1] else '')
-            safe_set(r, 5, rd[2] if rd[2] else '')
-            safe_set(r, 6, rd[3] if rd[3] else '')
-            safe_set(r, 7, rd[4] if rd[4] else '')
-            safe_set(r, 8, rd[5] if rd[5] else '')
+            if r > 61:
+                break
+            safe_set(r, 2, rd[0] if rd[0] else "")
+            safe_set(r, 4, rd[1] if rd[1] else "")
+            safe_set(r, 5, rd[2] if rd[2] else "")
+            safe_set(r, 6, rd[3] if rd[3] else "")
+            safe_set(r, 7, rd[4] if rd[4] else "")
+            safe_set(r, 8, rd[5] if rd[5] else "")
 
         for mr in merged:
             ws.merge_cells(str(mr))
@@ -325,15 +371,22 @@ def salary_export_api(request):
         buf = BytesIO()
         wb.save(buf)
         buf.seek(0)
-        response = HttpResponse(buf, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(fn)}"
+        response = HttpResponse(
+            buf,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(fn)}"
         return response
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
     finally:
         if conn:
-            try: conn.close()
-            except: pass
+            try:
+                conn.close()
+            except:
+                pass
+
+
 @login_required
 def salary_print_api(request):
     rsid = request.GET.get("rsid", "")
@@ -344,13 +397,23 @@ def salary_print_api(request):
     try:
         conn = _get_conn()
         cursor = conn.cursor()
-        cursor.execute("SELECT XM, WORKTIME, JOBUNIT, APPOINTTIME FROM RS_INFO WHERE RSID=?", (int(rsid),))
+        cursor.execute(
+            "SELECT XM, WORKTIME, JOBUNIT, APPOINTTIME FROM RS_INFO WHERE RSID=?",
+            (int(rsid),),
+        )
         p = cursor.fetchone()
-        if not p: return HttpResponse("人员不存在", status=404)
+        if not p:
+            return HttpResponse("人员不存在", status=404)
 
-        cursor.execute("SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH=0", (int(rsid),))
+        cursor.execute(
+            "SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH=0",
+            (int(rsid),),
+        )
         gz93 = cursor.fetchone()
-        cursor.execute("SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH<>0 ORDER BY sXH", (int(rsid),))
+        cursor.execute(
+            "SELECT WH, ZXSJ, ZWGZ, ZWJE, JBGZ, JBJE FROM YW_GZBD WHERE RSID=? AND sXH<>0 ORDER BY sXH",
+            (int(rsid),),
+        )
         rows = cursor.fetchall()
         cursor.close()
 
@@ -359,8 +422,11 @@ def salary_print_api(request):
         jobunit = p[2] or ""
         appoint = p[3] or ""
 
-        def row_html(rd): return f"<tr style='height:17pt'><td colspan='2' class='reason'>{rd[0] or ''}</td><td>{rd[1] or ''}</td><td>{rd[2] or ''}</td><td>{rd[3] or ''}</td><td>{rd[4] or ''}</td><td>{rd[5] or ''}</td></tr>"
-        def empty_row(): return '<tr style="height:17pt"><td colspan="2" class="reason"></td><td></td><td></td><td></td><td></td><td></td></tr>'
+        def row_html(rd):
+            return f"<tr style='height:17pt'><td colspan='2' class='reason'>{rd[0] or ''}</td><td>{rd[1] or ''}</td><td>{rd[2] or ''}</td><td>{rd[3] or ''}</td><td>{rd[4] or ''}</td><td>{rd[5] or ''}</td></tr>"
+
+        def empty_row():
+            return '<tr style="height:17pt"><td colspan="2" class="reason"></td><td></td><td></td><td></td><td></td><td></td></tr>'
 
         gz93_h = ""
         if gz93:
@@ -368,10 +434,12 @@ def salary_print_api(request):
         else:
             gz93_h = '<tr style="height:17pt"><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
 
-        p1 = "".join(row_html(r) for r in rows[:18]) + "".join(empty_row() for _ in range(18 - len(rows[:18])))
-        p2 = "".join(row_html(r) for r in rows[18:]) + "".join(empty_row() for _ in range(26 - len(rows[18:])))
-
-        v = "历<br>年<br>工<br>资<br>变<br>动<br>情<br>况"
+        p1 = "".join(row_html(r) for r in rows[:18]) + "".join(
+            empty_row() for _ in range(18 - len(rows[:18]))
+        )
+        p2 = "".join(row_html(r) for r in rows[18:]) + "".join(
+            empty_row() for _ in range(26 - len(rows[18:]))
+        )
 
     except Exception as e:
         return HttpResponse(str(e), status=500)
@@ -433,4 +501,4 @@ td.noborder{{border:none;}}
     buf = BytesIO()
     HTML(string=html).write_pdf(buf)
     buf.seek(0)
-    return HttpResponse(buf, content_type='application/pdf')
+    return HttpResponse(buf, content_type="application/pdf")

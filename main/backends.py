@@ -4,7 +4,7 @@
 import hashlib
 import logging
 from django.contrib.auth.models import User
-from main.db_utils import _get_conn
+from main.utils import _get_conn
 
 logger = logging.getLogger(__name__)
 

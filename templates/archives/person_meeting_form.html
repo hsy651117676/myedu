@@ -33,6 +33,7 @@
 <div id="app">
   <div class="header">
       <div class="form-title">党组会认定申请单（[[ form.XM ]]）</div>
+        <a v-if="form.editable === false" style="color:#e6a23c;">温馨提示：如已上会备案信息有误，请认真填写《档案专审情况》表，并联系档案室工作人员通过《党组会认定管理》页面进行核实并更正！</a>
     <div class="btn-row">
       <button @click="extractInfo" :disabled="readonly">提取数据</button>
       <button class="primary" @click="save" v-if="!readonly">保存</button>
@@ -41,13 +42,15 @@
   </div>
 
   <div class="section">党组会信息</div>
+      <a v-if="form.editable === false" style="color:#e6a23c;font-size:13px;display:block;margin-bottom:8px;">初审人、初审时间、复审人、复审时间、本人签字时间、本人意见等信息，请前往《认定表》页面查看。</a>
+<a v-else style="color:#409EFF;font-size:13px;display:block;margin-bottom:8px;">初审人、初审时间、复审人、复审时间、本人签字时间、本人意见等信息，请前往《认定表》页面补充完整。</a>
   <div class="info-row"><label>届次名称</label><span>[[ form.batch_name || '未分配' ]]</span></div>
   <div class="form-row">
     <label>上党组会时间</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.batch_date || '未分配' ]]</span>
-    <label>分管领导</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.leader || '未填写' ]]</span>
+    <label>时任分管领导</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.leader || '未填写' ]]</span>
   </div>
   <div class="form-row">
-    <label>申请人</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.applicant || '未填写' ]]</span>
+    <label>上党组会申请人</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.applicant || '未填写' ]]</span>
     <label>届次状态</label><span style="flex:1;font-size:16px;color:#303133;">[[ form.batch_status || '未填写' ]]</span>
   </div>
 

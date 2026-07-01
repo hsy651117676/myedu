@@ -9,7 +9,7 @@ from django.http import JsonResponse, FileResponse, Http404
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from main.db_utils import _get_conn
+from main.utils import _get_conn
 from main.views.archives.image.scan_service import (
     get_or_generate_pdf,
     check_scan_exists,
@@ -18,7 +18,7 @@ from main.views.archives.image.scan_service import (
     IMAGE_TYPES,
 )
 
-from main.decorators import archive_perm_required
+from main.utils.decorators import archive_perm_required
 logger = logging.getLogger(__name__)
 
 

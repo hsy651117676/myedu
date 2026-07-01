@@ -13,12 +13,12 @@ body{
   align-items:center;
   color:#fff;
   font-family:"Microsoft YaHei","PingFang SC",sans-serif;
-  padding:50px 20px;
+  padding:40px 20px;
   text-align:center;
 }
 h1{
-  font-size:32px;
-  margin-bottom:30px;
+  font-size:28px;
+  margin-bottom:24px;
   font-weight:300;
   letter-spacing:4px;
 }
@@ -26,15 +26,15 @@ h1{
   background:rgba(255,255,255,0.08);
   border:1px solid rgba(255,255,255,0.12);
   border-radius:12px;
-  padding:30px 40px;
-  max-width:620px;
-  line-height:2;
-  font-size:16px;
+  padding:24px 30px;
+  max-width:900px;
+  line-height:1.8;
+  font-size:15px;
   color:rgba(255,255,255,0.85);
   text-align:left;
-  margin-bottom:30px;
+  margin-bottom:20px;
 }
-.notice p{ margin-bottom:16px; }
+.notice p{ margin-bottom:8px; }
 .notice .highlight{ color:#ffd666; font-weight:bold; }
 .notice .badge{
   display:inline-block;
@@ -44,26 +44,95 @@ h1{
   font-size:13px;
   margin:0 4px;
 }
-.sign{ text-align:right; margin-top:24px; color:rgba(255,255,255,0.5); font-size:14px; }
+.sign{ text-align:right; margin-top:16px; color:rgba(255,255,255,0.5); font-size:13px; }
+.bottom-row{
+  display:flex;
+  gap:20px;
+  max-width:900px;
+  width:100%;
+}
+.bottom-row .notice{
+  flex:1;
+  min-width:0;
+}
+.bottom-row h3{
+  font-size:17px;
+  margin-bottom:10px;
+  color:#ffd666;
+  font-weight:normal;
+}
+kbd{
+  display:inline-block;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.25);
+  border-radius:3px;
+  padding:1px 6px;
+  font-size:12px;
+  margin:0 2px;
+}
+.tip-item{ margin-bottom:6px; padding-left:8px; }
+.tip-item::before{ content:"• "; color:#ffd666; }
+a{ color:#ffd666; text-decoration:none; }
+a:hover{ text-decoration:underline; }
+.step{ margin-bottom:4px; }
+.step-num{ display:inline-block; background:#ffd666; color:#001529; border-radius:50%; width:20px; height:20px; text-align:center; line-height:20px; font-size:12px; font-weight:bold; margin-right:6px; }
 </style>
 </head>
 <body>
 
-<h1>📋目前基础功能已全部写完，请大家多使用本平台</h1>
+<h1>📋 盘州市教育人事档案信息管理平台</h1>
 
 <div class="notice">
   <p>各位同事：</p>
-  <p>&emsp;&emsp;如有显示异常或操作上的疑问，请随时与我联系。或将问题汇总到李老师处，由他统一告知我，方便一并修复！</p>
-  <p>请大家多使用本平台，原来的小蝴蝶系统将不再维护，大家使用中存在的问题及时反馈，我好修复！</p>
-  <p>💡 温馨提示：推荐使用 <span class="badge">Edge 浏览器</span> 下载文件，速度比其他浏览器更快！</p>
-  <p>感谢大家的理解与支持，祝工作愉快！</p>
-  <div class="sign">—— 黄胜原</div>
-  <div class="sign">2026年5月</div>
+  <p>&emsp;&emsp;目前本平台已完成常用功能开发。原来的小蝴蝶系统将不再维护，请大家迁移至本平台使用,熟悉本平台。</p>
+  <p>&emsp;&emsp;使用中遇到显示异常、操作疑问或功能建议，请随时与我联系；也可汇总至李家贤老师处统一反馈。</p>
+  <p>&emsp;&emsp;感谢大家的理解与支持，祝工作愉快！</p>
+  <div class="sign">—— 黄胜原 </div>
 </div>
 
-<div class="notice">
-  <p>目前还在调试模块：</p>
-  <p>图像处理及批量图像处理等功能：</p>
+<div class="bottom-row">
+  <div class="notice">
+    <h3>📌 更新提示</h3>
+    <p>仍在调试中的模块：</p>
+    <div class="tip-item">图像处理及批量图像处理</div>
+    <div class="tip-item">扫描查看器优化</div>
+    <p style="margin-top:8px;">如需其他功能，欢迎反馈。</p>
+  </div>
+
+  <div class="notice">
+    <h3>🔒 证书安装指南</h3>
+    <p style="margin-bottom:12px;">推荐使用域名访问：<a href="https://pzs.das.cn">pzs.das.cn</a> / <a href="https://pzsdas.com">pzsdas.com</a> / <a href="https://das.edu">das.edu</a></p>
+    <div class="step"><span class="step-num">1</span> 打开登录页面，点击页面上的"下载证书"链接，下载 <b>ca.crt</b> 文件</div>
+    <div class="step"><span class="step-num">2</span> 双击下载的证书文件，点击"安装证书"</div>
+    <div class="step"><span class="step-num">3</span> 存储位置选择"<b>本地计算机</b>"，点击下一步</div>
+    <div class="step"><span class="step-num">4</span> 选择"<b>将所有证书放入下列存储</b>"，点击浏览</div>
+    <div class="step"><span class="step-num">5</span> 选择"<b>受信任的根证书颁发机构</b>"，点击确定 → 下一步 → 完成</div>
+    <div class="step"><span class="step-num">6</span> 重启浏览器，使用域名访问即可正常使用</div>
+    <p style="margin-top:8px;color:#ffd666;">⚠ 如未安装证书，浏览器会提示"连接不安全"，不影响使用但无法正常预览PDF。</p>
+  </div>
 </div>
+
+<div class="bottom-row">
+  <div class="notice">
+    <h3>⌨️ 快捷操作</h3>
+    <div class="tip-item">调整页面大小：<kbd>Ctrl</kbd> + 滚轮，或 <kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>-</kbd></div>
+    <div class="tip-item">恢复默认大小：<kbd>Ctrl</kbd> + <kbd>0</kbd></div>
+    <div class="tip-item">表格内切换单元格：<kbd>Tab</kbd>、<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></div>
+    <div class="tip-item">复制：<kbd>Ctrl</kbd> + <kbd>C</kbd></div>
+    <div class="tip-item">粘贴：<kbd>Ctrl</kbd> + <kbd>V</kbd></div>
+    <div class="tip-item">打印：<kbd>Ctrl</kbd> + <kbd>P</kbd></div>
+    <div class="tip-item">刷新：<kbd>F5</kbd></div>
+  </div>
+
+  <div class="notice">
+    <h3>💡 浏览器建议</h3>
+    <div class="tip-item">推荐使用 <span class="badge">Edge 浏览器</span></div>
+    <div class="tip-item">下载速度更快，兼容性更好</div>
+    <div class="tip-item">如遇页面错乱，请 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> 强制刷新</div>
+    <div class="tip-item">如 PDF 无法预览，请检查证书是否安装正确</div>
+    <div class="tip-item">登录页面顶部有证书下载链接，可随时下载安装</div>
+  </div>
+</div>
+
 </body>
 </html>

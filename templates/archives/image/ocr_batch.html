@@ -1,0 +1,228 @@
+{% extends "layout/base.html" %}
+{% block title %}批量扫描识别{% endblock %}
+{% block content %}
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { height:100vh; display:flex; flex-direction:column; overflow:hidden; background:#f5f7fa; font-size:13px; }
+#app { display:flex; flex-direction:column; height:100%; }
+.toolbar { background:#fff; padding:10px 16px; border-bottom:1px solid #ebeef5; display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex-shrink:0; }
+.toolbar .el-select { width:130px; }
+.toolbar .el-input { width:90px; }
+.toolbar .el-input.wide { width:200px; }
+.toolbar .label { font-size:12px; color:#606266; white-space:nowrap; }
+.main-area { display:flex; overflow:hidden; flex:1; min-height:0; }
+.panel { display:flex; flex-direction:column; overflow:auto; background:#fff; flex-shrink:0; }
+.panel-header { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #eee; flex-shrink:0; }
+.panel-header h3 { font-size:14px; color:#303133; margin:0; }
+.panel-body { flex:1; overflow:auto; padding:8px 12px; }
+.left-panel { width:25%; min-width:220px; border-right:1px solid #eee; }
+.mid-panel { width:45%; min-width:400px; border-right:1px solid #eee; }
+.right-panel { width:30%; min-width:220px; }
+.divider { width:4px; cursor:col-resize; background:#e0e0e0; flex-shrink:0; }
+.divider:hover, .divider.active { background:#409EFF; }
+.right-section { padding:16px; }
+.right-section h4 { font-size:14px; color:#303133; margin:0 0 10px 0; padding-bottom:8px; border-bottom:1px solid #eee; }
+.help-text { font-size:13px; color:#666; line-height:2; }
+.stat-cards { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.stat-card { text-align:center; padding:14px 10px; border-radius:6px; color:#fff; font-size:13px; cursor:pointer; transition: opacity 0.2s; }
+.stat-card:hover { opacity:0.85; }
+.stat-card .num { font-size:32px; font-weight:700; display:block; }
+.stat-card.green { background:#67c23a; }
+.stat-card.yellow { background:#e6a23c; }
+.stat-card.red { background:#f56c6c; }
+.unmatched-list { margin-top:12px; }
+.unmatched-list .title { font-size:13px; color:#f56c6c; font-weight:600; margin-bottom:6px; }
+.unmatched-list .el-tag { cursor:pointer; margin:2px; }
+.loading-spinner { width:48px; height:48px; border:4px solid #e0e0e0; border-top-color:#409EFF; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto; }
+@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.pdf-dialog .el-dialog__body { padding:0; height:80vh; }
+.pdf-frame { width:100%; height:100%; border:none; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span class="label">单位</span>
+    <el-select v-model="form.unitId" placeholder="选择单位" filterable @change="onUnitChange">
+      <el-option v-for="u in units" :key="u.序号" :label="u.单位" :value="u.序号"></el-option>
+    </el-select>
+    <span class="label">类别</span>
+    <el-select v-model="form.fl" placeholder="类别" @change="onCategoryChange">
+      <el-option v-for="c in topCategories" :key="c.fl" :label="c.jbbh + '：' + c.flsm" :value="c.fl"></el-option>
+    </el-select>
+    <el-select v-model="form.subFl" placeholder="子类别" v-if="subCategories.length">
+      <el-option v-for="c in subCategories" :key="c.fl" :label="c.jbbh + '：' + c.flsm" :value="c.fl"></el-option>
+    </el-select>
+    <span class="label">年</span><el-input v-model.number="form.fyear" placeholder="年" style="width:70px"></el-input>
+    <span class="label">月</span><el-input v-model.number="form.fmonth" placeholder="月" style="width:60px"></el-input>
+    <span class="label">日</span><el-input v-model.number="form.fday" placeholder="日" style="width:60px"></el-input>
+    <span class="label">材料</span><el-input v-model="form.cltm" placeholder="材料名称" class="wide"></el-input>
+    <span class="label">页数</span><el-input v-model.number="form.ys" placeholder="页" style="width:60px"></el-input>
+    <el-button type="primary" size="small" @click="loadPersons" :disabled="!canSearch">加载人员</el-button>
+    <el-button type="warning" size="small" @click="startOcr" :disabled="!canOcr">开始识别归类</el-button>
+  </div>
+
+  <div class="main-area">
+    <!-- 左：人员列表 -->
+    <div class="panel left-panel" ref="leftPanel">
+      <div class="panel-header" v-if="personList.length">
+        <h3>人员（[[ personList.length ]]人）</h3>
+        <div>
+          <el-button size="small" @click="selectAll">全选</el-button>
+          <el-button size="small" @click="selectNone">全不选</el-button>
+        </div>
+      </div>
+      <div class="panel-body" v-if="personList.length">
+        <el-table :data="personList" @selection-change="onSelectionChange" ref="personTable" size="small">
+          <el-table-column type="selection" width="40"></el-table-column>
+          <el-table-column prop="name" label="姓名" width="80"></el-table-column>
+          <el-table-column label="档案序号" width="90">
+            <template #default="{ row }"><span v-if="row.archSeq!=='-'">[[ row.archSeq ]]</span><span v-else style="color:#c0c4cc;">-</span></template>
+          </el-table-column>
+          <el-table-column label="目录状态" width="100">
+            <template #default="{ row }">
+              <el-tag v-if="row.dirStatus==='未建'" type="info" size="small">未建</el-tag>
+              <el-tag v-else-if="row.dirStatus.startsWith('正常')" type="success" size="small">[[ row.dirStatus ]]</el-tag>
+              <el-tag v-else type="danger" size="small">[[ row.dirStatus ]]</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="扫描状态" width="90">
+            <template #default="{ row }">
+              <span v-if="row.scanStatus==='--'" style="color:#c0c4cc;">--</span>
+              <span v-else-if="row.scanStatus==='未扫'" style="color:#e6a23c;">未扫</span>
+              <span v-else-if="row.scanStatus==='已完成'" style="color:#67c23a;">已完成</span>
+              <span v-else-if="row.scanStatus==='异常'" style="color:#f56c6c;">异常</span>
+              <span v-else>[[ row.scanStatus ]]</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="PDF" width="50" align="center">
+            <template #default="{ row }">
+              <el-button v-if="row.canPreview && row.records.length===1" size="small" @click="previewExistingPdf(row)">👁</el-button>
+              <span v-else style="color:#c0c4cc;">-</span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <div class="divider" ref="divider1" @mousedown="onDividerMouseDown($event, 'left')"></div>
+
+    <!-- 中：OCR结果 -->
+    <div class="panel mid-panel" ref="midPanel">
+      <div class="panel-header" v-if="ocrDone">
+        <h3>识别结果（[[ results.length ]]份）</h3>
+        <div>
+          <el-button type="danger" size="small" @click="batchWrite" :disabled="!canWrite">确认写入（[[ stats.matched ]]人）</el-button>
+        </div>
+      </div>
+      <div class="panel-body" v-if="ocrDone">
+        <el-table :data="results" stripe border size="small">
+          <el-table-column type="index" label="#" width="35"></el-table-column>
+          <el-table-column label="文件" width="130"><template #default="{ row }">[[ row.first_file ]]~[[ row.last_file ]]</template></el-table-column>
+          <el-table-column prop="ocr_name" label="识别姓名" width="80"></el-table-column>
+          <el-table-column prop="ocr_csny" label="出生年月" width="85"></el-table-column>
+          <el-table-column label="匹配人员" width="80"><template #default="{ row }"><span v-if="row.matched_person">[[ row.matched_person.name ]]</span><el-tag v-else type="danger" size="small">?</el-tag></template></el-table-column>
+          <el-table-column prop="match_by" label="匹配依据" width="115"></el-table-column>
+          <el-table-column label="状态" width="60" align="center">
+            <template #default="{ row }"><el-tag v-if="row.match_status==='matched'" type="success" size="small">✓</el-tag><el-tag v-else-if="row.match_status==='conflict'" type="warning" size="small">⚠</el-tag><el-tag v-else type="danger" size="small">✗</el-tag></template>
+          </el-table-column>
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="{ row }"><el-button size="small" @click="previewPdf(row)">预览</el-button><el-button v-if="row.match_status!=='matched'" size="small" type="warning" @click="openSelect(row)">选人</el-button></template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <div class="divider" ref="divider2" @mousedown="onDividerMouseDown($event, 'mid')"></div>
+
+    <!-- 右：状态面板 -->
+    <div class="panel right-panel" ref="rightPanel">
+      <template v-if="ocrLoading">
+        <div class="right-section" style="text-align:center;padding-top:60px;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top:20px;font-size:15px;color:#303133;font-weight:600;">正在识别归类...</p>
+          <p style="font-size:12px;color:#909399;margin-top:8px;">OCR 识别 + 姓名匹配</p>
+        </div>
+      </template>
+      <template v-else-if="ocrDone">
+        <div class="right-section">
+          <h4>识别统计</h4>
+          <div class="stat-cards">
+            <div class="stat-card green" @click="showMatchedList"><span class="num">[[ stats.matched ]]</span>已匹配</div>
+            <div class="stat-card yellow" @click="showConflictList"><span class="num">[[ stats.conflict ]]</span>待确认</div>
+            <div class="stat-card red" @click="showUnmatchedList"><span class="num">[[ stats.not_found ]]</span>未匹配</div>
+          </div>
+          <div v-if="stats.conflict===0 && stats.not_found===0" style="text-align:center;color:#67c23a;margin-top:16px;">
+            <p style="font-size:36px;">✅</p><p>全部匹配，可写入</p>
+          </div>
+          <div v-if="writeResult" style="margin-top:16px;padding:12px;background:#f0f9eb;border-radius:4px;">
+            <p style="color:#67c23a;font-weight:600;">写入完成</p>
+            <p style="font-size:12px;color:#666;">成功 [[ writeResult.success ]] 人，失败 [[ writeResult.errors ]] 人</p>
+            <p style="font-size:12px;color:#909399;">AutoScan 文件已重命名保留</p>
+          </div>
+        </div>
+      </template>
+      <template v-else-if="personList.length">
+        <div class="right-section">
+          <h4>操作说明</h4>
+          <div class="help-text">
+            <p>1. 勾选本次扫描的人员</p>
+            <p>2. 扫描仪扫描到 AutoScan</p>
+            <p>3. 点击<b>"开始识别归类"</b></p>
+            <p>4. 校验识别结果</p>
+            <p>5. 点<b>"确认写入"</b></p>
+            <p style="margin-top:12px;color:#e6a23c;">写入：加密存盘 + RS_DESCRIPT</p>
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <div class="right-section">
+          <h4>快速开始</h4>
+          <div class="help-text">
+            <p>1. 选择<b>单位</b></p>
+            <p>2. 选择<b>类别</b>+<b>年月日</b></p>
+            <p>3. 输入<b>材料名称</b>+<b>页数</b></p>
+            <p>4. 点击<b>"加载人员"</b></p>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- 选人弹窗 -->
+  <el-dialog v-model="personDialog.visible" title="选择匹配人员" width="450px">
+    <el-table :data="personDialog.candidates" @row-click="selectCandidate" highlight-current-row height="300" size="small">
+      <el-table-column prop="name" label="姓名" width="100"></el-table-column>
+      <el-table-column prop="CSNY" label="出生年月" width="120"></el-table-column>
+      <el-table-column prop="unit" label="单位"></el-table-column>
+    </el-table>
+    <template #footer>
+      <el-button @click="personDialog.visible=false">取消</el-button>
+      <el-button type="primary" @click="confirmCandidate">确定</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- PDF 弹窗 -->
+  <el-dialog v-model="pdfDialog.visible" title="PDF 预览" width="90%" top="3vh" class="pdf-dialog" @close="pdfDialog.url=''">
+    <iframe v-if="pdfDialog.url" :src="pdfDialog.url" class="pdf-frame"></iframe>
+  </el-dialog>
+
+  <!-- 待确认/未匹配 分配弹窗 -->
+  <el-dialog v-model="assignDialog.visible" :title="assignDialog.title" width="700px">
+    <el-table :data="assignDialog.items" @row-click="assignDialogSelect" highlight-current-row height="400" size="small">
+      <el-table-column prop="ocr_name" label="识别姓名" width="80"></el-table-column>
+      <el-table-column prop="ocr_csny" label="出生年月" width="90"></el-table-column>
+      <el-table-column label="候选人员" min-width="200">
+        <template #default="{ row }">
+          <el-tag v-for="c in (row.candidates||[])" :key="c.RSID" size="small" style="margin:1px;cursor:pointer;" @click="quickAssign(row, c)">[[ c.name ]]</el-tag>
+          <span v-if="!(row.candidates||[]).length" style="color:#c0c4cc;">无候选</span>
+        </template>
+      </el-table-column>
+    </el-table>
+    <template #footer>
+      <el-button @click="assignDialog.visible=false">关闭</el-button>
+    </template>
+  </el-dialog>
+</div>
+
+{% include "archives/image/ocr_batch_js.html" %}
+{% endblock %}

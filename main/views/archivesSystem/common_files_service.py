@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
-BASE_DIR = getattr(settings, "COMMON_FILES_BASE_DIR", "/mnt/data/ReadFiles")
+BASE_DIR = getattr(settings, "COMMON_FILES_BASE_DIR", "/mnt/raid10/ReadFiles")
 
 
 def get_categories():
@@ -19,7 +19,7 @@ def get_categories():
     if data is not None:
         return data
 
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -37,7 +37,7 @@ def get_categories():
 
 
 def query_files_grouped(category="", year="", page=1, page_size=20):
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -83,7 +83,7 @@ def query_files_flat(category="", year="", keyword="", page=1, page_size=20):
     if cached is not None:
         return cached.get("rows", []), cached.get("total", 0)
 
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -137,7 +137,7 @@ def query_files_flat(category="", year="", keyword="", page=1, page_size=20):
 
 
 def get_file_info(file_id):
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -159,7 +159,7 @@ def build_full_path(relative_path):
 
 
 def query_persons_by_fileno(file_no):
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -192,7 +192,7 @@ def query_persons_by_fileno(file_no):
 
 
 def delete_file(file_no):
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -212,7 +212,7 @@ def delete_file(file_no):
 
 
 def rename_file(file_no, new_name):
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -241,7 +241,7 @@ def rename_file(file_no, new_name):
 
 def update_file_info(old_file_no, new_file_no, category, year, file_name):
     rename_file(old_file_no, file_name)
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -258,7 +258,7 @@ def update_file_info(old_file_no, new_file_no, category, year, file_name):
 
 
 def update_persons(file_no, category, year, persons):
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -309,7 +309,7 @@ def insert_file(
     upload_by,
     persons,
 ):
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:
@@ -354,7 +354,7 @@ def insert_file(
 
 def update_pdf_file(file_no, uploaded_file):
     """更新PDF文件，保持原路径和文件名"""
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
     import os
 
     conn = None
@@ -452,7 +452,7 @@ def add_category(category_name):
     if category_name in existing:
         return False, "类别已存在"
 
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     conn = None
     try:

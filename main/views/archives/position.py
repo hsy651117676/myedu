@@ -1,4 +1,5 @@
-'''9-2-1职务变动登记表'''
+"""9-2-1职务变动登记表"""
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -12,9 +13,10 @@ import xlrd
 from xlutils.copy import copy
 from urllib.parse import quote
 import openpyxl
-from main.db_utils import _get_conn
-from main.decorators import archive_perm_required
-#@archive_perm_required
+from main.utils import _get_conn
+from main.utils.decorators import archive_perm_required
+from django.http import JsonResponse, HttpResponse
+# @archive_perm_required
 
 
 @login_required
@@ -160,13 +162,16 @@ def position_export_api(request):
         for mr in merged:
             ws.merge_cells(str(mr))
 
-        export_dir = os.path.join(settings.MEDIA_ROOT, "exports")
-        os.makedirs(export_dir, exist_ok=True)
         fn = f"{person[0]}_{rsid}_9-2-1.xlsx"
-        filepath = os.path.join(export_dir, fn)
-        wb.save(filepath)
-
-        return JsonResponse({"code": 0, "url": f"/media/exports/{fn}"})
+        buf = BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        response = HttpResponse(
+            buf.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(fn)}"
+        return response
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
     finally:

@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from main.db_utils import _get_conn
+from main.utils import _get_conn
 import json
 import os
 import logging

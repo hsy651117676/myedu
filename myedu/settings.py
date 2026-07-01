@@ -1,80 +1,99 @@
-from pathlib import Path
+# myedu/settings.py
 import os
-from django.contrib import messages
+from pathlib import Path
 
 # ==================== 基础配置 ====================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 安全警告：生产环境必须修改 SECRET_KEY
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-7+3ayv)j!@*6u*l)ri+3ji#cg)d0-z80bn3(2#(ha6xjod53f(",
-)
 
-# 调试模式（生产环境必须设为False）
+# ========== 读取配置文件 ==========
+def load_credentials(config_path="/etc/myedu/credentials.conf"):
+    """从配置文件加载凭据到环境变量"""
+    config_file = Path(config_path)
+
+    if config_file.exists():
+        with open(config_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ.setdefault(key.strip(), value.strip())
+
+
+# 加载凭据
+load_credentials()
+
+# ==================== 基础配置 ====================
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    import secrets
+
+    SECRET_KEY = secrets.token_urlsafe(50)
+
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS",
-    "localhost,218.201.223.229,127.0.0.1,pzs.das.cn,pzsdas.com,das.edu,192.168.16.100,192.168.17.100,192.168.18.100",
-).split(",")
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "218.201.223.229",
+    "192.168.16.100",
+    "192.168.17.100",
+    "192.168.18.100",
+    "pzs.das.cn",
+    "pzsdas.com",
+    "das.edu",
+]
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
+
 # ==================== 档案扫描图像配置 ====================
 
-# 扫描图片存放根目录（加密存储）
-SCAN_IMAGE_BASE_DIR = "/mnt/bigdata/das_images"
+SCAN_IMAGE_BASE_DIR = "/mnt/raid10/das_images"
+SCAN_PDF_OUTPUT_DIR = "/mnt/raid10/das_pdf"
+MEDIA_BASE_DIR = "/mnt/media"
 
-# PDF输出根目录
-SCAN_PDF_OUTPUT_DIR = "/mnt/bigdata/das_pdf"
-
-# 支持的图像类型
 SCAN_IMAGE_TYPES = {
     "YS": "原始图像",
     "GQ": "高清图像",
 }
+SCAN_AES_KEY = os.environ.get("SCAN_AES_KEY")
+if SCAN_AES_KEY:
+    SCAN_AES_KEY = SCAN_AES_KEY.encode().ljust(16, b"\x00")[:16]
+else:
+    raise RuntimeError("SCAN_AES_KEY 未配置，请检查 /etc/myedu/credentials.conf")
 
-# 加密密钥
-SCAN_AES_KEY = b"3yj8jbvx" + b"\x00" * 8
-
-# PDF默认设置
-SCAN_PDF_PAGE_SIZE = "A4"  # A3 / A4 / A5 / B5
-SCAN_PDF_VERTICAL = True  # True纵向 / False横向
-SCAN_PDF_MARGIN_UP = 1  # 上边距（磅）
-SCAN_PDF_MARGIN_DOWN = 1  # 下边距（磅）
-SCAN_PDF_MARGIN_LEFT = 1  # 左边距（磅）
-SCAN_PDF_MARGIN_RIGHT = 1  # 右边距（磅）
-SCAN_PDF_DPI = 150  # 输出DPI
-SCAN_PDF_JPEG_QUALITY = 85  # JPEG压缩质量(1-100)
+SCAN_PDF_PAGE_SIZE = "A4"
+SCAN_PDF_VERTICAL = True
+SCAN_PDF_MARGIN_UP = 1
+SCAN_PDF_MARGIN_DOWN = 1
+SCAN_PDF_MARGIN_LEFT = 1
+SCAN_PDF_MARGIN_RIGHT = 1
+SCAN_PDF_DPI = 150
+SCAN_PDF_JPEG_QUALITY = 85
 
 # ==================== 音频视频配置 ====================
-MEDIA_BASE_DIR = "/mnt/data/media"
 
 # ==================== 安全配置 ====================
-# HTTPS设置
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000  # 1年
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True
 
-# 会话安全配置
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 60 * 60 * 8  # 8小时
-SESSION_COOKIE_SECURE = not DEBUG  # 开发环境允许HTTP
+SESSION_COOKIE_AGE = 60 * 60 * 8
+SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-# 防止点击劫持
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
-# 信任的CSRF来源
 CSRF_TRUSTED_ORIGINS = [
     "https://218.201.223.229:8341",
     "http://localhost:8000",
@@ -84,10 +103,11 @@ AUTHENTICATION_BACKENDS = [
     "main.backends.ArchiveAuthBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+
 # ==================== 应用配置 ====================
 
 INSTALLED_APPS = [
-    "simpleui",  # 管理后台主题
+    "simpleui",
     "sslserver",
     "django_extensions",
     "django.contrib.admin",
@@ -96,7 +116,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "main",  # 主应用
+    "main",
 ]
 
 MIDDLEWARE = [
@@ -105,7 +125,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "main.middleware.LoginJumpMiddleware",  # 如需iframe跳转则取消注释
+    "main.middleware.LoginJumpMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -137,25 +157,24 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": os.environ.get("DB_NAME", "myedu"),
         "USER": os.environ.get("DB_USER", "root"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "123456"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
         "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
         "PORT": os.environ.get("DB_PORT", "3306"),
         "OPTIONS": {
             "charset": "utf8mb4",
             "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
         },
-        "CONN_MAX_AGE": 600,  # 连接池，10分钟
+        "CONN_MAX_AGE": 600,
     }
 }
 
-# 人口数据库配置（外部数据库）
 POPULATION_DB = {
     "DRIVER": "ODBC Driver 18 for SQL Server",
     "SERVER": "127.0.0.1",
     "PORT": "1433",
     "DATABASE": os.environ.get("POP_DB_NAME", "rs_new"),
     "UID": os.environ.get("POP_DB_USER", "sa"),
-    "PWD": os.environ.get("POP_DB_PASSWORD", "PzsjyjDas@3634122!@#"),
+    "PWD": os.environ.get("POP_DB_PASSWORD", ""),
     "Encrypt": "Optional",
     "TrustServerCertificate": "Yes",
 }
@@ -166,10 +185,11 @@ ARCHIVES_DB = {
     "PORT": "1433",
     "DATABASE": "rs_new",
     "UID": "sa",
-    "PWD": "PzsjyjDas@3634122!@#",
+    "PWD": os.environ.get("POP_DB_PASSWORD", ""),
     "Encrypt": "Optional",
     "TrustServerCertificate": "Yes",
 }
+
 # ==================== 密码验证 ====================
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -190,7 +210,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# 自定义密码哈希器（可选，增强安全性）
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
@@ -210,16 +229,15 @@ CACHES = {
                 "max_connections": 100,
                 "retry_on_timeout": True,
             },
-            "PASSWORD": "redishshy795416",
+            "PASSWORD": os.environ.get("REDIS_PASSWORD", ""),
             "SOCKET_CONNECT_TIMEOUT": 5,
             "SOCKET_TIMEOUT": 5,
         },
         "KEY_PREFIX": "myedu",
-        "TIMEOUT": 300,  # 默认超时5分钟
+        "TIMEOUT": 300,
     }
 }
 
-# 使用Redis存储Session
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
@@ -230,19 +248,15 @@ EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.qq.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 465))
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "True").lower() == "true"
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "651117676@qq.com")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "rphcxwtfwljtbehb")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_TIMEOUT = 30
-
-# 开发环境使用控制台后端
-# if DEBUG:
-#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # ==================== 国际化 ====================
 
 LANGUAGE_CODE = "zh-hans"
-TIME_ZONE = "Asia/Shanghai"  # 改为中国时区
+TIME_ZONE = "Asia/Shanghai"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
@@ -255,12 +269,10 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-# 媒体文件配置
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
-# 静态文件缓存
 STATICFILES_STORAGE = (
     "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
     if not DEBUG
@@ -276,7 +288,6 @@ SIMPLEUI_CONFIG = {
     "system_keep": False,
     "dynamic": True,
 }
-# SimpleUI图标配置
 SIMPLEUI_ICON = {
     "人口查询": "fas fa-search",
     "人口管理": "fas fa-users",
@@ -317,7 +328,7 @@ LOGGING = {
             "level": "INFO",
             "class": "logging.handlers.RotatingFileHandler",
             "filename": BASE_DIR / "logs/info.log",
-            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "maxBytes": 1024 * 1024 * 10,
             "backupCount": 10,
             "formatter": "verbose",
         },
@@ -353,10 +364,10 @@ LOGGING = {
         },
         "django.db.backends": {
             "handlers": ["console"],
-            "level": "WARNING",  # 生产环境设为WARNING，开发可设DEBUG
+            "level": "WARNING",
             "propagate": False,
         },
-        "main": {  # 自定义应用日志
+        "main": {
             "handlers": ["console", "file_info", "file_error"],
             "level": "INFO",
             "propagate": False,
@@ -364,7 +375,6 @@ LOGGING = {
     },
 }
 
-# 确保日志目录存在
 LOGS_DIR = BASE_DIR / "logs"
 if not LOGS_DIR.exists():
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -375,50 +385,35 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ==================== 自定义设置 ====================
 
-# 分页配置
 PAGINATION = {
     "default_page_size": 30,
     "max_page_size": 100,
 }
 
-# 验证码配置
 CAPTCHA = {
     "length": 4,
-    "expire_time": 300,  # 5分钟
+    "expire_time": 300,
 }
 
-# 登录限制
 LOGIN_LIMIT = {
     "max_attempts": 5,
-    "lockout_time": 600,  # 10分钟
+    "lockout_time": 600,
 }
 
-# 邮件发送限制
 EMAIL_LIMIT = {
-    "send_interval": 60,  # 60秒
+    "send_interval": 60,
     "max_per_hour": 10,
-    "code_expire": 300,  # 5分钟
+    "code_expire": 300,
 }
 
 # ==================== 生产环境检查 ====================
 
 if not DEBUG:
-    # 确保生产环境的关键设置正确
-    assert (
-        SECRET_KEY
-        != "django-insecure-7+3ayv)j!@*6u*l)ri+3ji#cg)d0-z80bn3(2#(ha6xjod53f("
-    ), "Production must have a secure SECRET_KEY"
-
-    # 生产环境强制HTTPS
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    # HSTS设置
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-
-    # 其他安全头部
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True

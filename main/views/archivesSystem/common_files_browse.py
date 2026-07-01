@@ -66,12 +66,9 @@ def download_api(request):
         full_path = service.build_full_path(file_path)
         if not full_path or not __import__("os").path.exists(full_path):
             raise Http404("文件未找到")
-
-        with open(full_path, "rb") as f:
-            resp = HttpResponse(f.read(), content_type="application/pdf")
-        resp["Content-Disposition"] = f'inline; filename="{file_name}"'
-        resp["Content-Length"] = __import__("os").path.getsize(full_path)
-        return resp
+        return FileResponse(
+            open(full_path, "rb"), filename=file_name, content_type="application/pdf"
+        )
     except Http404:
         raise
     except:

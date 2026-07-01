@@ -259,9 +259,12 @@ const generateIdentify = () => {
 
       const printIdentify = () => { ElMessage.info('打印功能开发中'); };
 const exportIdentify = () => {
-  axios.get('/archives/api/identify-export/', { params: { rsid: rsid.value } }).then(res => {
-    if (res.data.code === 0) window.top.location.href = res.data.url;
-  });
+    const a = document.createElement('a');
+    a.href = '/archives/api/identify-export/?rsid=' + rsid.value;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 };
 
       onMounted(loadIdentify);

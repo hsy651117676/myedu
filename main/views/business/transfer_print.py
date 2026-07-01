@@ -9,8 +9,8 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.conf import settings
-from main.db_utils import _get_conn
-from main.decorators import archive_perm_required
+from main.utils import _get_conn
+from main.utils.decorators import archive_perm_required
 import openpyxl
 from weasyprint import HTML
 from urllib.parse import quote

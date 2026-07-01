@@ -9,8 +9,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.db import connection
 from django.http import HttpResponse
+import re
+import mimetypes
+from django.http import HttpResponse, StreamingHttpResponse
 
-MEDIA_BASE_DIR = getattr(settings, "MEDIA_BASE_DIR", "/mnt/data/media")
+MEDIA_BASE_DIR = settings.MEDIA_BASE_DIR
 ALLOWED_AUDIO = {"mp3", "wav", "flac", "ogg", "aac", "wma"}
 ALLOWED_VIDEO = {"mp4", "mkv", "avi", "mov", "wmv", "flv", "webm"}
 
@@ -39,6 +42,8 @@ def _get_first_letter(text):
 def _get_table(category):
     if category == "music":
         return "MusicFiles"
+    elif category == "video_music":
+        return "MusicVideoFiles"
     elif category == "movie":
         return "MovieFiles"
     elif category == "tv":
@@ -55,7 +60,6 @@ def manage_page(request):
     return render(request, "tools/media_manage.html")
 
 
-@login_required
 def list_api(request):
     category = request.GET.get("category", "music").strip()
     letter = request.GET.get("letter", "").strip()
@@ -116,17 +120,62 @@ def play_api(request):
         full_path = os.path.join(MEDIA_BASE_DIR, row[0])
         if not os.path.exists(full_path):
             raise Http404
+
+        # 播放次数+1
         cursor.execute(
             f"UPDATE {table} SET PlayCount = PlayCount + 1 WHERE ID = %s",
             (int(file_id),),
         )
 
-        ext = row[2] or os.path.splitext(row[0])[1].lstrip(".").lower()
-        content_type = f"audio/{ext}" if ext in ALLOWED_AUDIO else f"video/{ext}"
-        resp = FileResponse(open(full_path, "rb"), content_type=content_type)
-        resp["Content-Disposition"] = f'inline; filename="{row[1]}"'
-        resp["Accept-Ranges"] = "bytes"
-        return resp
+    ext = row[2] or os.path.splitext(row[0])[1].lstrip(".").lower()
+
+    # 根据扩展名设置 Content-Type
+    if ext in ALLOWED_AUDIO:
+        content_type = f"audio/{ext}"
+    elif ext in ALLOWED_VIDEO:
+        content_type = f"video/{ext}"
+    else:
+        content_type = "application/octet-stream"
+
+    # 更准确的 MIME 类型
+    mime_type, _ = mimetypes.guess_type(full_path)
+    if mime_type:
+        content_type = mime_type
+
+    file_size = os.path.getsize(full_path)
+    range_header = request.META.get("HTTP_RANGE", "").strip()
+
+    if range_header:
+        # 解析 Range: bytes=0-1024
+        range_match = re.search(r"bytes\s*=\s*(\d+)\s*-\s*(\d*)", range_header)
+        if range_match:
+            start = int(range_match.group(1))
+            end = range_match.group(2)
+            end = int(end) if end else file_size - 1
+
+            if start >= file_size:
+                return HttpResponse(status=416)  # Range Not Satisfiable
+
+            end = min(end, file_size - 1)
+            content_length = end - start + 1
+
+            with open(full_path, "rb") as f:
+                f.seek(start)
+                data = f.read(content_length)
+
+            resp = HttpResponse(data, status=206, content_type=content_type)
+            resp["Content-Range"] = f"bytes {start}-{end}/{file_size}"
+            resp["Content-Length"] = str(content_length)
+            resp["Accept-Ranges"] = "bytes"
+            resp["Content-Disposition"] = f'inline; filename="{row[1]}"'
+            return resp
+
+    # 没 Range 头就返回完整文件（小文件或首次请求）
+    resp = FileResponse(open(full_path, "rb"), content_type=content_type)
+    resp["Content-Length"] = str(file_size)
+    resp["Accept-Ranges"] = "bytes"
+    resp["Content-Disposition"] = f'inline; filename="{row[1]}"'
+    return resp
 
 
 @login_required
@@ -214,7 +263,6 @@ def upload_api(request):
 
     first_letter = _get_first_letter(artist if category == "music" else title)
 
-    # 目录：扩展名/首字母/...
     if category == "music":
         dir_path = os.path.join(MEDIA_BASE_DIR, ext, first_letter, artist)
     elif category == "movie":
@@ -244,6 +292,34 @@ def upload_api(request):
     except:
         pass
 
+    # 视频自动 faststart
+    is_faststart = 0
+    if category in ("movie", "tv") and ext in ALLOWED_VIDEO:
+        try:
+            import subprocess
+
+            fast_path = full_path + ".fast"
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-i",
+                    full_path,
+                    "-c",
+                    "copy",
+                    "-movflags",
+                    "+faststart",
+                    fast_path,
+                ],
+                check=True,
+                capture_output=True,
+                timeout=60,
+            )
+            os.replace(fast_path, full_path)
+            is_faststart = 1
+        except Exception as e:
+            print(f"faststart 转换失败: {e}")
+
     relative_path = os.path.relpath(full_path, MEDIA_BASE_DIR)
 
     if category == "music":
@@ -251,8 +327,10 @@ def upload_api(request):
         style = request.POST.get("style", "").strip()
         with connection.cursor() as cursor:
             cursor.execute(
-                """INSERT INTO MusicFiles (Title, Artist, FirstLetter, FilePath, FileName, MediaType, FileSize, Duration, Instrument, Style, MD5Hash)
-                              VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                """
+                INSERT INTO MusicFiles (Title, Artist, FirstLetter, FilePath, FileName, MediaType, FileSize, Duration, Instrument, Style, MD5Hash)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
                 (
                     title,
                     artist,
@@ -272,8 +350,10 @@ def upload_api(request):
         genre = request.POST.get("genre", "").strip()
         with connection.cursor() as cursor:
             cursor.execute(
-                """INSERT INTO MovieFiles (Title, Director, FirstLetter, FilePath, FileName, MediaType, FileSize, Duration, Year, Genre, MD5Hash)
-                              VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                """
+                INSERT INTO MovieFiles (Title, Director, FirstLetter, FilePath, FileName, MediaType, FileSize, Duration, Year, Genre, MD5Hash, IsFastStart)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
                 (
                     title,
                     artist,
@@ -286,6 +366,7 @@ def upload_api(request):
                     movie_year,
                     genre,
                     md5_value,
+                    is_faststart,
                 ),
             )
     else:
@@ -296,8 +377,10 @@ def upload_api(request):
         genre = request.POST.get("genre", "").strip()
         with connection.cursor() as cursor:
             cursor.execute(
-                """INSERT INTO TvFiles (Title, Director, Season, Episode, EpisodeTitle, FirstLetter, FilePath, FileName, MediaType, FileSize, Duration, Year, Genre, MD5Hash)
-                              VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                """
+                INSERT INTO TvFiles (Title, Director, Season, Episode, EpisodeTitle, FirstLetter, FilePath, FileName, MediaType, FileSize, Duration, Year, Genre, MD5Hash, IsFastStart)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
                 (
                     title,
                     artist,
@@ -313,6 +396,7 @@ def upload_api(request):
                     tv_year,
                     genre,
                     md5_value,
+                    is_faststart,
                 ),
             )
 
@@ -343,7 +427,6 @@ def delete_api(request):
     return JsonResponse({"code": 0, "msg": "删除成功"})
 
 
-@login_required
 def letters_api(request):
     category = request.GET.get("category", "music").strip()
     table = _get_table(category)
@@ -355,7 +438,6 @@ def letters_api(request):
     return JsonResponse({"code": 0, "data": letters})
 
 
-@login_required
 def instruments_api(request):
     with connection.cursor() as cursor:
         cursor.execute(
@@ -365,7 +447,6 @@ def instruments_api(request):
     return JsonResponse({"code": 0, "data": data})
 
 
-@login_required
 def styles_api(request):
     with connection.cursor() as cursor:
         cursor.execute(
@@ -525,3 +606,57 @@ def cover_api(request):
 
     svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect fill="#333" width="200" height="200"/><text fill="#aaa" x="100" y="110" text-anchor="middle" font-size="50">🎵</text></svg>'
     return HttpResponse(svg, content_type="image/svg+xml")
+
+
+def lyric_api(request):
+    file_id = request.GET.get("id", "")
+    category = request.GET.get("category", "music").strip()
+    if not file_id:
+        raise Http404
+
+    table = _get_table(category)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"SELECT Lyric FROM {table} WHERE ID = %s AND IsActive = 1", (int(file_id),)
+        )
+        row = cursor.fetchone()
+        if not row or not row[0]:
+            return JsonResponse({"code": 0, "type": "none", "data": ""})
+
+    lyric = row[0]
+    # 解析 LRC 格式
+    lines = []
+    for line in lyric.strip().split("\n"):
+        match = re.findall(r"\[(\d+):(\d+\.?\d*)\](.*)", line)
+        if match:
+            m, s, text = match[0]
+            sec = int(m) * 60 + float(s)
+            lines.append({"time": sec, "text": text.strip()})
+    lines.sort(key=lambda x: x["time"])
+    return JsonResponse({"code": 0, "type": "lrc", "data": lines})
+
+
+@csrf_exempt
+def save_lyric_api(request):
+    if request.method != "POST":
+        return JsonResponse({"code": 405})
+    try:
+        data = json.loads(request.body)
+    except:
+        return JsonResponse({"code": 400})
+
+    file_id = data.get("id")
+    lyric = data.get("lyric", "")
+    if not file_id:
+        return JsonResponse({"code": 400})
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE MusicFiles SET Lyric = %s WHERE ID = %s", (lyric, int(file_id))
+        )
+    return JsonResponse({"code": 0, "msg": "保存成功"})
+
+
+@login_required
+def lyric_editor_page(request):
+    return render(request, "tools/lyric_editor.html")

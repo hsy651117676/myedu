@@ -10,66 +10,120 @@
   <script src="/static/lib/axios.min.js"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; background:#f5f5f5; }
-    .header { display:flex;align-items:center;padding:8px 12px;background:#1a1a2e;color:#fff;gap:10px;flex-shrink:0; }
-    .header .title { font-size:16px;font-weight:bold; }
-    .toolbar { display:flex;align-items:center;padding:8px 12px;background:#fff;border-bottom:1px solid #eee;gap:8px;flex-shrink:0; }
-    .toolbar button { padding:5px 14px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:12px; }
-    .toolbar button:hover { border-color:#409EFF;color:#409EFF; }
-    .toolbar button.primary { background:#409EFF;color:#fff;border:none; }
-    .toolbar button.danger { background:#f56c6c;color:#fff;border:none; }
-    .main-list { flex:1;overflow:auto;background:#fff;display:flex;flex-direction:column; }
-    table { border-collapse:collapse;width:100%; }
-    th,td { padding:8px 12px;text-align:left;border-bottom:1px solid #f0f0f0;font-size:13px; }
-    th { background:#fafafa;position:sticky;top:0;z-index:1;color:#666; }
-    tr:hover { background:#e8f0fe; }
+    body { font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; background:#1a1a2e; color:#fff; }
+    .header { display:flex;align-items:center;padding:0 10px;background:#16213e;gap:8px;flex-shrink:0;height:40px; }
+    .header .title { font-size:15px;font-weight:bold; }
+    .header input { height:26px;border:none;border-radius:13px;padding:0 10px;font-size:12px;width:150px;color:#333; }
+    .header select { height:26px;border:none;border-radius:4px;padding:0 6px;font-size:12px;color:#333; }
+    .body { height:calc(100vh - 80px);display:flex;overflow:hidden;min-height:0;flex:none; }
+    .letter-panel { width:44px;flex-shrink:0;overflow-y:auto;background:#16213e;border-right:1px solid #333;padding:2px 0; }
+    .letter-panel .let { padding:4px 0;text-align:center;cursor:pointer;font-size:11px;color:#aaa; }
+    .letter-panel .let:hover { color:#409EFF; }
+    .letter-panel .let.active { background:#409EFF;color:#fff; }
+    .list-panel { flex:2;min-width:200px;overflow:hidden;display:flex;flex-direction:column;background:#1a1a2e; }
+    .list-panel table { border-collapse:collapse;width:100%; }
+    .list-panel th,.list-panel td { padding:6px 8px;text-align:left;border-bottom:1px solid #2a2a4a;font-size:12px;color:#ccc; }
+    .list-panel th { background:#16213e;position:sticky;top:0;z-index:1;color:#aaa; }
+    .list-panel tr:hover { background:#2a2a4a;cursor:pointer; }
+    .list-panel tr.playing { background:#1a3a5c; }
+    .player-panel { flex:7;min-width:300px;position:relative;display:flex;align-items:center;justify-content:center;background:#111;overflow:hidden; }
+    .player-panel video { position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;z-index:1; }
+    .player-panel .cover { width:260px;height:260px;object-fit:cover;border-radius:50%;opacity:0.7; }
+    .player-panel .cover-placeholder { width:240px;height:240px;border-radius:50%;background:#2a2a4a;display:flex;align-items:center;justify-content:center;font-size:70px;color:#555; }
+    .player-panel .info-overlay { position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:3;text-align:center; }
+    .player-panel .info-overlay .song { font-size:14px;font-weight:bold;text-shadow:0 1px 4px rgba(0,0,0,0.7); }
+    .lyric-box { position:absolute;top:0;right:0;width:50%;height:100%;overflow-y:auto;padding:40px 15px;text-align:center;z-index:2;scroll-behavior:smooth;mask-image:linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%); }
+    .lyric-box::-webkit-scrollbar { display:none; }
+    .lyric-line { padding:8px 0;font-size:14px;color:#ccc;transition:all 0.3s ease;cursor:default; }
+    .lyric-line.active { color:#fff;font-size:18px;font-weight:bold; }
+    .lyric-line.prev, .lyric-line.next { color:#aaa;font-size:13px; }
+    .player-bar { display:flex;align-items:center;padding:0 14px;background:#16213e;gap:10px;flex-shrink:0;height:40px; }
+    .player-bar button { background:none;border:none;color:#fff;cursor:pointer;font-size:20px;padding:4px 8px; }
+    .player-bar button:hover { color:#409EFF; }
+    .player-bar .progress-wrap { flex:1;height:4px;background:#555;border-radius:2px;cursor:pointer;min-width:100px; }
+    .player-bar .progress-wrap .bar { height:100%;background:#409EFF;border-radius:2px; }
+    .player-bar .time { font-size:10px;color:#aaa;min-width:60px;text-align:center; }
+    .player-bar .info { font-size:13px;min-width:180px; }
+    .player-bar .vol { width:80px; }
+    .drag-bar { width:5px;background:#2a2a4a;cursor:col-resize;flex-shrink:0; }
+    .drag-bar:hover { background:#409EFF; }
+    @keyframes spin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+    @keyframes pulse { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.08); } }
+    @keyframes float { 0%,100% { transform: translate(-50%,-50%) translateY(0); } 50% { transform: translate(-50%,-50%) translateY(-10px); } }
+    @keyframes wobble { 0%,100% { transform: translate(-50%,-50%) rotate(0deg); } 25% { transform: translate(-50%,-50%) rotate(3deg); } 75% { transform: translate(-50%,-50%) rotate(-3deg); } }
   </style>
 </head>
 <body>
 <div id="app">
   <div class="header">
     <span class="title">🎬 媒体管理</span>
-    <span style="color:#aaa;font-size:12px;">当前：[[ categoryLabel ]]</span>
-    <a href="/tools/media/" style="color:#409EFF;font-size:12px;margin-left:auto;">去播放器</a>
-  </div>
-  <div class="toolbar">
-    <button class="primary" @click="openUpload">上传</button>
-    <button @click="openEdit" :disabled="!selectedId">编辑</button>
-    <button class="danger" @click="deleteSelected" :disabled="!selectedId">删除</button>
-    <span style="flex:1;"></span>
-    <select v-model="category" @change="switchCategory" style="height:28px;border:1px solid #ddd;border-radius:4px;">
-      <option value="music">音乐</option><option value="movie">电影</option><option value="tv">电视剧</option>
+    <select v-model="category" @change="switchCategory" style="height:26px;">
+      <option value="music">音乐</option><option value="video_music">视频音乐</option><option value="movie">电影</option><option value="tv">电视剧</option>
     </select>
-    <input v-model="keyword" placeholder="搜索" @keyup.enter="loadList()" style="height:28px;border:1px solid #ddd;border-radius:4px;padding:0 8px;width:160px;">
-    <button @click="loadList()">搜索</button>
+    <input v-model="keyword" placeholder="搜索" @keyup.enter="search">
+    <button @click="search" style="background:#409EFF;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">搜索</button>
+    <button @click="openUpload" style="background:#67c23a;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">上传</button>
+    <button @click="openEdit" :disabled="!selectedId" style="background:#e6a23c;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">编辑</button>
+    <button @click="deleteSelected" :disabled="!selectedId" style="background:#f56c6c;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">删除</button>
+      <button @click="openLyricEditor" :disabled="!selectedId || category!=='music'" style="background:#909399;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">编辑歌词</button>
   </div>
-  <div class="main-list">
-    <div style="flex:1;overflow:auto;">
-      <table>
-        <thead><tr>
-          <th style="width:40px;">选</th><th>标题</th><th v-if="category==='music'">歌手</th><th v-else>导演</th>
-          <th v-if="category==='music'">乐器</th><th v-if="category==='music'">风格</th>
-          <th v-if="category==='tv'">季</th><th v-if="category==='tv'">集</th>
-          <th>格式</th><th>时长</th><th>大小</th><th>播放</th>
-        </tr></thead>
-        <tbody>
-          <tr v-for="r in list" :key="r.ID" :class="{active: selectedId===r.ID}" @click="selectedId=r.ID">
-            <td><input type="radio" :value="r.ID" v-model="selectedId" @click.stop></td>
-            <td>[[ r.Title ]]</td>
-            <td v-if="category==='music'">[[ r.Artist ]]</td><td v-else>[[ r.Director || '-' ]]</td>
-            <td v-if="category==='music'">[[ r.Instrument || '-' ]]</td><td v-if="category==='music'">[[ r.Style || '-' ]]</td>
-            <td v-if="category==='tv'">[[ r.Season || '-' ]]</td><td v-if="category==='tv'">[[ r.Episode || '-' ]]</td>
-            <td>[[ r.MediaType ]]</td><td>[[ formatDuration(r.Duration) ]]</td><td>[[ (r.FileSize/1024/1024).toFixed(1) ]] MB</td><td>[[ r.PlayCount ]]</td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="body">
+    <div class="letter-panel" id="letterPanel">
+      <div class="let" :class="{active: selectedLetter===''}" @click="selectLetter('')">全</div>
+      <div class="let" v-for="l in letters" :key="l" :class="{active: selectedLetter===l}" @click="selectLetter(l)">[[ l ]]</div>
     </div>
-    <div v-if="total>0" style="display:flex;justify-content:center;padding:10px;flex-shrink:0;">
-      <el-pagination small background layout="total, sizes, prev, pager, next"
-        :page-sizes="[20,50,100,200]" :page-size="pageSize" :total="total"
-        :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+    <div class="drag-bar" data-target="letterPanel"></div>
+    <div class="list-panel" id="listPanel">
+      <div style="flex:1;overflow:auto;">
+        <table><thead><tr><th style="width:30px;">选</th><th style="width:30px;">#</th><th>标题</th><th v-if="category==='music'">歌手</th><th v-else>导演</th><th v-if="category==='tv'">集</th><th style="width:60px;">时长</th></tr></thead>
+          <tbody>
+            <tr v-for="(r,i) in list" :key="r.ID" :class="{playing: currentId===r.ID}" @click="selectedId=r.ID">
+              <td><input type="radio" :value="r.ID" v-model="selectedId" @click.stop></td>
+              <td @click="play(r)" style="color:#409EFF;cursor:pointer;">▶</td>
+              <td @dblclick="play(r)">[[ r.Title ]]</td>
+              <td v-if="category==='music'">[[ r.Artist ]]</td><td v-else>[[ r.Director || '-' ]]</td>
+              <td v-if="category==='tv'">[[ r.Season?'S'+r.Season:'' ]][[ r.Episode?'E'+r.Episode:'' ]]</td>
+              <td>[[ formatDuration(r.Duration) ]]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-if="total>0" style="display:flex;justify-content:center;padding:6px;flex-shrink:0;">
+        <el-pagination small background layout="total, sizes, prev, pager, next" :page-sizes="[20,50,100,200]" :page-size="pageSize" :total="total" :current-page="currentPage" @size-change="onSizeChange" @current-change="onPageChange" />
+      </div>
+    </div>
+    <div class="drag-bar" data-target="listPanel"></div>
+    <div class="player-panel" id="playerPanel">
+      <video v-if="isVideo && currentId" ref="videoPlayer" controls autoplay
+          @timeupdate="onTimeUpdate" @loadedmetadata="onLoaded" @ended="onEnded" @error="onVideoError"></video>
+      <div v-else-if="currentId" style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;position:relative;z-index:2;">
+        <div class="cover-wrap" :style="coverStyle" style="position:static;">
+          <img v-if="coverUrl" :src="coverUrl" @error="coverUrl=''" class="cover">
+          <div v-else class="cover-placeholder">🎵</div>
+        </div>
+        <div class="lyric-box" v-if="lyricLines.length">
+          <div v-for="(l,i) in lyricLines" :key="i" class="lyric-line" :class="{active: i===currentLyric, prev: i===currentLyric-1, next: i===currentLyric+1}">[[ l.text ]]</div>
+        </div>
+        <div v-else style="color:#888;font-size:14px;position:absolute;right:20px;">暂无歌词</div>
+      </div>
+      <div v-else class="cover-placeholder" style="position:absolute;">🎵</div>
+      <div v-if="!isVideo && currentId" class="info-overlay"><div class="song">[[ currentTitle ]]</div></div>
+      <canvas ref="spectrumCanvas" v-show="playing && !isVideo" style="position:absolute;bottom:0;left:0;width:100%;height:70px;z-index:1;opacity:0.8;"></canvas>
     </div>
   </div>
+  <div class="player-bar">
+    <button @click="prev">⏮</button>
+    <button @click="togglePlay">[[ playing ? '⏸' : '▶️' ]]</button>
+    <button @click="next">⏭</button>
+    <span class="info">[[ currentTitle || '未播放' ]]</span>
+    <span class="time">[[ currentTime ]]</span>
+    <div class="progress-wrap" @click="seek"><div class="bar" :style="{width: progressPercent+'%'}"></div></div>
+    <span class="time">[[ totalTime ]]</span>
+    <button @click="toggleLoop">[[ loopMode==='顺序'?'🔀': loopMode==='单曲'?'🔂':'🔁' ]]</button>
+    <button @click="toggleMute">[[ muted ? '🔇' : '🔊' ]]</button>
+    <input type="range" v-model="volume" @input="setVolume" min="0" max="100" class="vol">
+  </div>
+  <audio ref="audioPlayer" @timeupdate="onTimeUpdate" @loadedmetadata="onLoaded" @ended="onEnded"></audio>
 
   <el-dialog v-model="showUpload" title="上传媒体" width="500px" @closed="resetUpload">
     <div style="display:flex;flex-direction:column;gap:10px;">
@@ -78,7 +132,7 @@
           <option value="music">音乐</option><option value="movie">电影</option><option value="tv">电视剧</option>
         </select>
       </div>
-      <input type="file" ref="fileInput" :accept="uploadForm.category==='music'?'.mp3,.wav,.flac,.ogg,.aac,.wma':'.mp4,.mkv,.avi,.mov,.wmv,.flv,.webm'" @change="onFileChange" style="font-size:13px;">
+      <input type="file" ref="uploadFileInput" :accept="uploadForm.category==='music'?'.mp3,.wav,.flac,.ogg,.aac,.wma':'.mp4,.mkv,.avi,.mov,.wmv,.flv,.webm'" @change="onUploadFileChange" style="font-size:13px;">
       <input v-model="uploadForm.title" placeholder="标题" style="height:32px;border:1px solid #ddd;border-radius:4px;padding:0 8px;">
       <input v-model="uploadForm.artist" :placeholder="uploadForm.category==='music'?'歌手':'导演'" style="height:32px;border:1px solid #ddd;border-radius:4px;padding:0 8px;">
       <template v-if="uploadForm.category==='music'">
@@ -93,7 +147,7 @@
         <div style="display:flex;gap:8px;"><input v-model="uploadForm.year" placeholder="年份" style="flex:1;height:32px;border:1px solid #ddd;border-radius:4px;padding:0 8px;"><input v-model="uploadForm.genre" placeholder="类型" style="flex:1;height:32px;border:1px solid #ddd;border-radius:4px;padding:0 8px;"></div>
       </template>
     </div>
-    <template #footer><el-button @click="showUpload=false" :disabled="uploading">取消</el-button><el-button type="primary" @click="doUpload" :disabled="uploading">[[ uploading ? '上传中...' : '上传' ]]</el-button></template>
+    <template #footer><el-button @click="showUpload=false" :disabled="uploading">取消</el-button><el-button type="primary" @click="doUpload" :disabled="uploading">[[ uploading?'上传中...':'上传' ]]</el-button></template>
   </el-dialog>
 
   <el-dialog v-model="showEdit" title="编辑媒体" width="500px" @closed="resetEdit">
@@ -117,97 +171,112 @@
         <div style="display:flex;gap:8px;"><input v-model="editForm.year" placeholder="年份" style="flex:1;height:32px;border:1px solid #ddd;border-radius:4px;padding:0 8px;"><input v-model="editForm.genre" placeholder="类型" style="flex:1;height:32px;border:1px solid #ddd;border-radius:4px;padding:0 8px;"></div>
       </template>
     </div>
-    <template #footer><el-button @click="showEdit=false" :disabled="saving">取消</el-button><el-button type="primary" @click="doEdit" :disabled="saving">[[ saving ? '保存中...' : '保存' ]]</el-button></template>
+    <template #footer><el-button @click="showEdit=false" :disabled="saving">取消</el-button><el-button type="primary" @click="doEdit" :disabled="saving">[[ saving?'保存中...':'保存' ]]</el-button></template>
   </el-dialog>
+      <el-dialog v-model="showLyricEditor" title="编辑歌词" width="600px" top="2vh" @closed="loadList(1)">
+    <iframe :src="'/tools/media/lyric-editor/?id='+lyricEditId" style="width:100%;height:500px;border:none;"></iframe>
+</el-dialog>
 </div>
 <script>
 (function(){
-  const { createApp, ref, reactive, computed, onMounted } = Vue;
+  const { createApp, ref, reactive, onMounted, nextTick } = Vue;
   const { ElMessage, ElMessageBox } = ElementPlus;
   const app = createApp({
     delimiters: ['[[', ']]'],
     setup(){
-      const category = ref('music');
-      const keyword = ref('');
-      const list = ref([]);
-      const currentPage = ref(1);
-      const pageSize = ref(20);
-      const total = ref(0);
+      const category = ref('music'); const keyword = ref(''); const selectedLetter = ref('');
+      const letters = ref([]); const list = ref([]); const currentPage = ref(1); const pageSize = ref(20); const total = ref(0);
+      const audioPlayer = ref(null); const videoPlayer = ref(null);
+      const playing = ref(false); const isVideo = ref(false); const currentId = ref(null);
+      const currentTitle = ref(''); const coverUrl = ref('');
+      const currentTime = ref('0:00'); const totalTime = ref('0:00'); const progressPercent = ref(0);
+      const loopMode = ref('顺序'); const volume = ref(80); const muted = ref(false);
       const selectedId = ref(null);
       const showUpload = ref(false); const uploading = ref(false);
       const uploadForm = reactive({category:'music',title:'',artist:'',instrument:'',style:'',season:'',episode:'',episode_title:'',year:'',genre:''});
-      const fileInput = ref(null);
+      const uploadFileInput = ref(null);
       const showEdit = ref(false); const saving = ref(false);
       const editForm = reactive({category:'music',title:'',artist:'',instrument:'',style:'',season:'',episode:'',episode_title:'',year:'',genre:''});
-      const categoryLabel = computed(() => ({music:'音乐',movie:'电影',tv:'电视剧'}[category.value]));
+      const lyricLines = ref([]); const currentLyric = ref(-1);
+      let playlist = [];
+      const videoExts = ['mp4','mkv','avi','mov','wmv','flv','webm'];
+      const animations = ['spin', 'pulse', 'float', 'wobble'];
+      const currentAnimation = ref('spin');
+      const coverStyle = ref({});
+      const spectrumCanvas = ref(null);
+      let audioContext = null, analyser = null, spectrumAnimId = null, sourceBound = false;
 
-      const switchCategory = () => { selectedId.value = null; loadList(1); };
-      const loadList = (page) => {
-        const p = typeof page==='number' ? page : 1;
-        const params = { page: p, pageSize: pageSize.value, category: category.value };
-        if (keyword.value) params.keyword = keyword.value;
-        axios.get('/tools/api/media/list/', { params }).then(res => {
-          if (res.data.code===0) { list.value = res.data.data||[]; total.value = res.data.total||0; currentPage.value = p; }
-        });
-      };
+      const initSpectrum = () => { if (!audioContext) { audioContext = new (window.AudioContext||window.webkitAudioContext)(); analyser = audioContext.createAnalyser(); analyser.fftSize = 128; } if (!sourceBound) { try { const p = audioPlayer.value; if(p){ const src = audioContext.createMediaElementSource(p); src.connect(analyser); analyser.connect(audioContext.destination); sourceBound = true; } } catch(e){} } };
+      const drawSpectrum = () => { const canvas = spectrumCanvas.value; if (!canvas || !analyser) return; const ctx = canvas.getContext('2d'); canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; const data = new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(data); ctx.clearRect(0,0,canvas.width,canvas.height); const bars = data.length, barW = canvas.width/bars; for(let i=0;i<bars;i++){ const h=(data[i]/255)*canvas.height; ctx.fillStyle=`hsl(${(i/bars)*120+200},80%,60%)`; ctx.fillRect(i*barW,canvas.height-h,barW-1,h); } spectrumAnimId = requestAnimationFrame(drawSpectrum); };
+      const startSpectrum = () => { initSpectrum(); if(audioContext.state==='suspended') audioContext.resume(); if(!spectrumAnimId) drawSpectrum(); };
+      const stopSpectrum = () => { if(spectrumAnimId){ cancelAnimationFrame(spectrumAnimId); spectrumAnimId=null; } const c=spectrumCanvas.value; if(c) c.getContext('2d').clearRect(0,0,c.width,c.height); };
+
+      const switchCategory = () => { stopSpectrum(); selectedLetter.value=''; keyword.value=''; currentId.value=null; selectedId.value=null; playing.value=false; coverUrl.value=''; coverStyle.value={}; isVideo.value=false; lyricLines.value=[]; currentLyric.value=-1; loadFilters(); loadList(1); };
+      const loadFilters = async () => { const r1 = await axios.get('/tools/api/media/letters/',{params:{category:category.value}}); if(r1.data.code===0) letters.value=r1.data.data||[]; };
+      const loadList = async (page) => { const p=typeof page==='number'?page:1; const params={page:p,pageSize:pageSize.value,category:category.value,letter:selectedLetter.value}; if(keyword.value) params.keyword=keyword.value; const r=await axios.get('/tools/api/media/list/',{params}); if(r.data.code===0){ list.value=r.data.data||[]; total.value=r.data.total||0; currentPage.value=p; playlist=[...list.value]; } };
+      const search = () => { selectedLetter.value=''; loadList(1); };
+      const selectLetter = (l) => { selectedLetter.value=l; keyword.value=''; loadList(1); };
       const onPageChange = (p) => loadList(p);
-      const onSizeChange = (s) => { pageSize.value = s; loadList(1); };
+      const onSizeChange = (s) => { pageSize.value=s; loadList(1); };
 
-      const openUpload = () => { showUpload.value = true; };
-      const resetUpload = () => { uploadForm.category = category.value; ['title','artist','instrument','style','season','episode','episode_title','year','genre'].forEach(k => uploadForm[k] = ''); };
-      const onFileChange = (e) => { const file = e.target.files?.[0]; if (!file) return; const name = file.name.replace(/\.\w+$/i, ''); if (name.includes(' - ')) { const parts = name.split(' - '); if (!uploadForm.artist) uploadForm.artist = parts[0].trim(); if (!uploadForm.title) uploadForm.title = parts.slice(1).join(' - ').trim(); } else { if (!uploadForm.title) uploadForm.title = name; } };
-      const doUpload = async () => {
-        const file = fileInput.value?.files?.[0]; if (!file) { ElMessage.warning('请选择文件'); return; }
-        uploading.value = true;
-        try {
-          const fd = new FormData(); fd.append('file', file); fd.append('category', uploadForm.category); fd.append('title', uploadForm.title); fd.append('artist', uploadForm.artist);
-          if (uploadForm.category==='music'){fd.append('instrument',uploadForm.instrument);fd.append('style',uploadForm.style);}
-          if (uploadForm.category==='tv'){fd.append('season',uploadForm.season);fd.append('episode',uploadForm.episode);fd.append('episode_title',uploadForm.episode_title);}
-          if (uploadForm.category!=='music'){fd.append('year',uploadForm.year);fd.append('genre',uploadForm.genre);}
-          const r = await axios.post('/tools/api/media/upload/', fd); ElMessage[r.data.code===0?'success':'error'](r.data.msg);
-          if (r.data.code===0) { showUpload.value = false; loadList(1); }
-        } finally { uploading.value = false; }
-      };
+      const loadLyric = async () => { if (!currentId.value || category.value !== 'music') { lyricLines.value = []; return; } const r = await axios.get('/tools/api/media/lyric/', { params: { id: currentId.value, category: category.value } }); if (r.data.code === 0 && r.data.type === 'lrc') { lyricLines.value = r.data.data || []; } else { lyricLines.value = []; } };
 
-      const openEdit = () => {
-        const r = list.value.find(item => item.ID === selectedId.value);
-        if (!r) { ElMessage.warning('请选择'); return; }
-        editForm.category = category.value; editForm.title = r.Title||''; editForm.artist = (r.Artist||r.Director||'');
-        editForm.instrument = r.Instrument||''; editForm.style = r.Style||''; editForm.season = r.Season||''; editForm.episode = r.Episode||'';
-        editForm.episode_title = r.EpisodeTitle||''; editForm.year = r.Year||''; editForm.genre = r.Genre||'';
-        showEdit.value = true;
+      const play = (r) => {
+        stopSpectrum(); lyricLines.value=[]; currentLyric.value=-1;
+        currentId.value=r.ID; currentTitle.value=(r.Artist||r.Director||'')+' - '+r.Title;
+        const ext=(r.MediaType||'').toLowerCase(); const willVideo=(category.value!=='music')||videoExts.includes(ext);
+        currentAnimation.value=animations[Math.floor(Math.random()*animations.length)];
+        if(willVideo){
+          audioPlayer.value.pause(); audioPlayer.value.src=''; stopSpectrum();
+          isVideo.value=true; coverUrl.value=''; coverStyle.value={};
+          nextTick(()=>{ const p=videoPlayer.value; if(!p)return; p.src='/tools/api/media/play/?id='+r.ID+'&category='+category.value; p.load(); p.onloadeddata=()=>{p.play().then(()=>{playing.value=true;});}; });
+        } else {
+          isVideo.value=false; coverUrl.value='/tools/api/media/cover/?id='+r.ID+'&category='+category.value; coverStyle.value={animation:`${currentAnimation.value} 15s linear infinite`}; loadLyric();
+          nextTick(()=>{ const p=audioPlayer.value; if(!p)return; p.src='/tools/api/media/play/?id='+r.ID+'&category='+category.value; p.play().then(()=>{playing.value=true;startSpectrum();}); });
+        }
       };
-      const resetEdit = () => { showEdit.value = false; };
-      const doEdit = async () => {
-        saving.value = true;
-        try {
-          const fd = new FormData(); fd.append('id', selectedId.value); fd.append('category', editForm.category); fd.append('title', editForm.title); fd.append('artist', editForm.artist);
-          if (editForm.category==='music'){fd.append('instrument',editForm.instrument);fd.append('style',editForm.style);}
-          if (editForm.category==='tv'){fd.append('season',editForm.season);fd.append('episode',editForm.episode);fd.append('episode_title',editForm.episode_title);}
-          if (editForm.category!=='music'){fd.append('year',editForm.year);fd.append('genre',editForm.genre);}
-          const r = await axios.post('/tools/api/media/edit/', fd); ElMessage[r.data.code===0?'success':'error'](r.data.msg);
-          if (r.data.code===0) { showEdit.value = false; loadList(1); }
-        } finally { saving.value = false; }
-      };
+      const togglePlay = () => { const p=isVideo.value?videoPlayer.value:audioPlayer.value; if(!p||!p.src)return; if(playing.value){p.pause();playing.value=false;if(!isVideo.value){coverStyle.value={...coverStyle.value,animationPlayState:'paused'};stopSpectrum();}} else {p.play();playing.value=true;if(!isVideo.value){coverStyle.value={animation:`${currentAnimation.value} 15s linear infinite`,animationPlayState:'running'};startSpectrum();}} };
+      const prev = () => { if(!playlist.length)return; const idx=playlist.findIndex(r=>r.ID===currentId.value); play(playlist[idx<=0?playlist.length-1:idx-1]); };
+      const next = () => { if(!playlist.length)return; if(loopMode.value==='随机'){play(playlist[Math.floor(Math.random()*playlist.length)]);return;} const idx=playlist.findIndex(r=>r.ID===currentId.value); play(playlist[idx>=playlist.length-1?0:idx+1]); };
+      const onEnded = () => { stopSpectrum(); if(loopMode.value==='单曲'){const p=isVideo.value?videoPlayer.value:audioPlayer.value;if(p){p.play();if(!isVideo.value)startSpectrum();}return;} next(); };
+      const toggleLoop = () => { loopMode.value=loopMode.value==='顺序'?'单曲':loopMode.value==='单曲'?'随机':'顺序'; };
+      const onTimeUpdate = () => { const p=isVideo.value?videoPlayer.value:audioPlayer.value; if(!p)return; const ct=p.currentTime,dur=p.duration||0; currentTime.value=formatSeconds(ct); progressPercent.value=dur?(ct/dur*100):0; if(!isVideo.value && lyricLines.value.length){ const idx=lyricLines.value.findLastIndex(l=>l.time<=ct); if(idx>=0 && idx!==currentLyric.value){ currentLyric.value=idx; nextTick(()=>{const el=document.querySelector('.lyric-line.active'); if(el)el.scrollIntoView({block:'center',behavior:'smooth'});}); } } };
+      const onLoaded = () => { const p=isVideo.value?videoPlayer.value:audioPlayer.value; totalTime.value=formatSeconds((p&&p.duration)||0); };
+      const seek = (e) => { const rect=e.target.getBoundingClientRect(); const p=isVideo.value?videoPlayer.value:audioPlayer.value; if(p)p.currentTime=(p.duration||0)*(e.clientX-rect.left)/rect.width; };
+      const setVolume = () => { const p=isVideo.value?videoPlayer.value:audioPlayer.value; if(p)p.volume=volume.value/100; muted.value=false; };
+      const toggleMute = () => { muted.value=!muted.value; const p=isVideo.value?videoPlayer.value:audioPlayer.value; if(p)p.volume=muted.value?0:volume.value/100; };
+      const formatSeconds = (s) => { const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); };
+      const formatDuration = (s) => formatSeconds(s||0);
+      const onVideoError = () => { const p=videoPlayer.value; if(!p||!p.error)return; const msgs={1:'视频加载被中止',2:'网络错误',3:'视频解码失败，建议转换格式或更换浏览器',4:'视频格式不支持'}; ElMessage.error(msgs[p.error.code]||'视频播放失败'); playing.value=false; };
 
-      const deleteSelected = () => {
-        if (!selectedId.value) { ElMessage.warning('请选择'); return; }
-        ElMessageBox.confirm('确定删除？','确认',{type:'warning'}).then(() => {
-          axios.post('/tools/api/media/delete/', { id: selectedId.value, category: category.value }).then(res => {
-            ElMessage[res.data.code===0?'success':'error'](res.data.msg);
-            if (res.data.code===0) { selectedId.value = null; loadList(1); }
-          });
-        }).catch(()=>{});
-      };
-      const formatDuration = (s) => { const m=Math.floor((s||0)/60), sec=Math.floor((s||0)%60); return m+':'+String(sec).padStart(2,'0'); };
+      const openUpload = () => { showUpload.value=true; };
+      const resetUpload = () => { uploadForm.category=category.value; ['title','artist','instrument','style','season','episode','episode_title','year','genre'].forEach(k=>uploadForm[k]=''); };
+      const onUploadFileChange = (e) => { const file=e.target.files?.[0]; if(!file)return; const name=file.name.replace(/\.\w+$/i,''); if(name.includes(' - ')){const parts=name.split(' - '); if(!uploadForm.artist)uploadForm.artist=parts[0].trim(); if(!uploadForm.title)uploadForm.title=parts.slice(1).join(' - ').trim();} else {if(!uploadForm.title)uploadForm.title=name;} };
+      const doUpload = async () => { const file=uploadFileInput.value?.files?.[0]; if(!file){ElMessage.warning('请选择文件');return;} uploading.value=true; try { const fd=new FormData(); fd.append('file',file); fd.append('category',uploadForm.category); fd.append('title',uploadForm.title); fd.append('artist',uploadForm.artist); if(uploadForm.category==='music'){fd.append('instrument',uploadForm.instrument);fd.append('style',uploadForm.style);} if(uploadForm.category==='tv'){fd.append('season',uploadForm.season);fd.append('episode',uploadForm.episode);fd.append('episode_title',uploadForm.episode_title);} if(uploadForm.category!=='music'){fd.append('year',uploadForm.year);fd.append('genre',uploadForm.genre);} const r=await axios.post('/tools/api/media/upload/',fd); ElMessage[r.data.code===0?'success':'error'](r.data.msg); if(r.data.code===0){showUpload.value=false;loadList(1);} } finally { uploading.value=false; } };
+      const openEdit = () => { const r=list.value.find(item=>item.ID===selectedId.value); if(!r){ElMessage.warning('请选择');return;} editForm.category=category.value; editForm.title=r.Title||''; editForm.artist=(r.Artist||r.Director||''); editForm.instrument=r.Instrument||''; editForm.style=r.Style||''; editForm.season=r.Season||''; editForm.episode=r.Episode||''; editForm.episode_title=r.EpisodeTitle||''; editForm.year=r.Year||''; editForm.genre=r.Genre||''; showEdit.value=true; };
+      const resetEdit = () => { showEdit.value=false; };
+      const doEdit = async () => { saving.value=true; try { const fd=new FormData(); fd.append('id',selectedId.value); fd.append('category',editForm.category); fd.append('title',editForm.title); fd.append('artist',editForm.artist); if(editForm.category==='music'){fd.append('instrument',editForm.instrument);fd.append('style',editForm.style);} if(editForm.category==='tv'){fd.append('season',editForm.season);fd.append('episode',editForm.episode);fd.append('episode_title',editForm.episode_title);} if(editForm.category!=='music'){fd.append('year',editForm.year);fd.append('genre',editForm.genre);} const r=await axios.post('/tools/api/media/edit/',fd); ElMessage[r.data.code===0?'success':'error'](r.data.msg); if(r.data.code===0){showEdit.value=false;loadList(1);} } finally { saving.value=false; } };
+      const deleteSelected = () => { if(!selectedId.value){ElMessage.warning('请选择');return;} ElMessageBox.confirm('确定删除？','确认',{type:'warning'}).then(()=>{axios.post('/tools/api/media/delete/',{id:selectedId.value,category:category.value}).then(res=>{ElMessage[res.data.code===0?'success':'error'](res.data.msg); if(res.data.code===0){selectedId.value=null;loadList(1);}});}).catch(()=>{}); };
 
-      onMounted(() => loadList(1));
-      return { category, keyword, list, currentPage, pageSize, total, selectedId, showUpload, uploading, uploadForm, fileInput, showEdit, saving, editForm, categoryLabel,
-               switchCategory, loadList, onPageChange, onSizeChange, openUpload, resetUpload, onFileChange, doUpload,
-               openEdit, resetEdit, doEdit, deleteSelected, formatDuration };
+      const initDrag = () => { document.querySelectorAll('.drag-bar').forEach(bar=>{bar.addEventListener('mousedown',(e)=>{const panel=document.getElementById(bar.dataset.target); if(!panel)return; const startX=e.clientX,startW=panel.offsetWidth; const onMove=(ev)=>{let w=startW+ev.clientX-startX; if(w<60)w=60; panel.style.flex='none'; panel.style.width=w+'px';}; const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}; document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);e.preventDefault();});}); };
+      const showLyricEditor = ref(false);
+const lyricEditId = ref('');
+
+const openLyricEditor = () => {
+    if (!selectedId.value) return;
+    lyricEditId.value = selectedId.value;
+    showLyricEditor.value = true;
+};
+      onMounted(()=>{loadFilters();loadList(1);nextTick(initDrag);});
+      return { category,keyword,selectedLetter,letters,list,currentPage,pageSize,total,
+               audioPlayer,videoPlayer,playing,isVideo,currentId,currentTitle,coverUrl,coverStyle,currentTime,totalTime,progressPercent,loopMode,volume,muted,
+               selectedId,showUpload,uploading,uploadForm,uploadFileInput,showEdit,saving,editForm,lyricLines,currentLyric,
+               switchCategory,search,selectLetter,play,togglePlay,prev,next,onEnded,toggleLoop,onPageChange,onSizeChange,
+               onTimeUpdate,onLoaded,seek,setVolume,toggleMute,formatDuration,spectrumCanvas,onVideoError,
+               openUpload,resetUpload,onUploadFileChange,doUpload,openEdit,resetEdit,doEdit,deleteSelected,showLyricEditor, lyricEditId, openLyricEditor};
     }
   });
-  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+  app.use(ElementPlus,{ locale: ElementPlusLocaleZhCn }).mount('#app');
 })();
 </script>
 </body>

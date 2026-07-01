@@ -5,8 +5,8 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.core.cache import cache
 import logging
-from main.db_utils import _get_conn
-from main.decorators import archive_perm_required
+from main.utils import _get_conn
+from main.utils.decorators import archive_perm_required
 #@archive_perm_required
 
 logger = logging.getLogger(__name__)

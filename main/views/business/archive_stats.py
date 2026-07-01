@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from main.db_utils import _get_conn
+from main.utils import _get_conn
 
 
 def _get_unit_stats(cursor, tids):

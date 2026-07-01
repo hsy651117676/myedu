@@ -5,12 +5,18 @@ from django.urls import path
 from . import html5piano
 from . import markdown
 from . import mediaplayer
+from . import linux_cmd
 
 app_name = "tools"
 
 
 urlpatterns = [
-    path("linux/", html5piano.linux, name="tools_linux"),
+    path("linux/", linux_cmd.linux_page, name="tools_linux"),
+    path("api/linux/categories/", linux_cmd.categories_api, name="linux-categories"),
+    path("api/linux/list/", linux_cmd.list_api, name="linux-list"),
+    path("api/linux/detail/", linux_cmd.detail_api, name="linux-detail"),
+    path("api/linux/save/", linux_cmd.save_api, name="linux-save"),
+    path("api/linux/delete/", linux_cmd.delete_api, name="linux-delete"),
     path("encrypt/", html5piano.encrypt, name="tools_encrypt"),
     path("decrypt/", html5piano.decrypt, name="tools_decrypt"),
     path("piano/", html5piano.piano, name="tools_html5piano"),
@@ -31,4 +37,7 @@ urlpatterns = [
     path("api/media/styles/", mediaplayer.styles_api),
     path("api/media/edit/", mediaplayer.edit_api),
     path("api/media/cover/", mediaplayer.cover_api),
+    path("api/media/lyric/", mediaplayer.lyric_api),
+    path("api/media/save-lyric/", mediaplayer.save_lyric_api),
+    path("media/lyric-editor/", mediaplayer.lyric_editor_page),
 ]

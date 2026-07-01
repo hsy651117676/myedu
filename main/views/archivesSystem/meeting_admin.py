@@ -19,8 +19,8 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 
-from main.db_utils import _get_conn
-from main.decorators import admin_required
+from main.utils import _get_conn
+from main.utils.decorators import admin_required
 
 logger = logging.getLogger(__name__)
 

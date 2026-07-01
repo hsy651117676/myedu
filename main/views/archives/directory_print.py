@@ -1,6 +1,7 @@
 """
 档案目录打印 - PDF + Excel
 """
+
 import logging
 import os
 import openpyxl
@@ -9,8 +10,8 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.conf import settings
-from main.db_utils import _get_conn
-from main.decorators import archive_perm_required
+from main.utils import _get_conn
+from main.utils.decorators import archive_perm_required
 from weasyprint import HTML
 from openpyxl.styles import Border, Side, Alignment
 from urllib.parse import quote
@@ -21,22 +22,39 @@ CATEGORIES = [
     ("一", "履历材料", None),
     ("二", "自传材料", None),
     ("三", "鉴定、考核材料", None),
-    ("四", "学历学位、职称、学术、培训等材料", [
-        ("4-1", "学历学位材料"), ("4-2", "专业技术职务材料"),
-        ("4-3", "科研学术材料"), ("4-4", "培训材料"),
-    ]),
+    (
+        "四",
+        "学历学位、职称、学术、培训等材料",
+        [
+            ("4-1", "学历学位材料"),
+            ("4-2", "专业技术职务材料"),
+            ("4-3", "科研学术材料"),
+            ("4-4", "培训材料"),
+        ],
+    ),
     ("五", "政审材料", None),
     ("六", "党团材料", None),
     ("七", "奖励材料", None),
     ("八", "处分材料", None),
-    ("九", "工资、任免、出国、会议等材料", [
-        ("9-1", "工资材料"), ("9-2", "任免材料"),
-        ("9-3", "出国材料"), ("9-4", "会议代表材料"),
-    ]),
+    (
+        "九",
+        "工资、任免、出国、会议等材料",
+        [
+            ("9-1", "工资材料"),
+            ("9-2", "任免材料"),
+            ("9-3", "出国材料"),
+            ("9-4", "会议代表材料"),
+        ],
+    ),
     ("十", "其他材料", None),
 ]
 
-TEMPLATE_PATH = os.path.join(settings.BASE_DIR, "static", "excel_templates", "干部档案目录.xlsx")
+# 四和九是父类，不插入空行
+NO_EMPTY_CATS = {"四", "九"}
+
+TEMPLATE_PATH = os.path.join(
+    settings.BASE_DIR, "static", "excel_templates", "干部档案目录.xlsx"
+)
 
 
 def _load_data(rsid):
@@ -50,13 +68,21 @@ def _load_data(rsid):
             """SELECT JBBH+'-'+CAST(XH AS VARCHAR(5)) AS 编号, CLTM AS 材料名称,
                    FYEAR AS 年, FMONTH AS 月, FDAY AS 日, YS AS 页数, BZ AS 备注
             FROM RS_ARCHINFO a LEFT JOIN CATETREE b ON a.FL=b.FL
-            WHERE a.RSID=? ORDER BY a.FL, a.XH""", (int(rsid),))
-        rows = [dict(zip([c[0] for c in cursor.description], r)) for r in cursor.fetchall()]
+            WHERE a.RSID=? ORDER BY a.FL, a.XH""",
+            (int(rsid),),
+        )
+        rows = [
+            dict(zip([c[0] for c in cursor.description], r)) for r in cursor.fetchall()
+        ]
         cursor.close()
         data_map = {}
         for row in rows:
             parts = (row["编号"] or "").split("-")
-            key = "-".join(parts[:2]) if len(parts) >= 3 and parts[0].isdigit() else parts[0]
+            key = (
+                "-".join(parts[:2])
+                if len(parts) >= 3 and parts[0].isdigit()
+                else parts[0]
+            )
             data_map.setdefault(key, []).append(row)
         return person_name, data_map
     finally:
@@ -67,7 +93,10 @@ def _load_data(rsid):
 @login_required
 @archive_perm_required
 def print_page(request):
-    return render(request, "archives/directory_print.html", {"rsid": request.GET.get("rsid", "")})
+    return render(
+        request, "archives/directory_print.html", {"rsid": request.GET.get("rsid", "")}
+    )
+
 
 @login_required
 def print_pdf_api(request):
@@ -80,30 +109,48 @@ def print_pdf_api(request):
 
     def font_size(text):
         l = len(text)
-        if l > 25: return '10pt'
-        if l > 18: return '12pt'
-        return '14pt'
+        if l > 25:
+            return "10pt"
+        if l > 18:
+            return "12pt"
+        return "14pt"
+
+    def empty_rows_html(n):
+        return (
+            '<tr class="er"><td class="ca"></td><td class="cb"></td><td class="cc"></td><td class="cd"></td><td class="ce"></td><td class="cf"></td><td class="cg"></td></tr>'
+            * n
+        )
 
     def rows_html(cat_key, data_key=None):
         items = data_map.get(data_key or cat_key, [])
         h = ""
         for i, item in enumerate(items, 1):
-            mat = item.get('材料名称') or ''
-            bz  = item.get('备注') or ''
+            mat = item.get("材料名称") or ""
+            bz = item.get("备注") or ""
             h += f"<tr class='dr'><td class='ca'>{i}</td><td class='cb' style='font-size:{font_size(mat)}'>{mat}</td><td class='cc'>{item.get('年') or ''}</td><td class='cd'>{item.get('月') or ''}</td><td class='ce'>{item.get('日') or ''}</td><td class='cf'>{item.get('页数') or ''}</td><td class='cg' style='font-size:{font_size(bz)}'>{bz}</td></tr>"
-        h += '<tr class="er"><td class="ca"></td><td class="cb"></td><td class="cc"></td><td class="cd"></td><td class="ce"></td><td class="cf"></td><td class="cg"></td></tr>' * empty_rows
+        # 父类不加空行
+        if cat_key not in NO_EMPTY_CATS:
+            h += empty_rows_html(empty_rows)
         return h
 
     cats = [
-        ("一", "履历材料", True, "一"), ("二", "自传材料", True, "二"),
-        ("三", "鉴定、考核材料", True, "三"), ("四", "学历学位、职称、学术、培训等材料", True, None),
-        ("4-1", "学历学位材料", False, "4-1"), ("4-2", "专业技术职务材料", False, "4-2"),
-        ("4-3", "科研学术材料", False, "4-3"), ("4-4", "培训材料", False, "4-4"),
-        ("五", "政审材料", True, "五"), ("六", "党团材料", True, "六"),
-        ("七", "奖励材料", True, "七"), ("八", "处分材料", True, "八"),
+        ("一", "履历材料", True, "一"),
+        ("二", "自传材料", True, "二"),
+        ("三", "鉴定、考核材料", True, "三"),
+        ("四", "学历学位、职称、学术、培训等材料", True, None),
+        ("4-1", "学历学位材料", False, "4-1"),
+        ("4-2", "专业技术职务材料", False, "4-2"),
+        ("4-3", "科研学术材料", False, "4-3"),
+        ("4-4", "培训材料", False, "4-4"),
+        ("五", "政审材料", True, "五"),
+        ("六", "党团材料", True, "六"),
+        ("七", "奖励材料", True, "七"),
+        ("八", "处分材料", True, "八"),
         ("九", "工资、任免、出国、会议等材料", True, None),
-        ("9-1", "工资材料", False, "9-1"), ("9-2", "任免材料", False, "9-2"),
-        ("9-3", "出国材料", False, "9-3"), ("9-4", "会议代表材料", False, "9-4"),
+        ("9-1", "工资材料", False, "9-1"),
+        ("9-2", "任免材料", False, "9-2"),
+        ("9-3", "出国材料", False, "9-3"),
+        ("9-4", "会议代表材料", False, "9-4"),
         ("十", "其他材料", True, "十"),
     ]
 
@@ -114,7 +161,7 @@ def print_pdf_api(request):
         body += rows_html(cat_key, data_key)
 
     html = f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><style>
-@page{{size:A4 portrait;margin:{1.5/2.54*72}pt {1.8/2.54*72}pt {2.0/2.54*72}pt {1.6/2.54*72}pt;@bottom-center{{content:"共 " counter(pages) " 页  第 " counter(page) " 页";font-size:9pt;font-family:"SimSun",sans-serif;}}}}
+@page{{size:A4 portrait;margin:{1.5 / 2.54 * 72}pt {1.8 / 2.54 * 72}pt {2.0 / 2.54 * 72}pt {1.6 / 2.54 * 72}pt;@bottom-center{{content:"共 " counter(pages) " 页  第 " counter(page) " 页";font-size:9pt;font-family:"SimSun",sans-serif;}}}}
 body{{font-family:"SimSun","宋体",sans-serif;margin:0;padding:0;font-size:14pt;}}
 table{{border-collapse:collapse;width:100%;table-layout:fixed;}}
 .col-ca{{width:6%;}}.col-cb{{width:53%;}}.col-cc{{width:10%;}}.col-cd{{width:4%;}}.col-ce{{width:4%;}}.col-cf{{width:5%;}}.col-cg{{width:12%;}}
@@ -141,9 +188,9 @@ thead{{display:table-header-group;}}
     buf = BytesIO()
     HTML(string=html).write_pdf(buf)
     buf.seek(0)
-    resp = HttpResponse(buf, content_type='application/pdf')
-    resp['Content-Security-Policy'] = "frame-ancestors 'self'"
-    resp['X-Frame-Options'] = 'SAMEORIGIN'
+    resp = HttpResponse(buf, content_type="application/pdf")
+    resp["Content-Security-Policy"] = "frame-ancestors 'self'"
+    resp["X-Frame-Options"] = "SAMEORIGIN"
     return resp
 
 
@@ -161,8 +208,8 @@ def print_export_api(request):
     ws.title = "干部档案目录"
 
     ws.page_setup.paperSize = 9
-    ws.page_setup.orientation = 'portrait'
-    ws.print_title_rows = '$3:$4'
+    ws.page_setup.orientation = "portrait"
+    ws.print_title_rows = "$3:$4"
     ws.oddFooter.center.text = "第 &P 页，共 &N 页"
     ws.evenFooter.center.text = "第 &P 页，共 &N 页"
     ws.page_margins.left = 1.6 / 2.54
@@ -174,45 +221,67 @@ def print_export_api(request):
     for i, w in enumerate(col_widths, 1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
 
-    title_font   = openpyxl.styles.Font(name='黑体', size=22, bold=True)
-    name_font    = openpyxl.styles.Font(name='宋体', size=16)
-    header_font  = openpyxl.styles.Font(name='黑体', size=16, bold=True)
-    cat_font     = openpyxl.styles.Font(name='黑体', size=16, bold=True)
-    sub_font     = openpyxl.styles.Font(name='宋体', size=16)
-    data_font    = openpyxl.styles.Font(name='宋体', size=16)
-    shrink_font  = openpyxl.styles.Font(name='宋体', size=16)
-    thin_border  = Border(left=Side(style='thin'), right=Side(style='thin'),
-                          top=Side(style='thin'), bottom=Side(style='thin'))
-    center_align = Alignment(horizontal='center', vertical='center')
-    left_align   = Alignment(horizontal='left', vertical='center')
-    shrink_align = Alignment(horizontal='left', vertical='center', shrink_to_fit=True)
+    title_font = openpyxl.styles.Font(name="黑体", size=22, bold=True)
+    name_font = openpyxl.styles.Font(name="宋体", size=16)
+    header_font = openpyxl.styles.Font(name="黑体", size=16, bold=True)
+    cat_font = openpyxl.styles.Font(name="黑体", size=16, bold=True)
+    sub_font = openpyxl.styles.Font(name="宋体", size=16)
+    data_font = openpyxl.styles.Font(name="宋体", size=16)
+    shrink_font = openpyxl.styles.Font(name="宋体", size=16)
+    thin_border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    shrink_align = Alignment(horizontal="left", vertical="center", shrink_to_fit=True)
 
     def sc(r, c, v, font=data_font, align=center_align):
         cell = ws.cell(row=r, column=c, value=v)
-        cell.font = font; cell.alignment = align
+        cell.font = font
+        cell.alignment = align
         return cell
 
-    ws.merge_cells('A1:G1'); sc(1, 1, "干部档案目录", title_font)
-    ws.merge_cells('A2:C2'); sc(2, 1, f"姓名：{person_name or ''}", name_font, left_align)
+    ws.merge_cells("A1:G1")
+    sc(1, 1, "干部档案目录", title_font)
+    ws.merge_cells("A2:C2")
+    sc(2, 1, f"姓名：{person_name or ''}", name_font, left_align)
 
-    ws.merge_cells('A3:A4'); sc(3, 1, "序号", header_font)
-    ws.merge_cells('B3:B4'); sc(3, 2, "材  料  题  名", header_font)
-    ws.merge_cells('C3:E3'); sc(3, 3, "材料形成时间", header_font)
-    sc(4, 3, "年", header_font); sc(4, 4, "月", header_font); sc(4, 5, "日", header_font)
-    ws.merge_cells('F3:F4'); sc(3, 6, "页数", header_font)
-    ws.merge_cells('G3:G4'); sc(3, 7, "备注", header_font)
+    ws.merge_cells("A3:A4")
+    sc(3, 1, "序号", header_font)
+    ws.merge_cells("B3:B4")
+    sc(3, 2, "材  料  题  名", header_font)
+    ws.merge_cells("C3:E3")
+    sc(3, 3, "材料形成时间", header_font)
+    sc(4, 3, "年", header_font)
+    sc(4, 4, "月", header_font)
+    sc(4, 5, "日", header_font)
+    ws.merge_cells("F3:F4")
+    sc(3, 6, "页数", header_font)
+    ws.merge_cells("G3:G4")
+    sc(3, 7, "备注", header_font)
 
     row = 5
     cats = [
-        ("一", "履历材料", True, "一"), ("二", "自传材料", True, "二"),
-        ("三", "鉴定、考核材料", True, "三"), ("四", "学历学位、职称、学术、培训等材料", True, None),
-        ("4-1", "学历学位材料", False, "4-1"), ("4-2", "专业技术职务材料", False, "4-2"),
-        ("4-3", "科研学术材料", False, "4-3"), ("4-4", "培训材料", False, "4-4"),
-        ("五", "政审材料", True, "五"), ("六", "党团材料", True, "六"),
-        ("七", "奖励材料", True, "七"), ("八", "处分材料", True, "八"),
+        ("一", "履历材料", True, "一"),
+        ("二", "自传材料", True, "二"),
+        ("三", "鉴定、考核材料", True, "三"),
+        ("四", "学历学位、职称、学术、培训等材料", True, None),
+        ("4-1", "学历学位材料", False, "4-1"),
+        ("4-2", "专业技术职务材料", False, "4-2"),
+        ("4-3", "科研学术材料", False, "4-3"),
+        ("4-4", "培训材料", False, "4-4"),
+        ("五", "政审材料", True, "五"),
+        ("六", "党团材料", True, "六"),
+        ("七", "奖励材料", True, "七"),
+        ("八", "处分材料", True, "八"),
         ("九", "工资、任免、出国、会议等材料", True, None),
-        ("9-1", "工资材料", False, "9-1"), ("9-2", "任免材料", False, "9-2"),
-        ("9-3", "出国材料", False, "9-3"), ("9-4", "会议代表材料", False, "9-4"),
+        ("9-1", "工资材料", False, "9-1"),
+        ("9-2", "任免材料", False, "9-2"),
+        ("9-3", "出国材料", False, "9-3"),
+        ("9-4", "会议代表材料", False, "9-4"),
         ("十", "其他材料", True, "十"),
     ]
 
@@ -235,11 +304,12 @@ def print_export_api(request):
             sc(row, 7, item.get("备注", ""), shrink_font, shrink_align)
             row += 1
 
-        for _ in range(empty_rows):
-            ws.row_dimensions[row].height = 24
-            for c in range(1, 8):
-                sc(row, c, "")
-            row += 1
+        if cat_key not in NO_EMPTY_CATS:
+            for _ in range(empty_rows):
+                ws.row_dimensions[row].height = 24
+                for c in range(1, 8):
+                    sc(row, c, "")
+                row += 1
 
     for r in range(3, row):
         for c in range(1, 8):
@@ -249,6 +319,9 @@ def print_export_api(request):
     wb.save(buf)
     buf.seek(0)
     filename = f"{person_name}_干部档案目录.xlsx"
-    response = HttpResponse(buf, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(filename)}"
+    response = HttpResponse(
+        buf,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(filename)}"
     return response

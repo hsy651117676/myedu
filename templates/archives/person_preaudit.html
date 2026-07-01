@@ -90,10 +90,13 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 
       const refreshData = () => loadData();
       const exportData = () => {
-        axios.get('/archives/api/preaudit-export/', { params: { rsid: rsid.value } }).then(res => {
-          if (res.data.code === 0) window.top.location.href = res.data.url;
-        });
-      };
+    const a = document.createElement('a');
+    a.href = '/archives/api/preaudit-export/?rsid=' + rsid.value;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
 
       onMounted(loadData);
       return { rsid, data, refreshData, exportData };

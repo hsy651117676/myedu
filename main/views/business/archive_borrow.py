@@ -8,8 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from main.db_utils import _get_conn
-from main.decorators import archive_perm_required
+from main.utils import _get_conn
+from main.utils.decorators import archive_perm_required
 
 logger = logging.getLogger(__name__)
 

@@ -79,9 +79,30 @@ const app = createApp({
   setup() {
     const currentPerson = ref({});
     const activeTab = ref('basic');
+    const prevTab = ref('basic');
+
+    // 通知档案目录iframe保存
+    const notifyDirectorySave = () => {
+      const iframe = document.querySelector('iframe[src*="person-directory"]');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ action: 'saveCurrentRow' }, '*');
+      }
+    };
+
+    const onTabChange = (tabName) => {
+      // 如果从档案目录切换走，通知保存
+      if (prevTab.value === 'directory' && tabName !== 'directory') {
+        notifyDirectorySave();
+      }
+      prevTab.value = tabName;
+    };
 
     window.addEventListener('message', (e) => {
       if (e.data.type === 'person-select') {
+        // 切换人员前也通知保存
+        if (activeTab.value === 'directory') {
+          notifyDirectorySave();
+        }
         currentPerson.value = e.data.data;
       }
     });
@@ -119,7 +140,7 @@ const app = createApp({
       });
     });
 
-    return { currentPerson, activeTab };
+    return { currentPerson, activeTab, onTabChange };
   }
 });
 

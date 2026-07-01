@@ -12,7 +12,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from main.db_utils import _get_conn
+from main.utils import _get_conn
 
 logger = logging.getLogger(__name__)
 

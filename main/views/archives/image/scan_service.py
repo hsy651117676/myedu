@@ -26,22 +26,23 @@ IMAGE_TYPES = settings.SCAN_IMAGE_TYPES
 _AES_KEY = settings.SCAN_AES_KEY
 
 PAGE_SIZE_MAP = {
-    'A4': A4,
-    'A5': A5,
-    'A3': A3,
-    'B5': B5,
+    "A4": A4,
+    "A5": A5,
+    "A3": A3,
+    "B5": B5,
 }
 
 
 # ==================== 业务SQL查询 ====================
 
-def get_latest_uptime(rsid, archid, image_type='YS'):
+
+def get_latest_uptime(rsid, archid, image_type="YS"):
     """获取指定档案材料的最新扫描时间"""
-    from main.db_utils import _get_conn
+    from main.utils import _get_conn
 
     table_name = f"RS_DESCRIPT_{rsid}"
 
-    if image_type == 'YS':
+    if image_type == "YS":
         sql = f"""SELECT MAX(uptime) AS max_uptime, COUNT(*) AS img_count
                   FROM {table_name}
                   WHERE Archid='{archid}'"""
@@ -59,7 +60,7 @@ def get_latest_uptime(rsid, archid, image_type='YS'):
         cursor.close()
         if row and row[0]:
             raw = str(row[0])
-            uptime = raw.replace('-', '').replace(':', '').replace(' ', '')
+            uptime = raw.replace("-", "").replace(":", "").replace(" ", "")
             count = row[1]
             return uptime, count
         return None, 0
@@ -75,6 +76,7 @@ def get_latest_uptime(rsid, archid, image_type='YS'):
 
 
 # ==================== PDF辅助 ====================
+
 
 def get_pdf_page_size(size_name, vertical=True):
     """获取PDF页面尺寸"""
@@ -92,13 +94,13 @@ def decrypt_image(encrypted_path):
     """
     import struct
 
-    with open(encrypted_path, 'rb') as f:
+    with open(encrypted_path, "rb") as f:
         data = f.read()
 
     if len(data) < 8:
         raise ValueError(f"文件太小: {encrypted_path}")
 
-    original_size = struct.unpack('<I', data[:4])[0]
+    original_size = struct.unpack("<I", data[:4])[0]
     enc = data[8:]
 
     # 计算加密数据的实际大小（对齐到16字节）
@@ -112,22 +114,20 @@ def decrypt_image(encrypted_path):
     # 截取原始长度
     plain = decrypted[:original_size]
 
-    if plain[:2] != b'\xff\xd8' and plain[:4] != b'\x89PNG':
+    if plain[:2] != b"\xff\xd8" and plain[:4] != b"\x89PNG":
         raise ValueError(f"解密后不是有效图片: {encrypted_path}")
 
     return Image.open(io.BytesIO(plain))
 
+
 # ==================== 路径构建 ====================
+
 
 def build_image_dir(image_type, rsid, fl, archid):
     """构建图片源目录路径"""
     rsid_padded = str(rsid).zfill(8)
     return os.path.join(
-        settings.SCAN_IMAGE_BASE_DIR,
-        image_type,
-        rsid_padded,
-        str(fl),
-        str(archid)
+        settings.SCAN_IMAGE_BASE_DIR, image_type, rsid_padded, str(fl), str(archid)
     )
 
 
@@ -135,11 +135,7 @@ def build_pdf_dir(image_type, rsid, fl, archid):
     """构建PDF存放目录路径"""
     rsid_padded = str(rsid).zfill(8)
     return os.path.join(
-        settings.SCAN_PDF_OUTPUT_DIR,
-        image_type,
-        rsid_padded,
-        str(fl),
-        str(archid)
+        settings.SCAN_PDF_OUTPUT_DIR, image_type, rsid_padded, str(fl), str(archid)
     )
 
 
@@ -177,11 +173,19 @@ def clean_old_pdfs(image_type, rsid, fl, archid, keep_uptime):
 
 # ==================== PDF生成 ====================
 
-def images_to_pdf(image_dir, output_pdf_path,
-                  page_size=None, vertical=None,
-                  margin_up=None, margin_down=None,
-                  margin_left=None, margin_right=None,
-                  dpi=None, jpeg_quality=None):
+
+def images_to_pdf(
+    image_dir,
+    output_pdf_path,
+    page_size=None,
+    vertical=None,
+    margin_up=None,
+    margin_down=None,
+    margin_left=None,
+    margin_right=None,
+    dpi=None,
+    jpeg_quality=None,
+):
     """
     将目录下所有解密后的图片合成为一个多页PDF
     """
@@ -205,10 +209,13 @@ def images_to_pdf(image_dir, output_pdf_path,
     if not os.path.exists(image_dir):
         return False, f"图片目录不存在: {image_dir}"
 
-    image_files = sorted([
-        f for f in os.listdir(image_dir)
-        if f.lower().endswith(('.jpg', '.jpeg', '.png'))
-    ])
+    image_files = sorted(
+        [
+            f
+            for f in os.listdir(image_dir)
+            if f.lower().endswith((".jpg", ".jpeg", ".png"))
+        ]
+    )
 
     if not image_files:
         return False, "目录下无图片文件"
@@ -238,11 +245,11 @@ def images_to_pdf(image_dir, output_pdf_path,
             x = margin_left + (usable_width - new_w) / 2
             y = margin_down + (usable_height - new_h) / 2
 
-            if img.mode in ('RGBA', 'LA', 'P'):
-                img = img.convert('RGB')
+            if img.mode in ("RGBA", "LA", "P"):
+                img = img.convert("RGB")
 
             img_buffer = io.BytesIO()
-            img.save(img_buffer, format='JPEG', quality=jpeg_quality, dpi=(dpi, dpi))
+            img.save(img_buffer, format="JPEG", quality=jpeg_quality, dpi=(dpi, dpi))
             img_buffer.seek(0)
 
             c.drawImage(ImageReader(img_buffer), x, y, width=new_w, height=new_h)
@@ -256,11 +263,19 @@ def images_to_pdf(image_dir, output_pdf_path,
     return True, output_pdf_path
 
 
-def get_or_generate_pdf(image_type, rsid, fl, archid,
-                        page_size=None, vertical=None,
-                        margin_up=None, margin_down=None,
-                        margin_left=None, margin_right=None,
-                        force_regenerate=False):
+def get_or_generate_pdf(
+    image_type,
+    rsid,
+    fl,
+    archid,
+    page_size=None,
+    vertical=None,
+    margin_up=None,
+    margin_down=None,
+    margin_left=None,
+    margin_right=None,
+    force_regenerate=False,
+):
     """获取或生成PDF文件"""
 
     if page_size is None:
@@ -298,7 +313,7 @@ def get_or_generate_pdf(image_type, rsid, fl, archid,
         margin_up=margin_up,
         margin_down=margin_down,
         margin_left=margin_left,
-        margin_right=margin_right
+        margin_right=margin_right,
     )
 
     if success:
@@ -312,6 +327,27 @@ def check_scan_exists(image_type, rsid, fl, archid):
     image_dir = build_image_dir(image_type, rsid, fl, archid)
     if not os.path.exists(image_dir):
         return False, 0
-    image_files = [f for f in os.listdir(image_dir)
-                   if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    image_files = [
+        f
+        for f in os.listdir(image_dir)
+        if f.lower().endswith((".jpg", ".jpeg", ".png"))
+    ]
     return len(image_files) > 0, len(image_files)
+
+
+def encrypt_image(raw_data):
+    """将原始图片数据加密为FTS格式"""
+    import struct
+    from Crypto.Cipher import AES
+
+    original_size = len(raw_data)
+    # 对齐到16字节
+    pad_size = (16 - (original_size % 16)) % 16
+    padded = raw_data + b"\x00" * pad_size
+
+    cipher = AES.new(_AES_KEY, AES.MODE_ECB)
+    encrypted = cipher.encrypt(padded)
+
+    # FTS格式头：4字节原始长度(小端) + 4字节保留
+    header = struct.pack("<I", original_size) + b"\x00" * 4
+    return header + encrypted

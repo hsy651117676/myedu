@@ -4,12 +4,12 @@
 <style>
 html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 #app { height:100%; display:flex; }
-.dir-tree { width:250px; border-right:1px solid #ddd; overflow-y:auto; padding:8px; }
+.dir-tree { width:250px; border-right:1px solid #ddd; overflow-y:auto; padding:8px; font-size:14px; }
 .dir-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.dir-table { border-collapse:collapse; width:100%; font-size:14px; }
+.dir-table { border-collapse:collapse; width:100%; font-size:16px; }
 .dir-table th, .dir-table td { padding:6px 4px; border:1px solid #ddd; text-align:center; }
 .dir-table th { background:#f5f5f5; position:sticky; top:0; z-index:1; }
-.dir-table td input { width:100%; border:none; padding:2px; background:transparent; font-size:14px; text-align:center; }
+.dir-table td input { width:100%; border:none; padding:2px; background:transparent; font-size:16px; text-align:center; }
 .dir-table td input:focus { background:#fff; }
 .dir-table tr[draggable="true"] { cursor:move; }
 .dir-table tr.drag-over { background:#ffe58f !important; }
@@ -20,6 +20,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 .dir-table tr.row-editing { background:#fffbe6; }
 .dir-table tr.row-editing.row-selected { background:#e6f0d0; }
 .dir-table td.cell-active { outline:2px solid #409EFF; outline-offset:-2px; background:#fff; }
+.dir-table td.col-number { cursor:context-menu; }
 .dir-table th:nth-child(1), .dir-table td:nth-child(1) { width:11.1%; }
 .dir-table th:nth-child(2), .dir-table td:nth-child(2) { width:44.4%; }
 .dir-table th:nth-child(3), .dir-table td:nth-child(3) { width:11.1%; }
@@ -27,109 +28,112 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 .dir-table th:nth-child(5), .dir-table td:nth-child(5) { width:5.6%; }
 .dir-table th:nth-child(6), .dir-table td:nth-child(6) { width:5.6%; }
 .dir-table th:nth-child(7), .dir-table td:nth-child(7) { width:16.6%; }
+.ctx-menu { position:fixed; z-index:9999; background:#fff; border:1px solid #dcdfe6; border-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,0.12); min-width:180px; font-size:14px; }
+.ctx-menu div { padding:8px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+.ctx-menu div:hover { background:#ecf5ff; color:#409EFF; }
+.ctx-menu div .shortcut { color:#909399; font-size:12px; }
 </style>
 
 <div id="app" v-if="rsid">
   <div class="dir-tree">
     <div style="font-weight:bold;margin-bottom:6px;">档案分类</div>
     <div v-for="t in treeData" :key="t.fl" style="margin-bottom:4px;">
-      <div style="cursor:pointer;font-weight:bold;color:#303133;padding:2px 4px;" 
-           @click="currentFL=t.fl; currentName=t.name; loadList(); t.expanded=!t.expanded">
-        <span style="font-size:12px;">[[ t.expanded ? '▼' : '▶' ]]</span> [[ t.name ]]
+      <div style="cursor:pointer;font-weight:bold;color:#303133;padding:2px 4px;" @click="onTreeClick(t)">
+        <span v-if="t.fl==4||t.fl==9" style="font-size:12px;">[[ t.expanded ? '▼' : '▶' ]]</span>
+        <span v-else style="font-size:12px;visibility:hidden;">▶</span>
+        [[ t.name ]]
       </div>
-      <template v-if="t.expanded">
-        <template v-if="t.fl==4">
-          <div v-for="s in sub4" :key="s.fl"
-               style="cursor:pointer;padding:2px 4px 2px 18px;color:#606266;font-size:13px;"
-               :style="{ background: currentFL==s.fl ? '#d0e4fc' : '' }"
-               @click="currentFL=s.fl; currentName=s.name; loadList()">[[ s.name ]]</div>
-        </template>
-        <template v-if="t.fl==9">
-          <div v-for="s in sub9" :key="s.fl"
-               style="cursor:pointer;padding:2px 4px 2px 18px;color:#606266;font-size:13px;"
-               :style="{ background: currentFL==s.fl ? '#d0e4fc' : '' }"
-               @click="currentFL=s.fl; currentName=s.name; loadList()">[[ s.name ]]</div>
-        </template>
+      <template v-if="t.expanded && t.fl==4">
+        <div v-for="s in sub4" :key="s.fl" style="cursor:pointer;padding:2px 4px 2px 18px;color:#606266;font-size:13px;"
+             :style="{ background: currentFL==s.fl ? '#d0e4fc' : '' }" @click="selectFL(s.fl, s.name)">[[ s.name ]]</div>
+      </template>
+      <template v-if="t.expanded && t.fl==9">
+        <div v-for="s in sub9" :key="s.fl" style="cursor:pointer;padding:2px 4px 2px 18px;color:#606266;font-size:13px;"
+             :style="{ background: currentFL==s.fl ? '#d0e4fc' : '' }" @click="selectFL(s.fl, s.name)">[[ s.name ]]</div>
       </template>
     </div>
   </div>
 
   <div class="dir-main">
     <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;flex-wrap:wrap;">
-  <span style="font-weight:bold;color:#409EFF;">[[ currentName || '档案目录' ]]</span>
-  
-  <!-- 保存/刷新 -->
-  <el-button size="small" type="primary" @click="saveAll">保存</el-button>
-  <el-button size="small" type="info" @click="refreshData">刷新</el-button>
-  
-  <!-- 打印 -->
-  <el-button size="small" type="success" @click="printDirectory">打印</el-button>
-  
-  <!-- 排序 -->
-  <el-button v-if="!sortMode" size="small" type="warning" @click="enterSortMode">调整编号</el-button>
-  <el-button v-if="sortMode" size="small" type="primary" @click="saveSort">保存顺序</el-button>
-  <el-button v-if="sortMode" size="small" type="info" @click="cancelSort">取消</el-button>
-  
-  <!-- 插入/新增 -->
-  <el-button size="small" type="warning" @click="insertRow('InsertUp')">↑上行插入</el-button>
-  <el-button size="small" type="warning" @click="insertRow('InsertDown')">↓下行插入</el-button>
-  <el-button size="small" type="success" @click="addNewRow">新增行</el-button>
-  
-  <!-- 删除 -->
-  <el-button size="small" type="danger" @click="deleteRow">删除行</el-button>
-  
-  <!-- 帮助/查看 -->
-  <el-button size="small" type="info" @click="help">帮助说明</el-button>
-  <el-button size="small" type="primary" @click="showAllDir=true">查看全部目录</el-button>
-</div>
-    <div style="flex:1;overflow:auto;">
+      <span style="font-weight:bold;color:#409EFF;">[[ currentName || '档案目录' ]]</span>
+      <el-button size="small" type="primary" @click="saveAll">💾 保存</el-button>
+      <el-button size="small" type="info" @click="refreshData">刷新</el-button>
+      <el-button size="small" type="success" @click="printDirectory">打印</el-button>
+      <el-button size="small" type="success" @click="exportExcel">导出Excel</el-button>
+      <el-button v-if="!sortMode" size="small" type="warning" @click="enterSortMode">调整编号</el-button>
+      <el-button v-if="sortMode" size="small" type="primary" @click="saveSort">保存顺序</el-button>
+      <el-button v-if="sortMode" size="small" type="info" @click="cancelSort">取消</el-button>
+      <el-button size="small" type="warning" @click="toastShortcut('InsertUp'); doInsertRow('InsertUp')">↑上行插入</el-button>
+      <el-button size="small" type="warning" @click="toastShortcut('InsertDown'); doInsertRow('InsertDown')">↓下行插入</el-button>
+      <el-button size="small" type="success" @click="focusNewRow">新增行</el-button>
+      <el-button size="small" type="danger" @click="toastShortcut('Delete'); doDeleteRow()">删除行</el-button>
+      <el-button size="small" type="info" @click="help">帮助说明</el-button>
+      <el-button size="small" type="primary" @click="showAllDir=true">查看全部目录</el-button>
+    </div>
+
+    <div style="flex:1;overflow:auto;" @mousedown="ctxMenu.show=false">
       <table class="dir-table" :key="tableKey">
         <thead><tr>
-          <th>编号</th><th>材料名称</th>
-          <th>年</th><th>月</th><th>日</th><th>页数</th><th>备注</th>
+          <th>编号</th><th>材料名称</th><th>年</th><th>月</th><th>日</th><th>页数</th><th>备注</th>
         </tr></thead>
         <tbody>
           <tr v-for="(r,i) in archList" :key="i" :draggable="sortMode"
               @dragstart="onDragStart(i,$event)" @dragover="onDragOver(i,$event)" @dragleave="onDragLeave" @drop="onDrop(i)" @dragend="onDragEnd"
               :class="[r._dragOver?'drag-over':'', dragIndex===i?'drag-source':'', r._selected?'row-selected':'', editCell.row===i?'row-editing':'']"
               @click="!sortMode&&onRowClick(i)">
-            <td>[[ r.编号 ]]</td>
+            <td class="col-number" @contextmenu.prevent="onContextMenu($event, i)">[[ r.编号 ]]</td>
             <td style="text-align:left;position:relative;">
-              <input v-model="r.CLTM" @input="onMaterialInput($event, i)" @focus="onMaterialFocus($event, i)" @blur="onMaterialBlur(i)" @keyup="onKeyUp($event)" autocomplete="off" style="text-align:left;width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='CLTM'?'cell-active':''" />
+              <input v-model="r.CLTM" @input="onMaterialInput($event, i)" @focus="onCellFocus(i,'CLTM')" @keydown="onKeyDown($event, i)" autocomplete="off" style="text-align:left;width:100%;" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='CLTM'?'cell-active':''" />
               <div v-show="r._showSuggest&&r._suggestions.length&&!sortMode" style="position:absolute;top:100%;left:0;right:0;max-height:300px;overflow:auto;background:#fff;border:1px solid #409EFF;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
                 <div v-for="s in r._suggestions" :key="s" @mousedown.prevent="r.CLTM=s.replace(/^.*? - /,''); r._showSuggest=false"
                      style="padding:6px 8px;cursor:pointer;font-size:13px;border-bottom:1px solid #eee;"
                      @mouseover="$event.target.style.background='#d0e4fc'" @mouseout="$event.target.style.background='#fff'">[[ s ]]</div>
               </div>
             </td>
-            <td><input v-model="r.FYEAR" @focus="onCellFocus(i,'FYEAR')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FYEAR'?'cell-active':''" /></td>
-            <td><input v-model="r.FMONTH" @focus="onCellFocus(i,'FMONTH')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FMONTH'?'cell-active':''" /></td>
-            <td><input v-model="r.FDAY" @focus="onCellFocus(i,'FDAY')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FDAY'?'cell-active':''" /></td>
-            <td><input v-model="r.YS" @focus="onCellFocus(i,'YS')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='YS'?'cell-active':''" /></td>
-            <td><input v-model="r.BZ" @focus="onCellFocus(i,'BZ')" @blur="onCellBlur" @keyup="onKeyUp($event)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='BZ'?'cell-active':''" /></td>
+            <td><input v-model="r.FYEAR" @focus="onCellFocus(i,'FYEAR')" @keydown="onKeyDown($event, i)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FYEAR'?'cell-active':''" /></td>
+            <td><input v-model="r.FMONTH" @focus="onCellFocus(i,'FMONTH')" @keydown="onKeyDown($event, i)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FMONTH'?'cell-active':''" /></td>
+            <td><input v-model="r.FDAY" @focus="onCellFocus(i,'FDAY')" @keydown="onKeyDown($event, i)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='FDAY'?'cell-active':''" /></td>
+            <td><input v-model="r.YS" @focus="onCellFocus(i,'YS')" @keydown="onKeyDown($event, i)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='YS'?'cell-active':''" /></td>
+            <td><input v-model="r.BZ" @focus="onCellFocus(i,'BZ')" @keydown="onKeyDown($event, i)" :disabled="sortMode" :class="editCell.row===i&&editCell.col==='BZ'?'cell-active':''" /></td>
           </tr>
           <tr v-if="!sortMode&&currentFL" class="new-row">
             <td>[[ currentName?.split('、')[0]||'' ]] - *</td>
-            <td><input v-model="newRow.CLTM" placeholder="输入材料名称" style="text-align:left;width:100%;" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.FYEAR" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.FMONTH" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.FDAY" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.YS" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
-            <td><input v-model="newRow.BZ" @blur="commitNewRow" @keyup.enter="commitNewRow" /></td>
+            <td style="text-align:left;position:relative;">
+              <input v-model="newRow.CLTM" placeholder="输入材料名称" style="text-align:left;width:100%;" @input="onNewRowInput" @focus="onNewRowFocus" @blur="commitNewRow" @keydown.enter.prevent="commitNewRowAndFocus" />
+              <div v-show="newRowShowSuggest && newRowSuggestions.length" style="position:absolute;top:100%;left:0;right:0;max-height:300px;overflow:auto;background:#fff;border:1px solid #409EFF;z-index:999;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                <div v-for="s in newRowSuggestions" :key="s" @mousedown.prevent="newRow.CLTM=s.replace(/^.*? - /,''); newRowShowSuggest=false"
+                     style="padding:6px 8px;cursor:pointer;font-size:13px;border-bottom:1px solid #eee;"
+                     @mouseover="$event.target.style.background='#d0e4fc'" @mouseout="$event.target.style.background='#fff'">[[ s ]]</div>
+              </div>
+            </td>
+            <td><input v-model="newRow.FYEAR" @blur="commitNewRow" @keydown.enter.prevent="commitNewRowAndFocus" /></td>
+            <td><input v-model="newRow.FMONTH" @blur="commitNewRow" @keydown.enter.prevent="commitNewRowAndFocus" /></td>
+            <td><input v-model="newRow.FDAY" @blur="commitNewRow" @keydown.enter.prevent="commitNewRowAndFocus" /></td>
+            <td><input v-model="newRow.YS" @blur="commitNewRow" @keydown.enter.prevent="commitNewRowAndFocus" /></td>
+            <td><input v-model="newRow.BZ" @blur="commitNewRow" @keydown.enter.prevent="commitNewRowAndFocus" /></td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
-<el-dialog v-model="showAllDir" title="全部档案目录" width="900px" top="2vh">
+
+  <div v-show="ctxMenu.show" class="ctx-menu" :style="{left:ctxMenu.x+'px',top:ctxMenu.y+'px'}">
+    <div @click="toastShortcut('InsertUp'); doInsertRow('InsertUp')"><span>↑ 上方插入</span><span class="shortcut">Ctrl+R</span></div>
+    <div @click="toastShortcut('InsertDown'); doInsertRow('InsertDown')"><span>↓ 下方插入</span><span class="shortcut">Ctrl+D</span></div>
+    <div @click="toastShortcut('Delete'); doDeleteRow()"><span>🗑 删除当前行</span><span class="shortcut">Ctrl+E</span></div>
+  </div>
+
+  <el-dialog v-model="showAllDir" title="全部档案目录" width="900px" top="2vh">
     <iframe :src="'/archives/person-directory-all/?rsid='+rsid" style="width:100%;height:70vh;border:none;"></iframe>
-</el-dialog>
+  </el-dialog>
 </div>
 <div v-else style="text-align:center;color:#909399;margin-top:150px;">请选择人员</div>
+
 <script src="/static/js/archives_auto_names.js?v=3"></script>
 <script>
 (function(){
-  const { createApp, ref, reactive, onMounted } = Vue;
+  const { createApp, ref, reactive, onMounted, nextTick } = Vue;
   const { ElMessage, ElMessageBox } = ElementPlus;
 
   const app = createApp({setup(){
@@ -143,204 +147,273 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     const sortMode = ref(false), dragIndex = ref(-1);
     const editCell = reactive({row:-1,col:''});
     const showAllDir = ref(false);
-    const loadTree = () => axios.get('/archives/api/directory-tree/').then(res => {
-      if (res.data.code===0) {
-        treeData.value = res.data.tree.map(t=>({...t,expanded:false}));
-        sub4.value = res.data.sub4||[]; sub9.value = res.data.sub9||[];
-      }
-    });
+    const newRowSuggestions = ref([]);
+    const newRowShowSuggest = ref(false);
+    const ctxMenu = reactive({show:false, x:0, y:0, rowIndex:-1});
 
-    const loadList = () => {
-      if (!currentFL.value) return;
-      axios.get('/archives/api/directory-list/',{params:{rsid:rsid.value,fl:currentFL.value}}).then(res => {
-        if (res.data.code===0) archList.value = (res.data.data||[]).map(r=>({...r,_selected:false,_suggestions:[],_showSuggest:false,_dragOver:false}));
+    // ========== 请求队列 ==========
+    const queue = []; let processing = false;
+    const processQueue = async () => {
+      if (processing || !queue.length) return;
+      processing = true;
+      const t = queue.shift();
+      try { const res = await axios.post('/archives/api/directory-save/', t.data); t.resolve?.(res); }
+      catch(e) { t.reject?.(e); }
+      finally { processing = false; processQueue(); }
+    };
+    const enqueue = (d) => new Promise((resolve, reject) => { queue.push({data:d,resolve,reject}); processQueue(); });
+    const waitDrain = async () => { while (queue.length || processing) await new Promise(r=>setTimeout(r,50)); };
+
+    // ========== 快照 ==========
+    const snapshots = {};
+    const snap = (i) => { const r=archList.value[i]; if(r) snapshots[i]={CLTM:r.CLTM||'',FYEAR:r.FYEAR||'',FMONTH:r.FMONTH||'',FDAY:r.FDAY||'',YS:r.YS||'',BZ:r.BZ||''}; };
+    const changed = (i) => { const r=archList.value[i],s=snapshots[i]; return r?.ARCHID && (!s||s.CLTM!==(r.CLTM||'')||s.FYEAR!==(r.FYEAR||'')||s.FMONTH!==(r.FMONTH||'')||s.FDAY!==(r.FDAY||'')||s.YS!==(r.YS||'')||s.BZ!==(r.BZ||'')); };
+    const payload = (r) => ({ARCHID:r.ARCHID,CLTM:r.CLTM||'',FYEAR:r.FYEAR||'',FMONTH:r.FMONTH||'',FDAY:r.FDAY||'',YS:r.YS||'',BZ:r.BZ||''});
+
+    // ========== 防重入 ==========
+    const committing = new Set();
+    let committingNew = false;
+
+    // ========== 提交编辑行 ==========
+    const commitRow = (i) => {
+      if (sortMode.value || i<0 || i>=archList.value.length || !archList.value[i]?.ARCHID || !changed(i) || committing.has(i)) return Promise.resolve();
+      committing.add(i);
+      return enqueue({rsid:rsid.value,action:'UPDATE',row:payload(archList.value[i])}).then(()=>{snap(i);committing.delete(i);}).catch(()=>committing.delete(i));
+    };
+
+    // ========== 切换编辑行 ==========
+    const switchRow = (newIdx, col) => {
+      const old = editCell.row;
+      if (old === newIdx) { if(col) editCell.col=col; return; }
+      commitRow(old).then(()=>{
+        editCell.row=newIdx; editCell.col=col||'';
+        if(newIdx>=0){ snap(newIdx); archList.value.forEach((r,idx)=>r._selected=idx===newIdx); }
       });
     };
 
-    const showSuggestions = (row, keyword) => {
-      const kw = (keyword || '').toLowerCase();
-      if (!kw) {
-        row._suggestions = [];
-        row._showSuggest = false;
-        return;
-      }
-      row._suggestions = (window.ARCHIVES_AUTO_FLAT||[]).filter(n=>n&&n.toLowerCase().includes(kw)).slice(0,50);
-      row._showSuggest = row._suggestions.length > 0;
-    };
+    // ========== 分类树 ==========
+    const loadTree = () => axios.get('/archives/api/directory-tree/').then(res=>{
+      if(res.data.code===0){ treeData.value=res.data.tree.map(t=>({...t,expanded:false})); sub4.value=res.data.sub4||[]; sub9.value=res.data.sub9||[]; }
+    });
 
-    const onMaterialInput = (e, i) => {
-      if (sortMode.value) return;
-      const row = archList.value[i];
-      if (!row) return;
-      showSuggestions(row, e.target.value);
-    };
-
-    const onMaterialFocus = (e, i) => {
-      if (sortMode.value) return;
-      const row = archList.value[i];
-      if (!row) return;
-      editCell.row = i;
-      editCell.col = 'CLTM';
-      showSuggestions(row, e.target.value);
-    };
-
-    const onMaterialBlur = (i) => {
-      const row = archList.value[i];
-      if (!row) return;
-      // 延迟隐藏，给点击建议项的时间
-      setTimeout(() => {
-        row._showSuggest = false;
-      }, 200);
-    };
-
-    const quickSave = () => {
-      const rows = archList.value.filter(r=>r.ARCHID).map(r=>({action:'UPDATE',row:{ARCHID:r.ARCHID,CLTM:r.CLTM||'',FYEAR:r.FYEAR||'',FMONTH:r.FMONTH||'',FDAY:r.FDAY||'',YS:r.YS||'',BZ:r.BZ||''}}));
-      return rows.length ? axios.post('/archives/api/directory-save/',{rsid:rsid.value,batch:rows}) : Promise.resolve();
-    };
-
-    const commitNewRow = async () => {
-      if (!newRow.CLTM.trim()&&!newRow.FYEAR.trim()&&!newRow.FMONTH.trim()&&!newRow.FDAY.trim()&&!newRow.YS.trim()&&!newRow.BZ.trim()) return;
-      await axios.post('/archives/api/directory-save/',{rsid:rsid.value,action:'NEWROW',row:{...newRow,FL:currentFL.value}});
+    const selectFL = async (fl, name) => {
+      if(sortMode.value) return;
+      await commitRow(editCell.row);
+      await waitDrain();
+      currentFL.value=fl; currentName.value=name;
       Object.assign(newRow,{CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:''});
+      newRowSuggestions.value=[]; newRowShowSuggest.value=false;
       loadList();
     };
 
-    const saveAll = async () => { await quickSave(); ElMessage.success('保存成功'); loadList(); };
-    const enterSortMode = async () => { await quickSave(); sortMode.value=true; ElMessage.info('可拖动调整编号顺序'); };
+    const onTreeClick = (t) => {
+      if(sortMode.value) return;
+      t.expanded=!t.expanded;
+      if(t.fl===4&&sub4.value.length) selectFL(sub4.value[0].fl,sub4.value[0].name);
+      else if(t.fl===9&&sub9.value.length) selectFL(sub9.value[0].fl,sub9.value[0].name);
+      else if(t.fl!==4&&t.fl!==9) selectFL(t.fl,t.name);
+    };
+
+    const loadList = () => {
+      if(!currentFL.value) return;
+      Object.keys(snapshots).forEach(k=>delete snapshots[k]);
+      axios.get('/archives/api/directory-list/',{params:{rsid:rsid.value,fl:currentFL.value}}).then(res=>{
+        if(res.data.code===0){ archList.value=(res.data.data||[]).map(r=>({...r,_selected:false,_suggestions:[],_showSuggest:false,_dragOver:false})); editCell.row=-1; editCell.col=''; }
+      });
+    };
+
+    // ========== 建议列表 ==========
+    const filterNames = (kw) => (window.ARCHIVES_AUTO_FLAT||[]).filter(n=>n&&n.toLowerCase().includes(kw.toLowerCase())).slice(0,50);
+    const onMaterialInput = (e,i) => { if(!sortMode.value&&archList.value[i]){ const r=archList.value[i]; r._suggestions=filterNames(r.CLTM||''); r._showSuggest=r._suggestions.length>0; } };
+    const onNewRowInput = () => { newRowSuggestions.value=filterNames(newRow.CLTM||''); newRowShowSuggest.value=newRowSuggestions.value.length>0; };
+    const onNewRowFocus = () => onNewRowInput();
+
+    // ========== 快捷键提示 ==========
+    const toastShortcut = (action) => {
+      const tips = { 'InsertUp': '推荐使用快捷键 Ctrl+R', 'InsertDown': '推荐使用快捷键 Ctrl+D', 'Delete': '推荐使用快捷键 Ctrl+E' };
+      ElMessage({ message: tips[action] || '推荐使用快捷键', type: 'info', duration: 2000, showClose: false });
+    };
+
+    // ========== DOM 辅助 ==========
+    const scrollToBottom = () => nextTick(()=>{ const c=document.querySelector('.dir-main > div:nth-child(2)'); if(c)c.scrollTop=c.scrollHeight; });
+
+    const focusNewRowYear = (idx) => {
+      setTimeout(() => {
+        const trs = document.querySelectorAll('.dir-table tbody tr:not(.new-row)');
+        const inp = trs[idx]?.querySelectorAll('td')[2]?.querySelector('input');
+        if (inp) { inp.focus(); inp.select(); }
+      }, 50);
+    };
+
+    // ========== 新增行 ==========
+    const newRowEmpty = () => !newRow.CLTM.trim()&&!newRow.FYEAR.trim()&&!newRow.FMONTH.trim()&&!newRow.FDAY.trim()&&!newRow.YS.trim()&&!newRow.BZ.trim();
+
+    const commitNewRow = async (andFocus=true) => {
+      if (newRowEmpty() || committingNew) return;
+      committingNew = true;
+      newRowShowSuggest.value = false;
+      try {
+        const res = await enqueue({rsid:rsid.value,action:'NEWROW',row:{FL:currentFL.value,CLTM:newRow.CLTM,FYEAR:newRow.FYEAR,FMONTH:newRow.FMONTH,FDAY:newRow.FDAY,YS:newRow.YS,BZ:newRow.BZ}});
+        if (res.data?.code===0 && res.data?.data) {
+          archList.value.push({...res.data.data,_selected:false,_suggestions:[],_showSuggest:false,_dragOver:false});
+        }
+        Object.assign(newRow,{CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:''});
+        if (andFocus) {
+          await nextTick();
+          const idx = archList.value.length - 1;
+          editCell.row = idx;
+          editCell.col = 'FYEAR';
+          snap(idx);
+          focusNewRowYear(idx);
+        }
+        scrollToBottom();
+      } catch(e) { ElMessage.error('新增失败'); }
+      finally { committingNew = false; }
+    };
+
+    const commitNewRowAndFocus = () => commitNewRow(true);
+    const focusNewRow = () => {
+      if(sortMode.value) return ElMessage.warning('调整编号模式下不可新增');
+      commitRow(editCell.row);
+      nextTick(()=>{ document.querySelector('.new-row td:nth-child(2) input')?.focus(); });
+    };
+
+    // ========== 插入 / 删除 ==========
+    const doInsertRow = async (action) => {
+      if(sortMode.value) return ElMessage.warning('调整编号模式下不可插入');
+      const idx = ctxMenu.show ? ctxMenu.rowIndex : (editCell.row>=0 ? editCell.row : 0);
+      const row = archList.value[idx];
+      if(!row) return ElMessage.warning('请先选中一行');
+      await commitRow(editCell.row);
+      await waitDrain();
+      try { await enqueue({rsid:rsid.value,action,row:{XH:row.XH,FL:currentFL.value}}); loadList(); ElMessage.success('操作成功'); }
+      catch { ElMessage.error('操作失败'); }
+      ctxMenu.show = false;
+    };
+
+const doDeleteRow = (rowIndex) => {
+  if(sortMode.value) return ElMessage.warning('调整编号模式下不可删除');
+  const idx = rowIndex ?? (ctxMenu.show ? ctxMenu.rowIndex : (editCell.row>=0 ? editCell.row : 0));
+  const row = archList.value[idx];
+  if(!row) return ElMessage.warning('请先选中一行');
+  ctxMenu.show = false;
+  ElMessageBox.confirm(
+    '如已扫描原件，删除将连文件一并删除，如顺序错误可通过"调整编号"进行调整，确定删除该行？',
+    '删除确认',
+    {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'error',
+      confirmButtonClass: 'el-button--danger',
+    }
+  ).then(async ()=>{
+    await commitRow(editCell.row);
+    await waitDrain();
+    try {
+      if(row.ARCHID) await enqueue({rsid:rsid.value,action:'DELETE',row:{ARCHID:row.ARCHID}});
+      editCell.row=-1; editCell.col='';
+      loadList(); ElMessage.success('已删除');
+    } catch { ElMessage.error('删除失败'); }
+  }).catch(()=>{});
+};
+    // ========== 右键菜单 ==========
+    const onContextMenu = (e,i) => { ctxMenu.show=true; ctxMenu.x=e.clientX; ctxMenu.y=e.clientY; ctxMenu.rowIndex=i; };
+
+    // ========== 保存 / 刷新 ==========
+    const saveAll = async () => { await commitRow(editCell.row); await waitDrain(); ElMessage.success('保存成功'); };
+    const refreshData = () => loadList();
+
+    // ========== 排序 ==========
+    const enterSortMode = () => { sortMode.value=true; ElMessage.info('可拖动调整编号顺序'); };
     const saveSort = async () => {
-      const items = archList.value.map((r,i)=>({ARCHID:r.ARCHID,XH:i+1}));
-      await axios.post('/archives/api/directory-save/',{rsid:rsid.value,batch:items.map(r=>({action:'CHANGENUM',row:r}))});
-      sortMode.value=false; ElMessage.success('顺序已保存'); loadList();
+      try {
+        await enqueue({rsid:rsid.value,batch:archList.value.map((r,i)=>({action:'CHANGENUM',row:{ARCHID:r.ARCHID,XH:i+1}}))});
+        sortMode.value=false; ElMessage.success('顺序已保存'); loadList();
+      } catch { ElMessage.error('保存失败'); }
     };
     const cancelSort = () => { sortMode.value=false; dragIndex.value=-1; loadList(); };
+    const onDragStart=(i,e)=>{dragIndex.value=i;e.dataTransfer.effectAllowed='move';};
+    const onDragOver=(i,e)=>{e.preventDefault();archList.value.forEach((r,idx)=>r._dragOver=idx===i);};
+    const onDragLeave=()=>archList.value.forEach(r=>r._dragOver=false);
+    const onDrop=(i)=>{archList.value.forEach(r=>r._dragOver=false);if(dragIndex.value!==-1&&dragIndex.value!==i)archList.value.splice(i,0,archList.value.splice(dragIndex.value,1)[0]);dragIndex.value=-1;};
+    const onDragEnd=()=>{dragIndex.value=-1;archList.value.forEach(r=>r._dragOver=false);};
 
-    const onDragStart = (i,e) => { dragIndex.value=i; e.dataTransfer.effectAllowed='move'; };
-    const onDragOver = (i,e) => { e.preventDefault(); archList.value.forEach((r,idx)=>r._dragOver=idx===i); };
-    const onDragLeave = () => archList.value.forEach(r=>r._dragOver=false);
-    const onDrop = (i) => {
-      archList.value.forEach(r=>r._dragOver=false);
-      if (dragIndex.value===-1||dragIndex.value===i) return;
-      archList.value.splice(i,0,archList.value.splice(dragIndex.value,1)[0]);
-      dragIndex.value=-1;
-    };
-    const onDragEnd = () => { dragIndex.value=-1; archList.value.forEach(r=>r._dragOver=false); };
+    // ========== 行点击 / 单元格焦点 ==========
+    const onRowClick = (i) => { if(sortMode.value) return; switchRow(i,''); };
+    const onCellFocus = (i,col) => { if(sortMode.value) return; editCell.row===i ? editCell.col=col : switchRow(i,col); };
 
-    const insertRow = (action) => {
-      if (sortMode.value) { ElMessage.warning('调整编号模式下不可插入'); return; }
-      const idx = editCell.row>=0 ? editCell.row : 0;
-      const row = archList.value[idx];
-      if (!row) { ElMessage.warning('请先选中一行'); return; }
-      quickSave().catch(()=>{});
-      axios.post('/archives/api/directory-save/',{rsid:rsid.value,action,row:{XH:row.XH,FL:currentFL.value}}).then(res=>{
-        if (res.data.code===0) { tableKey.value++; loadList(); ElMessage.success('操作成功'); }
-        else ElMessage.error(res.data.msg);
-      });
-    };
-
-    const deleteRow = () => {
-      if (sortMode.value) { ElMessage.warning('调整编号模式下不可删除'); return; }
-      const idx = editCell.row>=0 ? editCell.row : 0;
-      if (!archList.value[idx]) { ElMessage.warning('请先选中一行'); return; }
-      quickSave().catch(()=>{});
-      ElMessageBox.confirm('确定删除该行？','确认',{type:'warning'}).then(()=>{
-        axios.post('/archives/api/directory-save/',{rsid:rsid.value,action:'DELETE',row:{ARCHID:archList.value[idx].ARCHID}}).then(res=>{
-          if (res.data.code===0) { tableKey.value++; loadList(); ElMessage.success('已删除'); }
-          else ElMessage.error(res.data.msg);
-        });
-      });
-    };
-
-    const addNewRow = () => {
-      if (sortMode.value) { ElMessage.warning('调整编号模式下不可新增'); return; }
-      archList.value.push({ARCHID:null,XH:archList.value.length+1,CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:'',_selected:false,_suggestions:[],_showSuggest:false});
-    };
-
-    const onRowClick = (i) => {
-      archList.value.forEach(r=>r._selected=false);
-      if (archList.value[i]) archList.value[i]._selected=true;
-      editCell.row=i;
-    };
-
-    const onCellFocus = (i,col) => { 
-      editCell.row=i; 
-      editCell.col=col; 
-      // 关闭材料名称的提示
-      archList.value.forEach(r => r._showSuggest = false);
-    };
-
-    const onCellBlur = () => {};
-
+    // ========== 键盘导航 ==========
     const moveFocus = (inp, direction) => {
-      const td = inp.closest('td'), tr = inp.closest('tr');
-      if (!td||!tr) return;
-      if (direction==='up'||direction==='down') {
-        const tds = tr.querySelectorAll('td');
-        const colIdx = Array.from(tds).indexOf(td);
-        const targetTr = direction==='up' ? tr.previousElementSibling : tr.nextElementSibling;
-        if (targetTr) {
-          const target = targetTr.querySelectorAll('td')[colIdx]?.querySelector('input');
-          if (target&&!target.disabled) { target.focus(); target.select(); }
-        }
-      } else if (direction==='left') {
-        const target = td.previousElementSibling?.querySelector('input');
-        if (target&&!target.disabled) { target.focus(); target.selectionStart=target.value.length; }
-      } else if (direction==='right') {
-        const target = td.nextElementSibling?.querySelector('input');
-        if (target&&!target.disabled) { target.focus(); target.select(); }
-      } else if (direction==='enter') {
-        const nextTd = td.nextElementSibling;
-        if (nextTd) {
-          const target = nextTd.querySelector('input');
-          if (target&&!target.disabled) { target.focus(); target.select(); }
-        } else {
-          const nextTr = tr.nextElementSibling;
-          if (nextTr) {
-            const target = nextTr.querySelectorAll('td')[1]?.querySelector('input');
-            if (target&&!target.disabled) { target.focus(); target.select(); }
-          }
-        }
+      const td=inp.closest('td'), tr=inp.closest('tr');
+      if(!td||!tr) return;
+      const allTrs=Array.from(tr.parentElement.querySelectorAll('tr:not(.new-row)'));
+      const idx=allTrs.indexOf(tr), colIdx=Array.from(tr.querySelectorAll('td')).indexOf(td);
+
+      const focusAt = (el, col) => { const t=el?.querySelectorAll('td')[col]?.querySelector('input'); if(t&&!t.disabled){t.focus();t.select();} };
+      const focusNew = () => { const t=document.querySelector('.new-row td:nth-child(2) input'); if(t&&!t.disabled)t.focus(); };
+
+      if(direction==='up') focusAt(allTrs[idx-1],colIdx);
+      else if(direction==='down') focusAt(allTrs[idx+1],colIdx);
+      else if(direction==='left'){ const t=td.previousElementSibling?.querySelector('input'); if(t&&!t.disabled){t.focus();t.selectionStart=t.value.length;} }
+      else if(direction==='right') focusAt(tr,colIdx+1);
+      else if(direction==='enter'){
+        if(td.nextElementSibling) focusAt(tr,colIdx+1);
+        else focusAt(allTrs[idx+1],1) || focusNew();
       }
     };
 
-    const onKeyUp = (e) => {
-      if (sortMode.value) return;
-      const inp = e.target;
-      const val = inp.value||'';
-      if (e.key==='ArrowUp') { moveFocus(inp,'up'); }
-      else if (e.key==='ArrowDown') { moveFocus(inp,'down'); }
-      else if (e.key==='ArrowLeft' && inp.selectionStart===0) { moveFocus(inp,'left'); }
-      else if (e.key==='ArrowRight' && inp.selectionStart===val.length && val.length>0) { moveFocus(inp,'right'); }
-      else if (e.key==='Enter') { moveFocus(inp,'enter'); }
-      else if (e.key==='Tab') { e.preventDefault(); moveFocus(inp,'right'); }
+    // ========== 快捷键查表 ==========
+    const keyHandlers = {
+      ArrowUp:    (e,i,inp)=>{e.preventDefault();moveFocus(inp,'up');},
+      ArrowDown:  (e,i,inp)=>{e.preventDefault();moveFocus(inp,'down');},
+      ArrowLeft:  (e,i,inp)=>{if(inp.selectionStart===0){e.preventDefault();moveFocus(inp,'left');}},
+      ArrowRight: (e,i,inp)=>{if(inp.selectionStart===inp.value.length){e.preventDefault();moveFocus(inp,'right');}},
+      Enter:      (e,i,inp)=>{e.preventDefault();moveFocus(inp,'enter');},
+      Tab:        (e,i,inp)=>{e.preventDefault();moveFocus(inp,'right');},
     };
 
-    const printDirectory = () => {
-      const url = '/archives/api/directory-print-pdf/?rsid='+rsid.value+'&emptyRows=5';
-      window.open(url);
+    const onKeyDown = (e, i) => {
+      if(sortMode.value) return;
+      if(e.ctrlKey||e.metaKey){
+        if(e.key==='s'||e.key==='S'){e.preventDefault();saveAll();return;}
+        if(e.key==='d'||e.key==='D'){e.preventDefault();doInsertRow('InsertDown');return;}
+        if(e.key==='e'||e.key==='E'){e.preventDefault();doDeleteRow(i);return;}
+        if(e.key==='r'||e.key==='R'){e.preventDefault();doInsertRow('InsertUp');return;}
+        return;
+      }
+      keyHandlers[e.key]?.(e,i,e.target);
     };
 
-    const help = () => {
-      ElMessageBox.alert(
-        '<div style="line-height:2;font-size:14px;">' +
-        '<p>1.本意是推荐使用快捷键 <b>Ctrl+C</b> 复制、<b>Ctrl+V</b> 粘贴，和日常办公习惯一致。</p>' +
-        '<p>2.但部分人员就是喜欢右击来复制、粘贴！原来右键菜单的"插入行""删除行"等功能已移至顶部按钮栏，请直接点击操作。</p>' +
-        '<p>3. 键盘 <b>↑↓←→</b> 可在单元格间移动，<b>Enter</b> 跳到右边单元格，<b>Tab</b> 同样右移。</p>' +
-        '<p>4. 调整编号模式下可<b>拖拽</b>行进行排序，完成后点击"保存顺序"。</p>' +
-        '<p>5. 材料名称列支持输入拼音首字母快速筛选提示。</p>' +
-        '<p>6. 不可能为一个右键复制、粘贴，我又要写一大堆代码!</p>' +
-        '</div>',
-        '右键菜单还给你们用了！~',
-        { dangerouslyUseHTMLString: true, confirmButtonText: '知道了' }
-      );
+    // ========== 打印导出 ==========
+    const printDirectory = () => window.open('/archives/api/directory-print-pdf/?rsid='+rsid.value+'&emptyRows=5');
+    const exportExcel = () => { const a=document.createElement('a'); a.href='/archives/api/directory-print-export/?rsid='+rsid.value+'&emptyRows=5'; a.download=''; a.click(); };
+    const help = () => ElMessageBox.alert(
+      '<div style="line-height:2;font-size:14px;">'+
+      '<p>💡 <b>推荐使用快捷键操作，工作更高效！</b></p>'+
+      '<p>1. <b>↑↓←→</b> 移动单元格，<b>Enter/Tab</b> 跳到右边，行尾跳到下一行或新增行。</p>'+
+      '<p>2. <b>Ctrl+S</b> 保存 | <b>Ctrl+R</b> 上方插入 | <b>Ctrl+D</b> 下方插入 | <b>Ctrl+E</b> 删除行。</p>'+
+      '<p>3. 材料名称列输入即提示。</p>'+
+      '<p>4. 调整编号模式下可<b>拖拽</b>排序。</p>'+
+      '<p>5. <b>编号列右击</b>可插入/删除（含快捷键提示）。</p>'+
+      '<p>6. 离开行自动保存，4类/9类自动选中第一个子类。</p>'+
+      '<p>7. 新增行填完离开后自动转为普通行，焦点跳到年份列。</p>'+
+      '</div>','操作说明',{dangerouslyUseHTMLString:true,confirmButtonText:'知道了'});
+
+    // ========== 页面关闭保存 ==========
+    const beforeUnloadSave = () => {
+      const i=editCell.row;
+      if(i>=0&&i<archList.value.length&&archList.value[i]?.ARCHID&&changed(i))
+        navigator.sendBeacon('/archives/api/directory-save/',JSON.stringify({rsid:rsid.value,action:'UPDATE',row:payload(archList.value[i])}));
     };
 
-    onMounted(loadTree);
+    onMounted(()=>{loadTree();window.addEventListener('beforeunload',beforeUnloadSave);});
 
     return { rsid,treeData,sub4,sub9,archList,currentFL,currentName,tableKey,newRow,sortMode,dragIndex,editCell,
-      loadList,refreshData:loadList,saveAll,commitNewRow,enterSortMode,saveSort,cancelSort,
+      newRowSuggestions,newRowShowSuggest,ctxMenu,
+      onTreeClick,selectFL,loadList,refreshData,saveAll,commitNewRow,commitNewRowAndFocus,focusNewRow,enterSortMode,saveSort,cancelSort,
       onDragStart,onDragOver,onDragLeave,onDrop,onDragEnd,
-      insertRow,deleteRow,addNewRow,printDirectory,onMaterialInput,onMaterialFocus,onMaterialBlur,
-      onRowClick,onCellFocus,onCellBlur,onKeyUp,help,showAllDir };
+      doInsertRow,doDeleteRow,toastShortcut,printDirectory,onMaterialInput,onNewRowInput,onNewRowFocus,
+      onRowClick,onCellFocus,onKeyDown,onContextMenu,help,showAllDir,exportExcel };
   }});
 
   app.config.compilerOptions.delimiters=['[[',']]'];

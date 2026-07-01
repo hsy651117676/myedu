@@ -107,13 +107,14 @@ const deleteRow = () => {
           if(res.data.code===0) loadPosition();
         });
       };
-
-      const exportPosition = () => {
-        axios.get('/archives/api/position-export/', { params: { rsid: rsid.value } }).then(res => {
-          if(res.data.code===0) window.top.location.href = res.data.url;
-        });
-      };
-
+const exportPosition = () => {
+    const a = document.createElement('a');
+    a.href = '/archives/api/position-export/?rsid=' + rsid.value;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
       const printPosition = () => {
         let w = window.open('','_blank');
         w.document.write('<html><head><meta charset="utf-8"><title>干部职务变动登记表</title><style>');

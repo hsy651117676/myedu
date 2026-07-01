@@ -47,13 +47,14 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 
       <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span style="font-weight:bold;font-size:13px;">工资变动表（草稿）</span>
+          <span style="font-weight:bold;font-size:13px;">（草稿）</span>
           <div style="display:flex;gap:4px;flex-wrap:wrap;">
             <el-button size="small" @click="loadSalary">加载档案目录</el-button>
             <el-button size="small" @click="clearDraftLevels">清除档次数据</el-button>
             <el-button size="small" @click="inferSalary">推理级别和档次</el-button>
             <el-button type="warning" size="small" @click="autoGenSalary">重新生成工资</el-button>
             <el-button type="danger" size="small" @click="clearDraftWages">清除当前工资数据</el-button>
+            <el-button type="danger" size="small" @click="deleteSelectedRows">删除选中行</el-button>
             <el-button type="success" size="small" @click="saveSalary" :disabled="saving">[[ saving ? '保存中...' : '保存' ]]</el-button>
           </div>
         </div>
@@ -342,7 +343,13 @@ const printSalary = () => {
         }
       });
 
-      return { rsid, salaryList, oldList, data93, loadSalary, clearDraftLevels, inferSalary, autoGenSalary, clearDraftWages, saveSalary, saveOldList, clearSalary, exportSalary, printSalary, toggleRow, toggleAll, selectRow, clickRow, handleKeydown, lastSelected };
+const deleteSelectedRows = () => {
+  salaryList.value = salaryList.value.filter(r => !r._selected);
+  ElMessage.success('已删除选中行');
+};
+      return { rsid, salaryList, oldList, data93, loadSalary, clearDraftLevels, inferSalary, autoGenSalary, clearDraftWages,
+        saveSalary, saveOldList, clearSalary, exportSalary, printSalary, toggleRow, toggleAll, selectRow, clickRow,
+        handleKeydown, lastSelected, deleteSelectedRows };
     }
   });
   app.config.compilerOptions.delimiters = ['[[', ']]'];

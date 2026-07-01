@@ -2,11 +2,10 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from main.db_utils import _get_conn
+from main.utils import _get_conn
 import json
 import logging
-from main.decorators import archive_perm_required
-# @archive_perm_required
+from main.utils.decorators import archive_perm_required
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ def person_directory_view(request):
 
 @login_required
 def directory_tree_api(request):
-    """获取分类树"""
     conn = None
     try:
         conn = _get_conn()
@@ -36,7 +34,6 @@ def directory_tree_api(request):
         )
         rows = [{"fl": r[0], "name": r[1], "pid": r[2]} for r in cursor.fetchall()]
 
-        # 子类
         cursor.execute(
             "SELECT FL, JBBH + '、' + FLSM AS name, PID FROM CATETREE WHERE PID=4 ORDER BY FL"
         )
@@ -58,7 +55,6 @@ def directory_tree_api(request):
 
 @login_required
 def directory_list_api(request):
-    """获取档案目录列表"""
     rsid = request.GET.get("rsid", "")
     fl = request.GET.get("fl", "1")
     if not rsid:
@@ -107,6 +103,10 @@ def directory_save_api(request):
     if not rsid:
         return JsonResponse({"code": 400})
 
+    def v(val):
+        """空字符串转None，避免写入0"""
+        return val if val else None
+
     conn = None
     try:
         conn = _get_conn()
@@ -122,9 +122,9 @@ def directory_save_api(request):
                         "UPDATE RS_ARCHINFO SET CLTM=?, FYEAR=?, FMONTH=?, FDAY=?, YS=?, BZ=? WHERE ARCHID=?",
                         (
                             row.get("CLTM", ""),
-                            row.get("FYEAR", ""),
-                            row.get("FMONTH", ""),
-                            row.get("FDAY", ""),
+                            v(row.get("FYEAR", "")),
+                            v(row.get("FMONTH", "")),
+                            v(row.get("FDAY", "")),
                             row.get("YS", ""),
                             row.get("BZ", ""),
                             row.get("ARCHID"),
@@ -160,9 +160,9 @@ def directory_save_api(request):
                             xh,
                             fl,
                             row.get("CLTM", ""),
-                            row.get("FYEAR", ""),
-                            row.get("FMONTH", ""),
-                            row.get("FDAY", ""),
+                            v(row.get("FYEAR", "")),
+                            v(row.get("FMONTH", "")),
+                            v(row.get("FDAY", "")),
                             row.get("YS", ""),
                             row.get("BZ", ""),
                         ),
@@ -178,9 +178,9 @@ def directory_save_api(request):
                     "UPDATE RS_ARCHINFO SET CLTM=?, FYEAR=?, FMONTH=?, FDAY=?, YS=?, BZ=? WHERE ARCHID=?",
                     (
                         single_row.get("CLTM", ""),
-                        single_row.get("FYEAR", ""),
-                        single_row.get("FMONTH", ""),
-                        single_row.get("FDAY", ""),
+                        v(single_row.get("FYEAR", "")),
+                        v(single_row.get("FMONTH", "")),
+                        v(single_row.get("FDAY", "")),
                         single_row.get("YS", ""),
                         single_row.get("BZ", ""),
                         single_row.get("ARCHID"),
@@ -238,13 +238,27 @@ def directory_save_api(request):
                         xh,
                         fl,
                         single_row.get("CLTM", ""),
-                        single_row.get("FYEAR", ""),
-                        single_row.get("FMONTH", ""),
-                        single_row.get("FDAY", ""),
+                        v(single_row.get("FYEAR", "")),
+                        v(single_row.get("FMONTH", "")),
+                        v(single_row.get("FDAY", "")),
                         single_row.get("YS", ""),
                         single_row.get("BZ", ""),
                     ),
                 )
+                cursor.execute("SELECT @@IDENTITY AS ARCHID")
+                archid = cursor.fetchone()[0]
+                cursor.execute(
+                    """SELECT a.ARCHID, a.RSID, a.XH, a.CLTM, a.FYEAR, a.FMONTH, a.FDAY, a.YS, a.BZ, a.FL,
+                              b.JBBH + '-' + CAST(a.XH AS VARCHAR(5)) AS 编号
+                       FROM RS_ARCHINFO a LEFT JOIN CATETREE b ON a.FL = b.FL
+                       WHERE a.ARCHID=?""",
+                    (archid,),
+                )
+                cols = [c[0] for c in cursor.description]
+                new_data = dict(zip(cols, cursor.fetchone()))
+                conn.commit()
+                cursor.close()
+                return JsonResponse({"code": 0, "msg": "操作成功", "data": new_data})
             elif single_action == "CHANGENUM":
                 cursor.execute(
                     "UPDATE RS_ARCHINFO SET XH=? WHERE ARCHID=?",

@@ -13,6 +13,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 .tree-node:hover { background:#e8f0fe; }
 .tree-node.active { background:#d0e4fc; }
 .drag-bar { width:4px; background:#e4e7ed; cursor:col-resize; flex-shrink:0; }
+.file-table th:nth-child(4), .file-table td:nth-child(4) { text-align:left; }
 </style>
 
 <div id="app" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
@@ -69,7 +70,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                     [[ selectedFileName || 'PDF预览' ]]
                     <el-button size="small" @click="printPdf" style="float:right;">打印</el-button>
                 </div>
-                <iframe :src="pdfUrl" style="flex:1;border:none;"></iframe>
+                <iframe :src="pdfUrl" style="flex:1;border:none;" :title="selectedFileName"></iframe>
             </div>
             <div v-else style="flex:1;display:flex;align-items:center;justify-content:center;color:#ccc;">请选择文件查看</div>
         </div>
