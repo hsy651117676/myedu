@@ -2,21 +2,32 @@
 <script>
 (function(){
   const { createApp, ref, reactive, computed, onMounted, nextTick } = Vue;
-  const { ElMessage } = ElementPlus;
+  const { ElMessage, ElMessageBox } = ElementPlus;
   const app = createApp({
     setup(){
       var ocrLoading = ref(false);
-      var form = reactive({unitId:null, fl:null, subFl:null, fyear:null, fmonth:null, fday:null, cltm:'', ys:null});
-      var units=ref([]),topCategories=ref([]),subCategories=ref([]),personList=ref([]),personTable=ref(null),selectedPersons=ref([]),results=ref([]),unmatchedPersons=ref([]),ocrDone=ref(false),stats=reactive({matched:0,conflict:0,not_found:0}),personDialog=reactive({visible:false,candidates:[],targetRow:null,selected:null}),writeResult=ref(null);
+      var writeLoading = ref(false);
+      var personsLoading = ref(false);
+      var personSearchLoading = ref(false);
+      var showAll = ref(false);
+      var structureMode = ref('flat');
+      var scanChannel = ref('01');
+      var form = reactive({unitId:null, fl:null, subFl:null, fyear:null, fmonth:null, fday:null, cltm:'', bz:'', ys:null});
+      var units=ref([]),topCategories=ref([]),subCategories=ref([]),personList=ref([]),personTable=ref(null),selectedPersons=ref([]),results=ref([]),unmatchedPersons=ref([]),ocrDone=ref(false),stats=reactive({matched:0,conflict:0,not_found:0}),personDialog=reactive({visible:false,candidates:[],targetRow:null,selected:null,search:''}),writeResult=ref(null);
       var pdfDialog=reactive({visible:false,url:''});
-      var assignDialog=reactive({visible:false,title:'',items:[]});
+      var ocrTextDialog=reactive({visible:false,text:'',info:{}});
+      var progress=reactive({done:0,total:0});
+      var structureInfo=ref(null);
+      var personSearchTimer=null;
       var leftPanel=ref(null),midPanel=ref(null),rightPanel=ref(null);
       var effectiveFl=computed(function(){return form.subFl||form.fl;});
-      var canSearch=computed(function(){return form.unitId&&form.fl&&form.ys;});
+      var canSearch=computed(function(){return form.unitId&&form.fl&&form.cltm&&form.fyear&&form.ys;});
       var canOcr=computed(function(){return canSearch.value&&personList.value.length>0;});
       var selectedCount=computed(function(){return selectedPersons.value.length;});
       var categoryLabel=computed(function(){var cat=topCategories.value.find(function(c){return c.fl===form.fl;});var name=cat?cat.jbbh+'\uFF1A'+cat.flsm:'';if(form.subFl){var sub=subCategories.value.find(function(c){return c.fl===form.subFl;});name+=' / '+(sub?sub.flsm:'');}return name;});
-      var canWrite=computed(function(){return ocrDone.value&&stats.conflict===0&&stats.not_found===0&&selectedCount.value>0;});
+      var writableCount=computed(function(){return results.value.filter(function(r){return r.match_status==='matched'&&!r._written;}).length;});
+      var canWrite=computed(function(){return writableCount.value>0;});
+      var visibleResults=computed(function(){if(showAll.value)return results.value;return results.value.filter(function(r){return !r._written;});});
 
       var onDividerMouseDown=function(e, side){
         e.preventDefault();
@@ -30,14 +41,27 @@
         document.addEventListener('mousemove',m);document.addEventListener('mouseup',u);
       };
 
-      var loadUnits=async function(){try{var r=await axios.get('/archives/image/api/ocr-unit-list/');units.value=r.data.data||[];}catch(e){ElMessage.error('加载单位失败');}};
+      var loadUnits=async function(){try{var r=await axios.get('/archives/image/api/ocr-unit-list/');units.value=r.data.data||[];if(units.value.length===1){form.unitId=units.value[0]['序号'];setTimeout(function(){if(canSearch.value)loadPersons();},300);}}catch(e){ElMessage.error('加载单位失败');}};
       var loadCategories=async function(){try{var r=await axios.get('/archives/image/api/ocr-category-tree/');topCategories.value=r.data.top||[];window._catChildren=r.data.children||{};}catch(e){ElMessage.error('加载类别失败');}};
       var onUnitChange=function(){personList.value=[];selectedPersons.value=[];ocrDone.value=false;results.value=[];writeResult.value=null;};
       var onCategoryChange=function(val){form.subFl=null;subCategories.value=(val===4||val===9)?(window._catChildren[val]||[]):[];};
 
-      var loadPersons=async function(){
-        if(!canSearch.value)return;ocrDone.value=false;results.value=[];writeResult.value=null;
+      var autoDetectStructure=async function(){
         try{
+          var r=await axios.get('/archives/image/api/ocr-detect-structure/',{params:{channel:scanChannel.value}});
+          structureInfo.value=r.data;
+          if(r.data.structure==='folder'){structureMode.value='folder';}
+          else{structureMode.value='flat';}
+        }catch(e){}
+      };
+
+      var loadPersons=async function(){
+        if(!canSearch.value)return;
+        if(personsLoading.value){ElMessage.warning('正在加载中，请稍候');return;}
+        personsLoading.value=true;
+        ocrDone.value=false;results.value=[];writeResult.value=null;progress.done=0;progress.total=0;
+        try{
+          await autoDetectStructure();
           var r=await axios.get('/archives/image/api/ocr-unit-persons/',{params:{unit_id:form.unitId}});
           var rawList=r.data.data||[];
           var rsids=rawList.map(function(p){return p.RSID;}).join(',');
@@ -47,38 +71,142 @@
             var info=archInfo[p.RSID]||{exists:false,records:[],person:{}};
             var recs=info.records||[],person=info.person||{};
             var dirStatus=recs.length===0?'未建':(recs.length===1?'正常（1条）':'异常（'+recs.length+'条）');
+            var jbbh=(topCategories.value.find(function(c){return c.fl===effectiveFl.value;})||{}).jbbh||'';
+            if(!jbbh&&window._catChildren){for(var key in window._catChildren){var found=(window._catChildren[key]||[]).find(function(c){return c.fl===effectiveFl.value;});if(found){jbbh=found.jbbh||'';break;}}}
+            if(!jbbh)jbbh=String(effectiveFl.value);
             var archSeq='-';
-            if(recs.length===1){archSeq=(topCategories.value.find(function(c){return c.fl===effectiveFl.value;})||{}).jbbh||'';archSeq=archSeq+'-'+recs[0].XH;}
-            else if(recs.length>1){var jbbh=(topCategories.value.find(function(c){return c.fl===effectiveFl.value;})||{}).jbbh||'';archSeq=recs.map(function(rr){return jbbh+'-'+rr.XH;}).join(', ');}
+            if(recs.length===1){archSeq=jbbh+'-'+recs[0].XH;}
+            else if(recs.length>1){archSeq=recs.map(function(rr){return jbbh+'-'+rr.XH;}).join(', ');}
             var scanStatus='--';
             if(recs.length===1){var r0=recs[0];if(r0.uploaded===0)scanStatus='未扫';else if(r0.uploaded>=r0.YS)scanStatus='已完成';else scanStatus='已扫 '+r0.uploaded+'/'+r0.YS;}
             else if(recs.length>1)scanStatus='异常';
-            return {RSID:p.RSID,name:person.name||p.name||'',dirStatus:dirStatus,scanStatus:scanStatus,archSeq:archSeq,records:recs,canPreview:recs.length===1,canSelect:recs.length>1};
+            return {RSID:p.RSID,name:person.name||p.name||'',CSNY:person.csny||'',WORKTIME:person.worktime||'',unit:p.unit||'',dirStatus:dirStatus,scanStatus:scanStatus,archSeq:archSeq,records:recs,canPreview:recs.length===1,matched:false};
           });
           nextTick(function(){if(personTable.value)personList.value.forEach(function(rr){personTable.value.toggleRowSelection(rr,true);});});
           ElMessage.success('已加载 '+personList.value.length+' 人');
-        }catch(e){ElMessage.error('加载人员失败');}
+        }catch(e){if(e.response&&e.response.status===403){ElMessage.error('无权访问其他单位的数据');}else{ElMessage.error('加载人员失败');}}
+        finally{personsLoading.value=false;}
       };
 
       var onSelectionChange=function(val){selectedPersons.value=val;};
       var selectAll=function(){if(personTable.value)personList.value.forEach(function(r){personTable.value.toggleRowSelection(r,true);});};
       var selectNone=function(){if(personTable.value)personTable.value.clearSelection();};
 
-      var startOcr=async function(){
-        ocrLoading.value=true;writeResult.value=null;
-        try{
-          var r=await axios.get('/archives/image/api/ocr-verify/',{params:{pages:form.ys,unit_id:form.unitId}});
-          var d=r.data.data;results.value=d.items;unmatchedPersons.value=d.unmatched_persons;
-          stats.matched=d.stats.matched;stats.conflict=d.stats.conflict;stats.not_found=d.stats.not_found;ocrDone.value=true;
-          for(var i=0;i<results.value.length;i++){var item=results.value[i];if(item.matched_person){try{var cr=await axios.get('/archives/image/api/ocr-existing-count/',{params:{rsids:String(item.matched_person.RSID),fl:effectiveFl.value,cltm:form.cltm,fyear:form.fyear,fmonth:form.fmonth,fday:form.fday,ys:form.ys}});var info=cr.data.data[item.matched_person.RSID];if(info&&info.records&&info.records.length===1){item.archid=info.records[0].ARCHID;var jbbh=(topCategories.value.find(function(c){return c.fl===form.fl;})||{}).jbbh||'';item.arch_seq=jbbh+'-'+info.records[0].XH;}}catch(e){}}}
-        }catch(e){ElMessage.error('OCR识别失败');}
-        finally{ocrLoading.value=false;}
+      var markPersonMatched=function(rsid){var p=personList.value.find(function(pp){return pp.RSID===rsid;});if(p)p.matched=true;};
+      var updatePersonScanStatus=function(rsid){
+        var p=personList.value.find(function(pp){return pp.RSID===rsid;});
+        if(p&&p.records&&p.records.length===1){var r0=p.records[0];r0.uploaded=r0.YS;if(r0.uploaded>=r0.YS)p.scanStatus='已完成';else p.scanStatus='已扫 '+r0.uploaded+'/'+r0.YS;}
       };
 
-      var previewPdf=function(row){pdfDialog.url='/archives/image/api/ocr-preview-pdf/?files='+encodeURIComponent(JSON.stringify(row.files));pdfDialog.visible=true;};
+      var _doStartOcr = function(){
+    ocrLoading.value = true;
+    writeResult.value = null;
+    showAll.value = false;
+    results.value = [];
+    stats.matched = 0;
+    stats.conflict = 0;
+    stats.not_found = 0;
+    progress.total = 0;
+    progress.done = 0;
+    personList.value.forEach(function(p){p.matched = false;});
+
+    var url = '/archives/image/api/ocr-verify/?pages=' + form.ys
+        + '&unit_id=' + form.unitId
+        + '&mode=' + structureMode.value
+        + '&channel=' + scanChannel.value;
+
+    var es = new EventSource(url);
+
+    es.addEventListener('message', function(e){
+        var d = JSON.parse(e.data);
+
+        if(d.type === 'total'){
+            progress.total = d.total;
+        }
+        else if(d.type === 'result'){
+            results.value.push(d.item);
+            progress.done = d.done;
+
+            if(d.item.match_status === 'matched' || d.item.match_status === 'fuzzy'){
+                if(d.item.match_status === 'matched') stats.matched++;
+                else stats.conflict++;
+                if(d.item.matched_person) markPersonMatched(d.item.matched_person.RSID);
+            } else if(d.item.match_status === 'conflict'){
+                stats.conflict++;
+            } else {
+                stats.not_found++;
+            }
+        }
+        else if(d.type === 'all_done'){
+            unmatchedPersons.value = d.unmatched_persons;
+            ocrDone.value = true;
+            ocrLoading.value = false;
+            es.close();
+            ElMessage.success('识别完成，共 ' + results.value.length + ' 份材料');
+        }
+    });
+
+    es.onerror = function(){
+        ocrLoading.value = false;
+        es.close();
+        ElMessage.error('识别中断');
+    };
+};
+      var startOcr=function(){
+        if(ocrLoading.value){ElMessage.warning('正在识别中，请稍候');return;}
+        _doStartOcr();
+      };
+
+      var retryOcr=async function(row){
+        row._retrying=true;
+        try{
+          var r=await axios.get('/archives/image/api/ocr-retry/',{params:{file:row.first_file,channel:scanChannel.value}});
+          row.ocr_text=r.data.ocr_text;row.ocr_name=r.data.ocr_name;row.ocr_csny=r.data.ocr_csny;
+          row.ocr_worktime=r.data.ocr_worktime;row.ocr_idcard=r.data.ocr_idcard;row.ocr_gender=r.data.ocr_gender;
+          ElMessage.success('重试完成，请查看识别结果');
+        }catch(e){ElMessage.error('重试失败');}
+        finally{row._retrying=false;}
+      };
+
+      var showOcrText=function(row){
+        ocrTextDialog.text=row.ocr_text||'';
+        ocrTextDialog.info={
+          name:row.ocr_name||'',
+          csny:row.ocr_csny||'',
+          worktime:row.ocr_worktime||'',
+          idcard:row.ocr_idcard||'',
+          gender:row.ocr_gender||'',
+          match_status:row.match_status||'',
+          match_by:row.match_by||'',
+          matched_person:row.matched_person?row.matched_person.name:''
+        };
+        ocrTextDialog.visible=true;
+      };
+
+      var previewPdf=function(row){
+        pdfDialog.url='/archives/image/api/ocr-preview-pdf/?files='+encodeURIComponent(JSON.stringify(row.files))+'&channel='+scanChannel.value;
+        pdfDialog.visible=true;
+      };
       var previewExistingPdf=function(row){if(row.records&&row.records.length===1){var r0=row.records[0];pdfDialog.url='/archives/image/api/ocr-preview-pdf/?rsid='+row.RSID+'&archid='+r0.ARCHID+'&fl='+effectiveFl.value;pdfDialog.visible=true;}};
 
-      var openSelect=function(row){personDialog.candidates=row.candidates.length?row.candidates:personList.value;personDialog.targetRow=row;personDialog.selected=null;personDialog.visible=true;};
+      var onPersonSearch=function(){
+        var kw=(personDialog.search||'').trim();
+        if(!kw){personDialog.candidates=[];return;}
+        clearTimeout(personSearchTimer);
+        personSearchTimer=setTimeout(async function(){
+          personSearchLoading.value=true;
+          try{
+            var r=await axios.get('/components/person-search/',{params:{keyword:kw,pageSize:50}});
+            personDialog.candidates=(r.data.data||[]).map(function(p){return{RSID:p.rsid,name:p.displayName,CSNY:p.csny||'',WORKTIME:p.worktime||'',unit:p.unitName};});
+          }catch(e){}
+          finally{personSearchLoading.value=false;}
+        },300);
+      };
+
+      var openSelect=function(row){
+        personDialog.candidates=personList.value.map(function(p){return{RSID:p.RSID,name:p.name,CSNY:p.CSNY||'',WORKTIME:p.WORKTIME||'',unit:p.unit||''};});
+        personDialog.targetRow=row;personDialog.selected=null;personDialog.search='';personDialog.visible=true;
+      };
       var selectCandidate=function(row){personDialog.selected=row;};
       var confirmCandidate=function(){
         if(personDialog.selected&&personDialog.targetRow){
@@ -86,41 +214,37 @@
           personDialog.targetRow.match_status='matched';personDialog.targetRow.match_by='人工修正';
           stats.matched++;if(stats.conflict>0)stats.conflict--;if(stats.not_found>0)stats.not_found--;
           unmatchedPersons.value=unmatchedPersons.value.filter(function(p){return p.RSID!==personDialog.selected.RSID;});
+          markPersonMatched(personDialog.selected.RSID);
+          personDialog.visible=false;
         }
-        personDialog.visible=false;
+      };
+      var undoMatch=function(row){
+        if(row._written){ElMessage.warning('已写入无法撤销');return;}
+        var oldStatus=row.match_status;
+        row.match_status='conflict';row.matched_person=null;row.archid=null;row.match_by='';
+        if(oldStatus==='matched')stats.matched--;stats.conflict++;
       };
 
-      var showConflictList=function(){
-        var items=results.value.filter(function(r){return r.match_status==='conflict';});
-        assignDialog.title='待确认（'+items.length+'份）';
-        assignDialog.items=items;
-        assignDialog.visible=true;
-      };
-      var showUnmatchedList=function(){
-        var items=results.value.filter(function(r){return r.match_status==='not_found';});
-        assignDialog.title='未匹配（'+items.length+'份）';
-        assignDialog.items=items;
-        assignDialog.visible=true;
-      };
-      var showMatchedList=function(){
-        ElMessage.info('已匹配 '+stats.matched+' 份，请查看中间表格');
-      };
-      var assignDialogSelect=function(row){if(row.match_status!=='matched')openSelect(row);};
-      var quickAssign=function(row, candidate){
-        row.matched_person={RSID:candidate.RSID,name:candidate.name};
-        row.match_status='matched';row.match_by='人工修正';
-        stats.matched++;if(row.match_status==='conflict')stats.conflict--;else stats.not_found--;
-        unmatchedPersons.value=unmatchedPersons.value.filter(function(p){return p.RSID!==candidate.RSID;});
+      var singleWrite=async function(row){
+        if(!row.matched_person||!row.matched_person.RSID){ElMessage.warning('未匹配到人员');return;}
+        writeLoading.value=true;
+        try{
+          var r=await axios.post('/archives/image/api/ocr-single-write/',{item:{rsid:row.matched_person.RSID,files:row.files,ocr_name:row.ocr_name,ocr_csny:row.ocr_csny,ocr_text:row.ocr_text,match_by:row.match_by},fl:effectiveFl.value,cltm:form.cltm,bz:form.bz,fyear:form.fyear,fmonth:form.fmonth,fday:form.fday,ys:form.ys,channel:scanChannel.value});
+          if(r.data.success){row._written=true;updatePersonScanStatus(row.matched_person.RSID);ElMessage.success('写入完成');}else{ElMessage.error('写入失败：'+r.data.msg);}
+        }catch(e){ElMessage.error('写入失败');}
+        finally{writeLoading.value=false;}
       };
 
       var batchWrite=async function(){
-        var items=results.value.filter(function(r){return r.matched_person&&r.archid&&selectedPersons.value.some(function(p){return p.RSID===r.matched_person.RSID;});}).map(function(r){return{rsid:r.matched_person.RSID,archid:r.archid,files:r.files,ocr_name:r.ocr_name,ocr_csny:r.ocr_csny,ocr_text:r.ocr_text,match_by:r.match_by};});
+        var items=results.value.filter(function(r){return r.match_status==='matched'&&!r._written&&r.matched_person;}).map(function(r){return{rsid:r.matched_person.RSID,files:r.files,ocr_name:r.ocr_name,ocr_csny:r.ocr_csny,ocr_text:r.ocr_text,match_by:r.match_by};});
         if(!items.length){ElMessage.warning('没有可写入的匹配结果');return;}
-        try{var payload={items:items,fl:effectiveFl.value,cltm:form.cltm,fyear:form.fyear,fmonth:form.fmonth,fday:form.fday,ys:form.ys};var r=await axios.post('/archives/image/api/ocr-batch-write/',payload);writeResult.value={success:r.data.success||items.length,errors:r.data.errors||0};ElMessage.success(r.data.msg);}catch(e){ElMessage.error('写入失败');}
+        writeLoading.value=true;
+        try{var payload={items:items,fl:effectiveFl.value,cltm:form.cltm,bz:form.bz,fyear:form.fyear,fmonth:form.fmonth,fday:form.fday,ys:form.ys,channel:scanChannel.value};var r=await axios.post('/archives/image/api/ocr-batch-write/',payload);writeResult.value={success:r.data.success||items.length,errors:r.data.errors||0};items.forEach(function(item){var row=results.value.find(function(rr){return rr.matched_person&&rr.matched_person.RSID===item.rsid;});if(row){row._written=true;updatePersonScanStatus(item.rsid);}});ElMessage.success(r.data.msg);}catch(e){ElMessage.error('写入失败');}
+        finally{writeLoading.value=false;}
       };
 
       onMounted(function(){loadUnits();loadCategories();});
-      return {ocrLoading,form,units,topCategories,subCategories,personList,personTable,selectedPersons,results,unmatchedPersons,ocrDone,stats,personDialog,writeResult,pdfDialog,assignDialog,leftPanel,midPanel,rightPanel,effectiveFl,categoryLabel,canSearch,canOcr,selectedCount,canWrite,onDividerMouseDown,loadUnits,loadCategories,onUnitChange,onCategoryChange,loadPersons,onSelectionChange,selectAll,selectNone,startOcr,previewPdf,previewExistingPdf,openSelect,selectCandidate,confirmCandidate,showConflictList,showUnmatchedList,showMatchedList,assignDialogSelect,quickAssign,batchWrite};
+      return {ocrLoading,writeLoading,personsLoading,personSearchLoading,showAll,structureMode,scanChannel,form,units,topCategories,subCategories,personList,personTable,selectedPersons,results,visibleResults,unmatchedPersons,ocrDone,stats,personDialog,writeResult,pdfDialog,ocrTextDialog,progress,structureInfo,leftPanel,midPanel,rightPanel,effectiveFl,categoryLabel,canSearch,canOcr,selectedCount,writableCount,canWrite,onDividerMouseDown,loadUnits,loadCategories,onUnitChange,onCategoryChange,loadPersons,onSelectionChange,selectAll,selectNone,startOcr,retryOcr,showOcrText,previewPdf,previewExistingPdf,onPersonSearch,openSelect,selectCandidate,confirmCandidate,undoMatch,singleWrite,batchWrite};
     }
   });
   app.config.compilerOptions.delimiters=['[[',']]'];

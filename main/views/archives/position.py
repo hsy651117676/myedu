@@ -170,7 +170,10 @@ def position_export_api(request):
             buf.getvalue(),
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        response["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(fn)}"
+        encoded_fn = quote(fn.encode("utf-8"))
+        response["Content-Disposition"] = (
+            f"attachment; filename=\"{encoded_fn}\"; filename*=UTF-8''{encoded_fn}"
+        )
         return response
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})

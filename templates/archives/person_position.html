@@ -27,6 +27,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     <table class="gz-table">
       <thead>
         <tr>
+          <th style="width:40px;"></th>
           <th style="width:50px;">序号</th>
           <th style="width:110px;">任职时间</th>
           <th style="width:110px;">免职时间</th>
@@ -107,13 +108,24 @@ const deleteRow = () => {
           if(res.data.code===0) loadPosition();
         });
       };
-const exportPosition = () => {
-    const a = document.createElement('a');
-    a.href = '/archives/api/position-export/?rsid=' + rsid.value;
-    a.download = '';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+const exportPosition = async () => {
+    const url = '/archives/api/position-export/?rsid=' + rsid.value;
+    const resp = await fetch(url);
+    if (resp.headers.get('content-type').includes('json')) {
+        const data = await resp.json();
+        ElementPlus.ElMessage.error(data.msg || '导出失败');
+    } else {
+        const blob = await resp.blob();
+        const disposition = resp.headers.get('content-disposition') || '';
+        let filename = '职务变动登记表.xlsx';
+        const match = disposition.match(/filename="([^"]+)"/);
+        if (match) filename = decodeURIComponent(match[1]);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
 };
       const printPosition = () => {
         let w = window.open('','_blank');

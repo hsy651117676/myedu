@@ -6,6 +6,8 @@ from main.utils import _get_conn
 import json
 import logging
 from main.utils.decorators import archive_perm_required
+from main.utils import query_dict
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -77,12 +79,35 @@ def directory_list_api(request):
         cols = [col[0] for col in cursor.description]
         rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
         cursor.close()
+
+        # 批量查扫描页数
+        for row in rows:
+            row["扫描页数"] = _get_scan_pages(row["RSID"], row["ARCHID"])
+
         return JsonResponse({"code": 0, "data": rows})
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
     finally:
         if conn:
             conn.close()
+
+
+def _get_scan_pages(rsid, archid):
+    """查扫描页数，缓存30分钟"""
+    cache_key = f"scan:pages:{rsid}:{archid}"
+    pages = cache.get(cache_key)
+    if pages is not None:
+        return pages
+    try:
+        table_name = f"RS_DESCRIPT_{rsid}"
+        rows = query_dict(
+            f"SELECT COUNT(*) AS cnt FROM {table_name} WHERE Archid=?", (archid,)
+        )
+        pages = rows[0]["cnt"] if rows else 0
+    except Exception:
+        pages = 0
+    cache.set(cache_key, pages, 1800)
+    return pages
 
 
 @login_required
@@ -92,7 +117,7 @@ def directory_save_api(request):
         return JsonResponse({"code": 405})
     try:
         data = json.loads(request.body)
-    except:
+    except Exception:
         return JsonResponse({"code": 400})
 
     rsid = data.get("rsid")

@@ -67,12 +67,15 @@
     </div>
 
     <div v-show="showSearch" style="flex:1;overflow-y:auto;padding:4px;">
-      <div v-for="p in searchList" :key="p.rsid" class="search-item"
-           :class="{ active: currentRsid===p.rsid }"
-           @click="selectSearch(p)">
-          <div style="font-weight:bold;">{{ p.displayName }}</div>
-          <div style="color:#909399;font-size:11px;">{{ p.unitName }} | 编号: {{ p.archiveNo }}</div>
-      </div>
+        <div v-for="p in searchList" :key="p.rsid" class="search-item"
+     :class="{ active: currentRsid===p.rsid }"
+     @click="selectSearch(p)">
+    <div style="font-weight:bold;">{{ p.displayName }}</div>
+    <div style="color:#909399;font-size:11px;">{{ p.unitName }} | 编号: {{ p.archiveNo }}</div>
+    <div style="color:#606266;font-size:11px;" v-if="p.csny || p.worktime">
+      出生: {{ p.csny || '-' }} | 参工: {{ p.worktime || '-' }}
+    </div>
+</div>
       <div v-if="searchList.length===0 && !searching" style="text-align:center;color:#909399;padding:20px;">未找到人员</div>
       <div v-if="searching" style="text-align:center;padding:20px;">搜索中...</div>
     </div>

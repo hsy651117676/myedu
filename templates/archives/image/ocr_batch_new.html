@@ -1,5 +1,5 @@
 {% extends "layout/base.html" %}
-{% block title %}批量扫描归档{% endblock %}
+{% block title %}同材料批量建档{% endblock %}
 {% block content %}
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -47,8 +47,6 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
 .structure-info .badge.folder { background:#67c23a; color:#fff; }
 .structure-info .badge.flat { background:#409EFF; color:#fff; }
 .structure-info .badge.warn { background:#e6a23c; color:#fff; }
-.ocr-detail-table td { padding:6px 10px; border:1px solid #e0e0e0; font-size:13px; }
-.ocr-detail-table td.label { background:#f5f7fa; width:80px; font-weight:500; }
 </style>
 
 <div id="app">
@@ -68,30 +66,11 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
     <span class="label">月</span><el-input v-model.number="form.fmonth" placeholder="月" style="width:60px"></el-input>
     <span class="label">日</span><el-input v-model.number="form.fday" placeholder="日" style="width:60px"></el-input>
     <span class="label">材料</span><el-input v-model="form.cltm" placeholder="材料名称" class="wide"></el-input>
-    <span class="label">备注</span><el-input v-model="form.bz" placeholder="备注" style="width:120px"></el-input>
     <span class="label">页数</span><el-input v-model.number="form.ys" placeholder="页" style="width:60px"></el-input>
-    <span class="label">通道</span>
-    <el-select v-model="scanChannel" style="width:100px;">
-      <el-option v-for="i in 5" :key="i" :label="'通道 '+i" :value="'0'+i"></el-option>
-    </el-select>
-    <span class="label">结构</span>
-    <el-select v-model="structureMode" style="width:130px;">
-      <el-option label="平铺文件" value="flat"></el-option>
- henticated=True, status=200, location=, result=False, path=/archives/image/api/ocr-detect-structure/
-192.168.18.103 - - [30/Jul/2026 14:47:14] "GET /archives/image/api/ocr-detect-structure/?channel=04 HTTP/1.1" 200 -
-[INFO] 2026-07-30 14:47:14,783 should_redirect: user_authenticated=True, status=200, location=, result=False, path=/archives/image/api/ocr-unit-persons/
-192.168.18.103 - - [30/Jul/2026 14:47:14] "GET /archives/image/api/ocr-unit-persons/?unit_id=2 HTTP/1.1" 200 -
-[INFO] 2026-07-30 14:47:15,266 should_redirect: user_authenticated=True, status=200, location=, result=False, path=/archives/image/api/ocr-existing-count/
-192.168.18.103 - - [30/Jul/2026 14:47:15] "GET /archives/image/api/ocr-existing-count/?rsids=17519,17272,794,804,4957,796,799,790,17516,9527,2515,17514,818,803,816,813,17452,17908,7912,812,791,811,6349,800,807,809,17518,449,17520,801,17526,3706,786,17521,6099,795,789,17524,17525,17523,5981,4788,787,8852,6245,793,17515,805,817,810,1738,808,2740,9354,815,9070,819,806,792,17522,7816,798,5221&fl=3&cltm=1&fyear=1&fmonth=1&fday=1&ys=2 HTTP/1.1" 200 -
-[INFO] 2026-07-30 14:47:33,852 should_redirect: user_authenticated=True, status=200, location=, result=False, path=/archives/image/api/ocr-verify/
-192.168.18.103 - - [30/Jul/2026 14:47:33] "GET /archives/image/api/ocr-verify/?pages=2&unit_id=2&mode=flat&channel=04 HTTP/1.1" 200 -
-[INFO] 2026-07-30 14:47:35,742 should_redirect: user_authenticated=True, status=200, location=, result=False, path=/archives/image/api/ocr-verify/
-192.168.18.103 - - [30/Jul/2026 14:47:35] "GET /archives/image/api/ocr-verify/?pages=2&unit_id=2&mode=flat&channel=04 HTTP/1.1" 200 -
-
-     <el-option label="按人分文件夹" value="folder"></el-option>
-    </el-select>
-    <el-button type="primary" size="small" @click="loadPersons" :disabled="!canSearch || personsLoading" :loading="personsLoading">加载人员</el-button>
-<el-button type="warning" size="small" @click="startOcr" :disabled="!canOcr || ocrLoading" :loading="ocrLoading">开始识别归类</el-button>
+    <span class="label">备注</span><el-input v-model="form.bz" placeholder="备注" style="width:120px"></el-input>
+    <el-button type="primary" size="small" @click="loadPersons" :disabled="!canSearch">加载人员</el-button>
+    <el-button type="info" size="small" @click="detectStructure">检测文件</el-button>
+    <el-button type="warning" size="small" @click="startOcr" :disabled="!canOcr">开始识别归类</el-button>
   </div>
 
   <div class="main-area">
@@ -146,20 +125,19 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
 
     <div class="panel mid-panel" ref="midPanel">
       <div class="panel-header" v-if="results.length">
-        <h3>识别结果（[[ visibleResults.length ]]份 / 共 [[ results.length ]]份）</h3>
+        <h3>识别结果（[[ results.length ]]份）</h3>
         <div>
-          <el-button size="small" @click="showAll = !showAll">[[ showAll ? '隐藏已处理' : '显示全部' ]]</el-button>
           <el-button type="danger" size="small" @click="batchWrite" :disabled="!canWrite || writeLoading" :loading="writeLoading">批量写入（[[ writableCount ]]人）</el-button>
         </div>
       </div>
       <div class="panel-body" v-if="results.length">
-        <el-table :data="visibleResults" stripe border size="small">
+        <el-table :data="results" stripe border size="small">
           <el-table-column type="index" label="#" width="35"></el-table-column>
-          <el-table-column label="文件" width="140"><template #default="{ row }">[[ row.first_file ]]~[[ row.last_file ]]</template></el-table-column>
+          <el-table-column label="文件" width="150"><template #default="{ row }">[[ row.first_file ]]~[[ row.last_file ]]</template></el-table-column>
           <el-table-column prop="ocr_name" label="识别姓名" width="80"></el-table-column>
           <el-table-column prop="ocr_csny" label="出生年月" width="85"></el-table-column>
           <el-table-column label="匹配人员" width="80"><template #default="{ row }"><span v-if="row.matched_person">[[ row.matched_person.name ]]</span><el-tag v-else type="danger" size="small">?</el-tag></template></el-table-column>
-          <el-table-column prop="match_by" label="匹配依据" width="120"></el-table-column>
+          <el-table-column prop="match_by" label="匹配依据" width="130"></el-table-column>
           <el-table-column label="状态" width="60" align="center">
             <template #default="{ row }">
               <el-tag v-if="row._written" type="info" size="small">已写</el-tag>
@@ -168,14 +146,12 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
               <el-tag v-else type="danger" size="small">✗</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="230" fixed="right">
+          <el-table-column label="操作" width="190" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" @click="showOcrText(row)">原文</el-button>
               <el-button size="small" @click="previewPdf(row)">预览</el-button>
               <el-button v-if="row.match_status==='matched' && !row._written" size="small" type="success" @click="singleWrite(row)" :loading="writeLoading">写入</el-button>
               <el-button v-if="row.match_status==='matched' && !row._written && row.match_by==='人工修正'" size="small" type="info" @click="undoMatch(row)">撤销</el-button>
               <el-button v-if="row.match_status!=='matched'" size="small" type="warning" @click="openSelect(row)">选人</el-button>
-              <el-button v-if="row.match_status==='not_found'" size="small" type="info" @click="retryOcr(row)" :loading="row._retrying">重试</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -201,10 +177,6 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
             <div class="stat-card yellow"><span class="num">[[ stats.conflict ]]</span>待确认</div>
             <div class="stat-card red"><span class="num">[[ stats.not_found ]]</span>未匹配</div>
           </div>
-          <div class="unmatched-list" v-if="unmatchedPersons.length">
-            <div class="title">未匹配人员（点击分配）</div>
-            <el-tag v-for="p in unmatchedPersons" :key="p.RSID" type="danger" size="small" @click="assignUnmatched(p)">[[ p.name ]]</el-tag>
-          </div>
           <div v-if="writeResult" style="margin-top:16px;padding:12px;background:#f0f9eb;border-radius:4px;">
             <p style="color:#67c23a;font-weight:600;">写入完成</p>
             <p style="font-size:12px;color:#666;">成功 [[ writeResult.success ]] 人，失败 [[ writeResult.errors ]] 人</p>
@@ -224,26 +196,31 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
             <div v-if="structureInfo.structure==='folder'">
               <p><span class="badge folder">按人分文件夹</span></p>
               <p style="margin-top:8px;">检测到 <b>[[ structureInfo.count ]]</b> 个文件夹</p>
+              <p style="font-size:12px;color:#909399;margin-top:4px;">文件夹名将与人员姓名精确匹配</p>
             </div>
             <div v-else-if="structureInfo.structure==='flat'">
               <p><span class="badge flat">平铺文件</span></p>
               <p style="margin-top:8px;">检测到 <b>[[ structureInfo.count ]]</b> 个文件</p>
+              <p style="font-size:12px;color:#909399;margin-top:4px;">按页数分组，OCR识别第一页匹配人员</p>
             </div>
             <div v-else-if="structureInfo.structure==='mixed'">
               <p><span class="badge warn">混合结构</span></p>
               <p style="margin-top:8px;">文件夹 <b>[[ structureInfo.folder_count ]]</b> 个，文件 <b>[[ structureInfo.file_count ]]</b> 个</p>
               <p style="font-size:12px;color:#e6a23c;margin-top:4px;">请保持一种方式，避免混乱</p>
             </div>
-            <div v-else><p>未检测到文件，请将扫描件放入当前通道</p></div>
+            <div v-else>
+              <p>未检测到文件，请将扫描件放入 AutoScan</p>
+            </div>
           </div>
           <h4 style="margin-top:16px;">操作说明</h4>
           <div class="help-text">
             <p><b>方式A：按人分文件夹</b> <span class="success">（推荐）</span></p>
-            <p class="highlight">当前通道/张三/001.JPG</p>
+            <p class="highlight">AutoScan/张三/001.JPG</p>
             <p>文件夹名 = 人员姓名（必须精确）</p>
             <p style="margin-top:8px;"><b>方式B：平铺文件</b></p>
-            <p class="highlight">当前通道/IMG_001.jpg</p>
+            <p class="highlight">AutoScan/IMG_001.jpg</p>
             <p>按页数自动分组，需确保顺序正确</p>
+            <p style="margin-top:8px;"><span class="warn">⚠ 文件命名不规范时按创建时间排序</span></p>
           </div>
         </div>
       </template>
@@ -251,22 +228,21 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
         <div class="right-section">
           <h4>📋 功能说明</h4>
           <div class="help-text">
-            <p>对同材料进行批量扫描、OCR识别匹配、自动建目录（按日期排序）、写入扫描件。</p>
-            <p style="margin-top:4px;"><span class="highlight">📌 已建目录则只更新扫描件</span></p>
+            <p>对未建目录的同材料进行批量扫描、OCR识别匹配、自动建目录（按日期排序）、写入扫描件。</p>
+            <p style="margin-top:4px;"><span class="highlight">📌 适用：目录未建，需自动建档并写入扫描件</span></p>
           </div>
           <h4 style="margin-top:16px;">操作步骤</h4>
           <div class="help-text">
-            <p>1. 选择<b>"通道"</b>，每位操作员使用不同通道</p>
-            <p>2. 选择<b>"平铺文件"</b>或<b>"按人分文件夹"</b></p>
-            <p>3. 准备好扫描件后点击<b>"开始识别归类"</b></p>
-            <p>4. 校验识别结果，手动修正</p>
-            <p>5. 点<b>"写入"</b>单条或批量</p>
+            <p>1. 点击 <b>"检测文件"</b> 查看文件结构</p>
+            <p>2. 准备好扫描件后点击 <b>"开始识别归类"</b></p>
+            <p>3. 校验识别结果，手动修正</p>
+            <p>4. 点 <b>"写入"</b> 自动建目录并存盘</p>
             <p style="margin-top:12px;"><span class="warn">⚠ 写入：自动建档案目录（按日期排序）</span></p>
             <p style="margin-top:4px;"><span class="warn">   + 扫描件记录 + 加密存盘</span></p>
             <p style="margin-top:8px;"><span>📝 文件命名：001.JPG 或任意名</span></p>
             <p style="margin-top:4px;"><span>   （非标准格式按创建时间排序，建议使用标准格式）</span></p>
-            <p style="margin-top:8px;"><span class="highlight">📁 推荐：当前通道下按人分文件夹</span></p>
-            <p class="highlight">   例：通道1/张三/001.JPG</p>
+            <p style="margin-top:8px;"><span class="highlight">📁 推荐：AutoScan下按人分文件夹</span></p>
+            <p class="highlight">   例：AutoScan/张三/001.JPG</p>
             <p style="margin-top:8px;"><span class="warn">⚠ 普通用户只能操作本单位</span></p>
           </div>
         </div>
@@ -275,17 +251,16 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
         <div class="right-section">
           <h4>📋 功能说明</h4>
           <div class="help-text">
-            <p>对同材料进行批量扫描、OCR识别匹配、自动建目录（按日期排序）、写入扫描件。</p>
-            <p style="margin-top:4px;"><span class="highlight">📌 已建目录则只更新扫描件</span></p>
+            <p>对未建目录的同材料进行批量扫描、OCR识别匹配、自动建目录（按日期排序）、写入扫描件。</p>
+            <p style="margin-top:4px;"><span class="highlight">📌 适用：目录未建，需自动建档并写入扫描件</span></p>
           </div>
           <h4 style="margin-top:16px;">快速开始</h4>
           <div class="help-text">
             <p>1. 选择<b>单位</b> + <b>类别</b> + <b>年月日</b></p>
-            <p>2. 输入<b>材料名称</b> + <b>备注</b> + <b>页数</b></p>
-            <p>3. 选择<b>通道</b>和<b>文件结构</b></p>
-            <p>4. 点击<b>"加载人员"</b></p>
-            <p style="margin-top:12px;"><span class="highlight">📁 推荐：当前通道下按人分文件夹</span></p>
-            <p class="highlight">   例：通道1/张三/001.JPG</p>
+            <p>2. 输入<b>材料名称</b> + <b>页数</b></p>
+            <p>3. 点击<b>"加载人员"</b></p>
+            <p style="margin-top:12px;"><span class="highlight">📁 推荐：AutoScan下按人分文件夹</span></p>
+            <p class="highlight">   例：AutoScan/张三/001.JPG</p>
             <p style="margin-top:8px;"><span class="warn">⚠ 写入：自动建档案目录（按日期排序）</span></p>
             <p style="margin-top:4px;"><span class="warn">   + 扫描件记录 + 加密存盘</span></p>
             <p style="margin-top:8px;"><span>📝 文件命名：001.JPG 或任意名</span></p>
@@ -314,27 +289,7 @@ body { height:100vh; display:flex; flex-direction:column; overflow:hidden; backg
   <el-dialog v-model="pdfDialog.visible" title="PDF 预览" width="90%" top="3vh" class="pdf-dialog" @close="pdfDialog.url=''">
     <iframe v-if="pdfDialog.url" :src="pdfDialog.url" class="pdf-frame"></iframe>
   </el-dialog>
-
-  <el-dialog v-model="ocrTextDialog.visible" title="OCR 识别详情" width="800px">
-    <div style="margin-bottom:16px;">
-      <h4 style="margin:0 0 8px 0;color:#303133;">📝 识别原文</h4>
-      <div style="white-space:pre-wrap;word-break:break-all;font-size:13px;line-height:1.8;max-height:40vh;overflow:auto;background:#fafafa;padding:12px;border-radius:6px;">[[ ocrTextDialog.text ]]</div>
-    </div>
-    <div>
-      <h4 style="margin:0 0 8px 0;color:#303133;">🔍 提取结果</h4>
-      <table class="ocr-detail-table" style="width:100%;border-collapse:collapse;">
-        <tr><td class="label">姓名</td><td>[[ ocrTextDialog.info.name || '未识别' ]]</td></tr>
-        <tr><td class="label">出生年月</td><td>[[ ocrTextDialog.info.csny || '未识别' ]]</td></tr>
-        <tr><td class="label">参工时间</td><td>[[ ocrTextDialog.info.worktime || '未识别' ]]</td></tr>
-        <tr><td class="label">身份证号</td><td>[[ ocrTextDialog.info.idcard || '未识别' ]]</td></tr>
-        <tr><td class="label">性别</td><td>[[ ocrTextDialog.info.gender || '未识别' ]]</td></tr>
-        <tr><td class="label">匹配状态</td><td>[[ ocrTextDialog.info.match_status ]]</td></tr>
-        <tr><td class="label">匹配依据</td><td>[[ ocrTextDialog.info.match_by ]]</td></tr>
-        <tr><td class="label">匹配人员</td><td>[[ ocrTextDialog.info.matched_person ]]</td></tr>
-      </table>
-    </div>
-  </el-dialog>
 </div>
 
-{% include "archives/image/ocr_batch_js.html" %}
+{% include "archives/image/ocr_batch_new_js.html" %}
 {% endblock %}

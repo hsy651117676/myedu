@@ -157,7 +157,7 @@
                   console.log('currentArch set to:', currentArch.value);
                     currentFl.value = d.fl;
                     currentArchiveName.value = d.xh + '、' + d.cltm;
-                    currentTitle.value = [personName.value, d.jbbh + '.' + d.cltm].filter(Boolean).join('_');
+                    currentTitle.value = [personName.value, d.jbbh + '-' + d.xh + '_' + d.cltm].filter(Boolean).join('_');
                     const key = cacheKey();
                     const blob = pdfBlobCache[key];
                     if (blob) {
@@ -246,19 +246,33 @@
             };
 
 
-          const downloadPdf = () => {
+          const downloadPdf = async () => {
     const fileName = (currentTitle.value || currentArchiveName.value || '档案') + '.pdf';
+    
+    // 如果已有缓存的 blob，直接用
     const key = cacheKey();
-    const blob = pdfBlobCache[key];
-
-    if (blob) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+    let blob = pdfBlobCache[key];
+    
+    if (!blob) {
+        // 没有缓存，重新 fetch
+        try {
+            const apiUrl = `/archives/image/api/scan-pdf/?image_type=YS&rsid=${rsid.value}&fl=${currentFl.value}&archid=${currentArch.value}`;
+            const res = await fetch(apiUrl);
+            blob = await res.blob();
+        } catch (e) {
+            console.error('下载失败', e);
+            return;
+        }
     }
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;  // 这个才是你指定的文件名
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
 };
             const printPdf = () => {
                 if (!pdfUrl.value) return;

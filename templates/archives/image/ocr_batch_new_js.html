@@ -1,0 +1,180 @@
+<script>
+(function(){
+  const { createApp, ref, reactive, computed, onMounted, nextTick } = Vue;
+  const { ElMessage } = ElementPlus;
+  const app = createApp({
+    setup(){
+      var ocrLoading = ref(false);
+      var writeLoading = ref(false);
+      var personSearchLoading = ref(false);
+      var form = reactive({unitId:null, fl:null, subFl:null, fyear:null, fmonth:null, fday:null, cltm:'', bz:'', ys:null});
+      var units=ref([]),topCategories=ref([]),subCategories=ref([]),personList=ref([]),personTable=ref(null),selectedPersons=ref([]),results=ref([]),unmatchedPersons=ref([]),ocrDone=ref(false),stats=reactive({matched:0,conflict:0,not_found:0}),personDialog=reactive({visible:false,candidates:[],targetRow:null,selected:null,search:''}),writeResult=ref(null);
+      var pdfDialog=reactive({visible:false,url:''});
+      var progress=reactive({done:0,total:0});
+      var structureInfo=ref(null);
+      var personSearchTimer=null;
+      var leftPanel=ref(null),midPanel=ref(null),rightPanel=ref(null);
+      var effectiveFl=computed(function(){return form.subFl||form.fl;});
+      var canSearch=computed(function(){return form.unitId&&form.fl&&form.ys;});
+      var canOcr=computed(function(){return canSearch.value&&personList.value.length>0&&structureInfo.value&&structureInfo.value.structure!=='empty';});
+      var selectedCount=computed(function(){return selectedPersons.value.length;});
+      var categoryLabel=computed(function(){var cat=topCategories.value.find(function(c){return c.fl===form.fl;});var name=cat?cat.jbbh+'\uFF1A'+cat.flsm:'';if(form.subFl){var sub=subCategories.value.find(function(c){return c.fl===form.subFl;});name+=' / '+(sub?sub.flsm:'');}return name;});
+      var writableCount=computed(function(){return results.value.filter(function(r){return r.match_status==='matched'&&!r._written;}).length;});
+      var canWrite=computed(function(){return writableCount.value>0;});
+
+      var onDividerMouseDown=function(e, side){
+        e.preventDefault();
+        var d=e.target, l, r, minL, minR;
+        if(side==='left'){l=leftPanel.value;r=midPanel.value;minL=180;minR=350;}
+        else{l=midPanel.value;r=rightPanel.value;minL=350;minR=180;}
+        d.classList.add('active');document.body.style.cursor='col-resize';document.body.style.userSelect='none';
+        var startX=e.clientX, startLW=l.offsetWidth, startRW=r.offsetWidth;
+        var m=function(ev){var dx=ev.clientX-startX;var nl=startLW+dx,nr=startRW-dx;if(nl<minL){nl=minL;nr=startLW+startRW-minL;}if(nr<minR){nr=minR;nl=startLW+startRW-minR;}l.style.flex='none';l.style.width=nl+'px';r.style.flex='none';r.style.width=nr+'px';};
+        var u=function(){d.classList.remove('active');document.body.style.cursor='';document.body.style.userSelect='';document.removeEventListener('mousemove',m);document.removeEventListener('mouseup',u);};
+        document.addEventListener('mousemove',m);document.addEventListener('mouseup',u);
+      };
+
+      var loadUnits=async function(){try{var r=await axios.get('/archives/image/api/ocr-new-unit-list/');units.value=r.data.data||[];if(units.value.length===1){form.unitId=units.value[0]['序号'];setTimeout(function(){if(canSearch.value)loadPersons();},300);}}catch(e){ElMessage.error('加载单位失败');}};
+      var loadCategories=async function(){try{var r=await axios.get('/archives/image/api/ocr-new-category-tree/');topCategories.value=r.data.top||[];window._catChildren=r.data.children||{};}catch(e){ElMessage.error('加载类别失败');}};
+      var onUnitChange=function(){personList.value=[];selectedPersons.value=[];ocrDone.value=false;results.value=[];writeResult.value=null;structureInfo.value=null;};
+      var onCategoryChange=function(val){form.subFl=null;subCategories.value=(val===4||val===9)?(window._catChildren[val]||[]):[];};
+
+      var loadPersons=async function(){
+        if(!canSearch.value)return;ocrDone.value=false;results.value=[];writeResult.value=null;progress.done=0;progress.total=0;
+        try{
+          var r=await axios.get('/archives/image/api/ocr-new-unit-persons/',{params:{unit_id:form.unitId}});
+          var rawList=r.data.data||[];
+          var rsids=rawList.map(function(p){return p.RSID;}).join(',');
+          var cr=await axios.get('/archives/image/api/ocr-new-existing-count/',{params:{rsids:rsids,fl:effectiveFl.value,cltm:form.cltm,fyear:form.fyear,fmonth:form.fmonth,fday:form.fday,ys:form.ys}});
+          var archInfo=cr.data.data||{};
+          personList.value=rawList.map(function(p){
+            var info=archInfo[p.RSID]||{exists:false,records:[],person:{}};
+            var recs=info.records||[],person=info.person||{};
+            var dirStatus=recs.length===0?'未建':(recs.length===1?'正常（1条）':'异常（'+recs.length+'条）');
+            var jbbh=(topCategories.value.find(function(c){return c.fl===effectiveFl.value;})||{}).jbbh||'';
+            if(!jbbh&&window._catChildren){for(var key in window._catChildren){var found=(window._catChildren[key]||[]).find(function(c){return c.fl===effectiveFl.value;});if(found){jbbh=found.jbbh||'';break;}}}
+            if(!jbbh)jbbh=String(effectiveFl.value);
+            var archSeq='-';
+            if(recs.length===1){archSeq=jbbh+'-'+recs[0].XH;}
+            else if(recs.length>1){archSeq=recs.map(function(rr){return jbbh+'-'+rr.XH;}).join(', ');}
+            var scanStatus='--';
+            if(recs.length===1){var r0=recs[0];if(r0.uploaded===0)scanStatus='未扫';else if(r0.uploaded>=r0.YS)scanStatus='已完成';else scanStatus='已扫 '+r0.uploaded+'/'+r0.YS;}
+            else if(recs.length>1)scanStatus='异常';
+            return {RSID:p.RSID,name:person.name||p.name||'',CSNY:person.csny||'',WORKTIME:person.worktime||'',unit:p.unit||'',dirStatus:dirStatus,scanStatus:scanStatus,archSeq:archSeq,records:recs,canPreview:recs.length===1,matched:false};
+          });
+          nextTick(function(){if(personTable.value)personList.value.forEach(function(rr){personTable.value.toggleRowSelection(rr,true);});});
+          ElMessage.success('已加载 '+personList.value.length+' 人');
+        }catch(e){if(e.response&&e.response.status===403){ElMessage.error('无权访问其他单位的数据');}else{ElMessage.error('加载人员失败');}}
+      };
+
+      var detectStructure=async function(){try{var r=await axios.get('/archives/image/api/ocr-new-detect-structure/');structureInfo.value=r.data;if(r.data.structure==='folder'){ElMessage.success('检测到 '+r.data.count+' 个文件夹（按人分）');}else if(r.data.structure==='flat'){ElMessage.success('检测到 '+r.data.count+' 个文件（平铺）');}else if(r.data.structure==='mixed'){ElMessage.warning('混合结构，建议统一方式');}else{ElMessage.info('未检测到文件');}}catch(e){ElMessage.error('检测失败');}};
+
+      var onSelectionChange=function(val){selectedPersons.value=val;};
+      var selectAll=function(){if(personTable.value)personList.value.forEach(function(r){personTable.value.toggleRowSelection(r,true);});};
+      var selectNone=function(){if(personTable.value)personTable.value.clearSelection();};
+
+      var markPersonMatched=function(rsid){var p=personList.value.find(function(pp){return pp.RSID===rsid;});if(p)p.matched=true;};
+
+      var startOcr=function(){
+        ocrLoading.value=true;writeResult.value=null;
+        results.value=[];stats.matched=0;stats.conflict=0;stats.not_found=0;progress.done=0;progress.total=0;
+        personList.value.forEach(function(p){p.matched=false;});
+        var url='/archives/image/api/ocr-new-verify/?pages='+form.ys+'&unit_id='+form.unitId;
+        var es=new EventSource(url);
+        es.addEventListener('message',function(e){
+          var d=JSON.parse(e.data);
+          if(d.type==='total'){progress.total=d.total;}
+          else if(d.type==='result'){
+            ocrLoading.value=false;
+            results.value.push(d.item);
+            progress.done=d.done;
+            if(d.item.match_status==='matched'){stats.matched++;if(d.item.matched_person)markPersonMatched(d.item.matched_person.RSID);}
+            else if(d.item.match_status==='conflict')stats.conflict++;
+            else stats.not_found++;
+          }else if(d.type==='all_done'){
+            unmatchedPersons.value=d.unmatched_persons;
+            ocrDone.value=true;es.close();
+          }
+        });
+        es.onerror=function(){ocrLoading.value=false;es.close();ElMessage.error('OCR识别中断');};
+      };
+
+      var previewPdf=function(row){pdfDialog.url='/archives/image/api/ocr-new-preview-pdf/?files='+encodeURIComponent(JSON.stringify(row.files));pdfDialog.visible=true;};
+      var previewExistingPdf=function(row){if(row.records&&row.records.length===1){var r0=row.records[0];pdfDialog.url='/archives/image/api/ocr-new-preview-pdf/?rsid='+row.RSID+'&archid='+r0.ARCHID+'&fl='+effectiveFl.value;pdfDialog.visible=true;}};
+
+      var onPersonSearch=function(){
+        var kw=(personDialog.search||'').trim();
+        if(!kw){personDialog.candidates=[];return;}
+        clearTimeout(personSearchTimer);
+        personSearchTimer=setTimeout(async function(){
+          personSearchLoading.value=true;
+          try{
+            var r=await axios.get('/components/person-search/',{params:{keyword:kw,pageSize:50}});
+            personDialog.candidates=(r.data.data||[]).map(function(p){return{RSID:p.rsid,name:p.displayName,CSNY:p.csny||'',WORKTIME:p.worktime||'',unit:p.unitName};});
+          }catch(e){}
+          finally{personSearchLoading.value=false;}
+        },300);
+      };
+var openSelect = function(row) {
+  // 优先显示候选人（OCR 推荐的），没有则显示本单位全部
+  var candidates = [];
+  if (row.candidates && row.candidates.length) {
+    candidates = row.candidates.map(function(p) {
+      return { RSID: p.RSID, name: p.name, CSNY: p.CSNY || '', WORKTIME: p.WORKTIME || '', unit: p.unit || '' };
+    });
+  } else {
+    candidates = personList.value.map(function(p) {
+      return { RSID: p.RSID, name: p.name, CSNY: p.CSNY || '', WORKTIME: p.WORKTIME || '', unit: p.unit || '' };
+    });
+  }
+  personDialog.candidates = candidates;
+  personDialog.targetRow = row;
+  personDialog.selected = null;
+  personDialog.search = '';
+  personDialog.visible = true;
+};
+      var selectCandidate=function(row){personDialog.selected=row;};
+      var confirmCandidate=function(){
+        if(personDialog.selected&&personDialog.targetRow){
+          personDialog.targetRow.matched_person={RSID:personDialog.selected.RSID,name:personDialog.selected.name};
+          personDialog.targetRow.match_status='matched';personDialog.targetRow.match_by='人工修正';
+          stats.matched++;if(stats.conflict>0)stats.conflict--;if(stats.not_found>0)stats.not_found--;
+          unmatchedPersons.value=unmatchedPersons.value.filter(function(p){return p.RSID!==personDialog.selected.RSID;});
+          markPersonMatched(personDialog.selected.RSID);
+          personDialog.visible=false;
+        }
+      };
+      var undoMatch=function(row){
+        if(row._written){ElMessage.warning('已写入无法撤销');return;}
+        var oldStatus=row.match_status;
+        row.match_status='conflict';row.matched_person=null;row.archid=null;row.match_by='';
+        if(oldStatus==='matched')stats.matched--;
+        stats.conflict++;
+      };
+
+      var singleWrite=async function(row){
+        if(!row.matched_person||!row.matched_person.RSID){ElMessage.warning('未匹配到人员');return;}
+        writeLoading.value=true;
+        try{
+          var r=await axios.post('/archives/image/api/ocr-new-single-write/',{item:{rsid:row.matched_person.RSID,files:row.files,ocr_name:row.ocr_name,ocr_csny:row.ocr_csny,ocr_text:row.ocr_text,match_by:row.match_by},fl:effectiveFl.value,cltm:form.cltm,bz:form.bz,fyear:form.fyear,fmonth:form.fmonth,fday:form.fday,ys:form.ys});
+          if(r.data.success){row._written=true;ElMessage.success('写入完成');}else{ElMessage.error('写入失败：'+r.data.msg);}
+        }catch(e){ElMessage.error('写入失败');}
+        finally{writeLoading.value=false;}
+      };
+
+      var batchWrite=async function(){
+        var items=results.value.filter(function(r){return r.match_status==='matched'&&!r._written&&r.matched_person;}).map(function(r){return{rsid:r.matched_person.RSID,files:r.files,ocr_name:r.ocr_name,ocr_csny:r.ocr_csny,ocr_text:r.ocr_text,match_by:r.match_by};});
+        if(!items.length){ElMessage.warning('没有可写入的匹配结果');return;}
+        writeLoading.value=true;
+        try{var payload={items:items,fl:effectiveFl.value,cltm:form.cltm,bz:form.bz,fyear:form.fyear,fmonth:form.fmonth,fday:form.fday,ys:form.ys};var r=await axios.post('/archives/image/api/ocr-new-batch-write/',payload);writeResult.value={success:r.data.success||items.length,errors:r.data.errors||0};items.forEach(function(item){var row=results.value.find(function(rr){return rr.matched_person&&rr.matched_person.RSID===item.rsid;});if(row){row._written=true;}});ElMessage.success(r.data.msg);}catch(e){ElMessage.error('写入失败');}
+        finally{writeLoading.value=false;}
+      };
+
+      onMounted(function(){loadUnits();loadCategories();});
+      return {ocrLoading,writeLoading,personSearchLoading,form,units,topCategories,subCategories,personList,personTable,selectedPersons,results,unmatchedPersons,ocrDone,stats,personDialog,writeResult,pdfDialog,progress,structureInfo,leftPanel,midPanel,rightPanel,effectiveFl,categoryLabel,canSearch,canOcr,selectedCount,writableCount,canWrite,onDividerMouseDown,loadUnits,loadCategories,onUnitChange,onCategoryChange,loadPersons,detectStructure,onSelectionChange,selectAll,selectNone,startOcr,previewPdf,previewExistingPdf,onPersonSearch,openSelect,selectCandidate,confirmCandidate,undoMatch,singleWrite,batchWrite};
+    }
+  });
+  app.config.compilerOptions.delimiters=['[[',']]'];
+  app.use(ElementPlus,{locale:ElementPlusLocaleZhCn}).mount('#app');
+})();
+</script>

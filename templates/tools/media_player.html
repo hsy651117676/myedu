@@ -22,10 +22,12 @@
     .letter-panel .let.active { background:#409EFF;color:#fff; }
     .list-panel { flex:2;min-width:200px;overflow:hidden;display:flex;flex-direction:column;background:#1a1a2e; }
     .list-panel table { border-collapse:collapse;width:100%; }
-    .list-panel th,.list-panel td { padding:6px 8px;text-align:left;border-bottom:1px solid #2a2a4a;font-size:12px;color:#ccc; }
+    .list-panel th,.list-panel td { padding:6px 4px;text-align:left;border-bottom:1px solid #2a2a4a;font-size:12px;color:#ccc; }
     .list-panel th { background:#16213e;position:sticky;top:0;z-index:1;color:#aaa; }
     .list-panel tr:hover { background:#2a2a4a;cursor:pointer; }
     .list-panel tr.playing { background:#1a3a5c; }
+    .list-panel .btn-dl { background:none;border:none;color:#67c23a;cursor:pointer;font-size:14px;padding:0; }
+    .list-panel .btn-dl:hover { color:#85e046; }
     .player-panel { flex:7;min-width:300px;position:relative;display:flex;align-items:center;justify-content:center;background:#111;overflow:hidden; }
     .player-panel video { position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;z-index:1; }
     .player-panel .cover-wrap { }
@@ -60,20 +62,20 @@
   <div class="header">
     <span class="title">🎬 媒体播放器</span>
     <select v-model="category" @change="switchCategory" style="height:26px;">
-      <option value="music">音乐</option><option value="video_music">视频音乐</option><option value="movie">电影</option><option value="tv">电视剧</option>
+      <option value="music">音乐</option><option value="movie">电影</option><option value="tv">电视剧</option>
     </select>
     <input v-model="keyword" placeholder="搜索" @keyup.enter="search">
     <select v-if="category==='music'" v-model="filterInstrument" @change="search"><option value="">全部乐器</option><option v-for="ins in instruments" :key="ins" :value="ins">[[ ins ]]</option></select>
     <select v-if="category==='music'" v-model="filterStyle" @change="search"><option value="">全部风格</option><option v-for="st in styles" :key="st" :value="st">[[ st ]]</option></select>
     <button @click="search" style="background:#409EFF;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">搜索</button>
     <button @click="showUpload=true" style="background:#67c23a;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">上传</button>
-    <button v-if="currentId" @click="downloadMedia" style="background:#666;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">下载</button>
+    <button @click="downloadMedia" style="background:#666;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">下载</button>
     <button v-if="currentId && category==='music'" @click="downloadLyric" style="background:#666;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">下载歌词</button>
     <button @click="popout" style="background:#666;border:none;color:#fff;padding:4px 12px;border-radius:13px;cursor:pointer;">独立窗口</button>
     <span style="flex:1;overflow:hidden;text-align:center;">
       <span style="display:inline-block;white-space:nowrap;animation:marquee 25s linear infinite;">
             🎵本想听几首歌，一网上听就要什么VIP会员，我日子，听个歌就要会员，太资本了，鬼火陆很，
-            一生气就写了这个，可以下载可以听，但别说是我这里下载来的，别又弄什么版权费！
+            一生气就写了个这给个，可以下载可以听，但别说是我这里下载来的，别又弄什么版权费！
            (说什么报答之恩！日后你惹出祸来，不把师父说出来，就行了。) 🎵</span>
     </span>
   </div>
@@ -85,14 +87,15 @@
     <div class="drag-bar" data-target="letterPanel"></div>
     <div class="list-panel" id="listPanel">
       <div style="flex:1;overflow:auto;">
-        <table><thead><tr><th style="width:32px;">#</th><th>标题</th><th v-if="category==='music'">歌手</th><th v-else>导演</th><th v-if="category==='tv'">集</th><th style="width:60px;">时长</th></tr></thead>
+        <table><thead><tr><th style="width:28px;">▶</th><th>标题</th><th v-if="category==='music'">歌手</th><th v-else>导演</th><th v-if="category==='tv'">集</th><th style="width:50px;">时长</th><th style="width:32px;">下载</th></tr></thead>
           <tbody>
-            <tr v-for="(r,i) in list" :key="r.ID" :class="{playing: currentId===r.ID}" @dblclick="play(r)">
+            <tr v-for="(r,i) in list" :key="r.ID" :class="{playing: currentId===r.ID}">
               <td @click="play(r)" style="color:#409EFF;cursor:pointer;">▶</td>
               <td @click="play(r)">[[ r.Title ]]</td>
-              <td v-if="category==='music'">[[ r.Artist ]]</td><td v-else>[[ r.Director || '-' ]]</td>
-              <td v-if="category==='tv'">[[ r.Season?'S'+r.Season:'' ]][[ r.Episode?'E'+r.Episode:'' ]]</td>
-              <td>[[ formatDuration(r.Duration) ]]</td>
+              <td v-if="category==='music'" @click="play(r)">[[ r.Artist ]]</td><td v-else @click="play(r)">[[ r.Director || '-' ]]</td>
+              <td v-if="category==='tv'" @click="play(r)">[[ r.Season?'S'+r.Season:'' ]][[ r.Episode?'E'+r.Episode:'' ]]</td>
+              <td @click="play(r)">[[ formatDuration(r.Duration) ]]</td>
+              <td @click.stop><button class="btn-dl" @click="downloadById(r.ID)" title="下载">⬇</button></td>
             </tr>
           </tbody>
         </table>
@@ -230,23 +233,37 @@
       const onVideoError = () => { const p=videoPlayer.value; if(!p||!p.error)return; const msgs={1:'视频加载被中止',2:'网络错误',3:'视频解码失败，建议转换格式或更换浏览器',4:'视频格式不支持'}; ElMessage.error(msgs[p.error.code]||'视频播放失败'); playing.value=false; };
 
       const popout = () => { if (window.top !== window.self) { window.open(window.location.href, '_blank'); } };
-      const downloadMedia = () => { if (!currentId.value) return; const a=document.createElement('a'); a.href='/tools/api/media/play/?id='+currentId.value+'&category='+category.value+'&download=1'; a.download=''; document.body.appendChild(a); a.click(); document.body.removeChild(a); };
+
+      const downloadById = (id) => {
+    const a = document.createElement('a');
+    a.href = '/tools/api/media/play/?id=' + id + '&category=' + category.value + '&download=1';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+const downloadMedia = () => {
+    if (!currentId.value) { ElMessage.warning('请先播放或在列表中点击⬇下载'); return; }
+    downloadById(currentId.value);
+};
+
+      const downloadLyric = () => {
+        if (!currentId.value || !lyricLines.value.length) { ElMessage.warning('无歌词可下载'); return; }
+        const lrc = lyricLines.value.map(l => {
+          const m = Math.floor(l.time / 60), s = (l.time % 60).toFixed(2);
+          return `[${String(m).padStart(2, '0')}:${String(s).padStart(5, '0')}]${l.text}`;
+        }).join('\n');
+        const blob = new Blob([lrc], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (currentTitle.value || 'lyric') + '.lrc';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+
       const resetUpload = () => { uploadForm.category=category.value; ['title','artist','instrument','style','season','episode','episode_title','year','genre'].forEach(k=>uploadForm[k]=''); };
       const onUploadFileChange = (e) => { const file=e.target.files?.[0]; if(!file)return; const name=file.name.replace(/\.\w+$/i,''); if(name.includes(' - ')){const parts=name.split(' - '); if(!uploadForm.artist)uploadForm.artist=parts[0].trim(); if(!uploadForm.title)uploadForm.title=parts.slice(1).join(' - ').trim();} else {if(!uploadForm.title)uploadForm.title=name;} };
       const doUpload = async () => { const file=uploadFileInput.value?.files?.[0]; if(!file){ElMessage.warning('请选择文件');return;} if(!uploadForm.title.trim()){ElMessage.warning('请输入标题');return;} if(!uploadForm.artist.trim()){ElMessage.warning(uploadForm.category==='music'?'请输入歌手':'请输入导演');return;} uploading.value=true; try { const fd=new FormData(); fd.append('file',file); fd.append('category',uploadForm.category); fd.append('title',uploadForm.title); fd.append('artist',uploadForm.artist); if(uploadForm.category==='music'){fd.append('instrument',uploadForm.instrument);fd.append('style',uploadForm.style);} if(uploadForm.category==='tv'){fd.append('season',uploadForm.season);fd.append('episode',uploadForm.episode);fd.append('episode_title',uploadForm.episode_title);} if(uploadForm.category!=='music'){fd.append('year',uploadForm.year);fd.append('genre',uploadForm.genre);} const r=await axios.post('/tools/api/media/upload/',fd); ElMessage[r.data.code===0?'success':'error'](r.data.msg); if(r.data.code===0){showUpload.value=false;loadList(1);} } finally { uploading.value=false; } };
-const downloadLyric = () => {
-    if (!currentId.value || !lyricLines.value.length) { ElMessage.warning('无歌词可下载'); return; }
-    const lrc = lyricLines.value.map(l => {
-        const m = Math.floor(l.time / 60), s = (l.time % 60).toFixed(2);
-        return `[${String(m).padStart(2, '0')}:${String(s).padStart(5, '0')}]${l.text}`;
-    }).join('\n');
-    const blob = new Blob([lrc], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = (currentTitle.value || 'lyric') + '.lrc';
-    a.click();
-    URL.revokeObjectURL(a.href);
-};
+
       const initDrag = () => { document.querySelectorAll('.drag-bar').forEach(bar => { bar.addEventListener('mousedown', (e) => { const panel = document.getElementById(bar.dataset.target); if(!panel) return; const startX=e.clientX, startW=panel.offsetWidth; const onMove=(ev)=>{ let w=startW+ev.clientX-startX; if(w<60)w=60; panel.style.flex='none'; panel.style.width=w+'px'; }; const onUp=()=>{ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }; document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp); e.preventDefault(); }); }); };
 
       onMounted(() => { loadFilters(); loadList(1); nextTick(initDrag); });
@@ -254,7 +271,7 @@ const downloadLyric = () => {
                audioPlayer,videoPlayer,playing,isVideo,currentId,currentTitle,coverUrl,coverStyle,currentTime,totalTime,progressPercent,loopMode,volume,muted,
                lyricLines,currentLyric, switchCategory,search,selectLetter,play,togglePlay,prev,next,onEnded,toggleLoop,onPageChange,onSizeChange,
                onTimeUpdate,onLoaded,seek,setVolume,toggleMute,formatDuration,spectrumCanvas,onVideoError,
-               showUpload,uploading,uploadForm,uploadFileInput,resetUpload,onUploadFileChange,doUpload,popout,downloadMedia,downloadLyric };
+               showUpload,uploading,uploadForm,uploadFileInput,resetUpload,onUploadFileChange,doUpload,popout,downloadMedia,downloadLyric,downloadById };
     }
   });
   app.use(ElementPlus,{ locale: ElementPlusLocaleZhCn }).mount('#app');

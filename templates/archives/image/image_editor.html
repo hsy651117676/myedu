@@ -3,7 +3,7 @@
 {% block content %}
 <style>
 html, body { height:100%; margin:0; padding:0; overflow:hidden; background:linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-#app { height:100%; display:flex; align-items:center; justify-content:center; padding:40px; }
+#app { height:100%; overflow-y:auto; display:flex; align-items:flex-start; justify-content:center; padding:40px; }
 .notice-card {
   background:#fff; border-radius:16px; padding:48px 56px; max-width:720px;
   box-shadow:0 8px 32px rgba(0,0,0,0.08); line-height:1.8; font-size:15px; color:#444;
@@ -25,7 +25,7 @@ a { color:#409EFF; text-decoration:none; }
 a:hover { text-decoration:underline; }
 </style>
 
-<div id="app">
+<div id="app" ref="appRef">
   <div class="notice-card">
     <h2>✅ 图像处理</h2>
     <div class="subtitle">新版客户端已开发完成，请使用新版工具</div>
@@ -58,20 +58,37 @@ a:hover { text-decoration:underline; }
       <div class="icon">🛠️</div>
       <div class="text">
         <h4>使用说明</h4>
-        <p>1. 复制上方路径<br>2. 打开文件管理器（Win+E），粘贴到地址栏<br>3. 首次连接输入上方账号密码<br>4. 双击 <span class="highlight">ScanTool.exe</span> 启动<br>如遇杀毒软件拦截，请添加信任。</p>
+        <p>
+          1. 复制上方路径<br>
+          2. 打开文件管理器（Win+E），粘贴到地址栏<br>
+          3. 首次连接输入上方账号密码<br>
+          4. 双击 <span class="highlight">ScanTool.exe</span> 启动<br>
+          如遇杀毒软件拦截，请添加信任。<br><br>
+          说到杀毒软件，我就深恶痛绝。什么某零、某霸之类的，只要你装了他们，不光把你电脑卡成PPT，还一天到晚弹窗吓唬你说这不安全那不安全，非要你装他全家桶才罢休。一台本来值5000块的电脑，硬生生被他们拖成1000块的体验。要我说，这帮流氓软件比病毒还狠——病毒起码偷偷摸摸，他们是光明正大地祸害你。真心建议别装，Windows自带的安全防护足够用了。<br><br>
+          说到软件选择，我也多说几句：<br>
+          压缩解压用 7-Zip，别用某0压缩——解个文件还要先看广告，压缩完还弹网页，不知道的以为你电脑中毒了。<br>
+          办公就用 Office，别用某山——编辑个文档动不动就要开会员，PDF转Word要会员、去水印要会员、连多页合并都要会员。他们是穷棒子出身吗？靠这种恶心手段赚钱，吃相太难看了。<br>
+          还有PDF方面，更是让人无法接受。不是我不爱国，是他们打着国产旗号，干的事却比谁都狠——看个PDF要会员、编辑要会员、签名要会员、连打印都要会员。一个PDF阅读器硬是做成理财产品，每年续费比Office还贵。这种"国产"，支持一次就后悔一次。<br>
+          另外推荐一下 GitHub（github.com），全球最大的开源代码平台，上面有大量优秀的免费开源软件，很多功能比收费的还好用。比如7-Zip、LibreOffice、SumatraPDF等等，完全免费无广告，都是社区开发者义务维护的。有什么软件需求，先上GitHub搜一搜，十有八九能找到免费好用的替代品，不用被这些国产流氓软件绑架。<br>
+          这些流氓软件，打着免费的旗号，干着比收费还狠的事。能躲就躲，能卸载就卸载。
+        </p>
       </div>
     </div>
   </div>
 </div>
 <script>
-const { createApp } = Vue;
+const { createApp, ref, onMounted } = Vue;
 createApp({
   setup(){
+    const appRef = ref(null);
     const copyPath = () => {
       navigator.clipboard.writeText('\\\\192.168.18.100\\ftp\\档案扫描软件（胜原版）');
       ElementPlus.ElMessage.success('路径已复制，粘贴到文件管理器地址栏即可打开');
     };
-    return { copyPath };
+    onMounted(() => {
+      if (appRef.value) appRef.value.scrollTop = 0;
+    });
+    return { copyPath, appRef };
   }
 }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
 </script>

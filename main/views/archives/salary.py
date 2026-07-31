@@ -338,9 +338,9 @@ def salary_export_api(request):
             ws.cell(row=r, column=c).value = v
 
         safe_set(3, 2, p[0] or "")
-        safe_set(3, 6, fmt6(p[1]))
+        safe_set(3, 6, p[1])
         safe_set(4, 2, p[2] or "")
-        safe_set(5, 3, p[3] or "")
+        safe_set(5, 3, p[2] or "")
         safe_set(6, 3, fmt6(p[3]))
         safe_set(6, 7, fmt6(p[3]))
 
@@ -371,11 +371,15 @@ def salary_export_api(request):
         buf = BytesIO()
         wb.save(buf)
         buf.seek(0)
+
+        encoded_fn = quote(fn.encode("utf-8"))
         response = HttpResponse(
             buf,
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        response["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(fn)}"
+        response["Content-Disposition"] = (
+            f"attachment; filename=\"{encoded_fn}\"; filename*=UTF-8''{encoded_fn}"
+        )
         return response
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})

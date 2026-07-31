@@ -128,14 +128,19 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       // ==================== 数据加载 ====================
 
       const loadSalary = () => {
-        axios.get('/archives/api/salary/', { params: { rsid: rsid.value } }).then(res => {
-          if (res.data.code === 0) {
+    axios.get('/archives/api/salary/', { params: { rsid: rsid.value } }).then(res => {
+        if (res.data.code === 0) {
             salaryList.value = (res.data.data.newData || []).map(r => ({ ...r, _selected: false }));
             oldList.value = res.data.data.oldData || [];
             data93.value = res.data.data.data93 && res.data.data.data93.length ? res.data.data.data93 : [];
-          }
-        });
-      };
+        } else {
+            ElMessage.error(res.data.msg || '加载失败');
+        }
+    }).catch(err => {
+        const msg = err.response?.data?.msg || err.message || '未知错误';
+        ElMessage.error('加载失败：' + msg);
+    });
+};
 
       // ==================== 清除功能 ====================
 
@@ -278,10 +283,17 @@ const exportSalary = async () => {
         ElementPlus.ElMessage.error(data.msg || '无权限');
     } else {
         const blob = await resp.blob();
+        const disposition = resp.headers.get('content-disposition') || '';
+        let filename = '工资表.xlsx';
+        const match = disposition.match(/filename="([^"]+)"/);
+        if (match) {
+            filename = decodeURIComponent(match[1]);
+        }
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = '';
+        a.download = filename;
         a.click();
+        URL.revokeObjectURL(a.href);
     }
 };
 const printSalary = () => {

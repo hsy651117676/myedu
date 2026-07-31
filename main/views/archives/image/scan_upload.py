@@ -107,7 +107,7 @@ def upload_scan_api(request):
 
         table_name = f"RS_DESCRIPT_{rsid}"
         cursor.execute(
-            f"SELECT COUNT(*) FROM {table_name} WHERE Archid=? AND Oldfilename=?",
+            f"SELECT COUNT(*) FROM {table_name} WHERE Archid=? AND Newfilename=?",
             (archid, filename),
         )
         row = cursor.fetchone()
@@ -115,7 +115,7 @@ def upload_scan_api(request):
 
         if existing == 0:
             cursor.execute(
-                f"SELECT COUNT(DISTINCT Oldfilename) FROM {table_name} WHERE Archid=?",
+                f"SELECT COUNT(DISTINCT Newfilename) FROM {table_name} WHERE Archid=?",
                 (archid,),
             )
             row = cursor.fetchone()
@@ -145,7 +145,6 @@ def upload_scan_api(request):
             with open(save_path, "wb") as f:
                 f.write(encrypted_data)
         except Exception:
-            # 磁盘写失败，回滚数据库记录
             _delete_descript(rsid, archid, filename)
             raise
 
@@ -166,13 +165,13 @@ def _update_descript(rsid, archid, filename, length, pdfkey, fl):
         cursor = conn.cursor()
 
         cursor.execute(
-            f"SELECT COUNT(*) FROM {table_name} WHERE Archid=? AND Oldfilename=?",
+            f"SELECT COUNT(*) FROM {table_name} WHERE Archid=? AND Newfilename=?",
             (archid, filename),
         )
         row = cursor.fetchone()
         if row and row[0] > 0:
             cursor.execute(
-                f"UPDATE {table_name} SET Length=?, Pdfkey=?, uptime=? WHERE Archid=? AND Oldfilename=?",
+                f"UPDATE {table_name} SET Length=?, Pdfkey=?, uptime=? WHERE Archid=? AND Newfilename=?",
                 (length, pdfkey, uptime, archid, filename),
             )
         else:
@@ -254,9 +253,8 @@ def delete_scan_api(request):
         conn = _get_conn()
         cursor = conn.cursor()
 
-        # 查Path
         cursor.execute(
-            f"SELECT Path FROM {table_name} WHERE Archid=? AND Oldfilename=?",
+            f"SELECT Path FROM {table_name} WHERE Archid=? AND Newfilename=?",
             (archid, filename),
         )
         row = cursor.fetchone()
@@ -267,7 +265,7 @@ def delete_scan_api(request):
                 os.remove(full_path)
 
         cursor.execute(
-            f"DELETE FROM {table_name} WHERE Archid=? AND Oldfilename=?",
+            f"DELETE FROM {table_name} WHERE Archid=? AND Newfilename=?",
             (archid, filename),
         )
         conn.commit()
@@ -314,10 +312,9 @@ def update_page_count_api(request):
         old_ys = row[1] or 0
         cltm = row[0]
 
-        # 检查已上传页数
         table_name = f"RS_DESCRIPT_{rsid}"
         cursor.execute(
-            f"SELECT COUNT(DISTINCT Oldfilename) FROM {table_name} WHERE Archid=?",
+            f"SELECT COUNT(DISTINCT Newfilename) FROM {table_name} WHERE Archid=?",
             (archid,),
         )
         uploaded = cursor.fetchone()[0]
@@ -355,7 +352,7 @@ def _delete_descript(rsid, archid, filename):
         conn = _get_conn()
         cursor = conn.cursor()
         cursor.execute(
-            f"DELETE FROM {table_name} WHERE Archid=? AND Oldfilename=?",
+            f"DELETE FROM {table_name} WHERE Archid=? AND Newfilename=?",
             (archid, filename),
         )
         conn.commit()

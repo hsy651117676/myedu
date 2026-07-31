@@ -1,0 +1,191 @@
+<!-- templates/archives/image/scan_stats.html -->
+{% extends "layout/base.html" %}
+{% block title %}扫描情况统计{% endblock %}
+{% block content %}
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { height:100vh; display:flex; flex-direction:column; overflow:hidden; background:#f5f7fa; font-size:13px; }
+#app { display:flex; flex-direction:column; height:100%; }
+.toolbar { background:#fff; padding:10px 16px; border-bottom:1px solid #ebeef5; display:flex; gap:10px; align-items:center; flex-shrink:0; }
+.toolbar .el-select { width:180px; }
+.stats-table-wrap { flex:1; overflow:auto; padding:12px; }
+.stats-table { border-collapse:collapse; width:100%; background:#fff; font-size:12px; }
+.stats-table th, .stats-table td { border:1px solid #e0e0e0; padding:6px 8px; text-align:center; white-space:nowrap; }
+.stats-table th { background:#f5f7fa; font-weight:600; }
+.stats-table thead tr:first-child th { position:sticky; top:0; z-index:3; }
+.stats-table thead tr:last-child th { position:sticky; top:34px; z-index:2; }
+.stats-table th.name-col { min-width:80px; }
+.stats-table th.num-col { min-width:50px; }
+.stats-table td.name-col { text-align:left; font-weight:500; }
+.stats-table th.total-col { background:#e8f4fd; }
+.stats-table td.total-col { background:#e8f4fd; font-weight:600; }
+.stats-table th.rate-col { background:#fef8ee; }
+.stats-table td.rate-col { background:#fef8ee; font-weight:600; }
+.stats-table .done-full { color:#67c23a; }
+.stats-table .done-part { color:#e6a23c; }
+.stats-table .done-none { color:#f56c6c; }
+.stats-table th.cat-col { cursor:pointer; }
+.stats-table th.cat-col:hover { background:#d0e4fc; }
+.stats-table tr:hover td { background:#f0f7ff; }
+.footer-bar { background:#fff; padding:8px 16px; border-top:1px solid #ebeef5; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; font-size:12px; color:#666; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-size:14px;font-weight:600;">扫描情况统计</span>
+    <el-select v-model="unitId" placeholder="选择单位" filterable @change="loadStats">
+      <el-option v-for="u in units" :key="u.序号" :label="u.单位" :value="String(u.序号)"></el-option>
+    </el-select>
+    <el-button type="primary" size="small" @click="exportExcel" :disabled="!stats.length">导出Excel</el-button>
+    <span v-if="stats.length" style="color:#909399;font-size:12px;">
+      缓存10分钟，上次更新：[[ lastUpdate ]]
+    </span>
+  </div>
+
+  <div class="stats-table-wrap" v-if="stats.length">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th rowspan="2" class="name-col">姓名</th>
+          <th rowspan="2" class="rate-col">完成率</th>
+          <th colspan="3" class="total-col">合计</th>
+          <th v-for="c in cats" :key="c.fl" class="cat-col" :colspan="3">[[ c.jbbh ]]类</th>
+        </tr>
+        <tr>
+          <th class="num-col total-col">应扫</th>
+          <th class="num-col total-col">已扫</th>
+          <th class="num-col total-col">未扫</th>
+          <template v-for="c in cats" :key="'h'+c.fl">
+            <th class="num-col">应扫</th>
+            <th class="num-col">已扫</th>
+            <th class="num-col">未扫</th>
+          </template>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in stats" :key="row.RSID">
+          <td class="name-col">[[ row.name ]]</td>
+          <td class="rate-col">
+            <span v-if="row.total_should > 0 && row.rate >= 100" class="done-full">[[ row.rate ]]%</span>
+            <span v-else-if="row.total_should > 0 && row.rate > 0" class="done-part">[[ row.rate ]]%</span>
+            <span v-else-if="row.total_should > 0" class="done-none">0%</span>
+            <span v-else>-</span>
+          </td>
+          <td class="total-col">[[ row.total_should ]]</td>
+          <td class="total-col">
+            <span v-if="row.total_should > 0 && row.total_done >= row.total_should" class="done-full">[[ row.total_done ]]</span>
+            <span v-else-if="row.total_should > 0 && row.total_done > 0" class="done-part">[[ row.total_done ]]</span>
+            <span v-else-if="row.total_should > 0" class="done-none">0</span>
+            <span v-else>-</span>
+          </td>
+          <td class="total-col">
+            <span v-if="row.total_lack > 0" class="done-none">[[ row.total_lack ]]</span>
+            <span v-else-if="row.total_should > 0" class="done-full">0</span>
+            <span v-else>-</span>
+          </td>
+          <template v-for="cat in row.categories" :key="cat.fl">
+            <td>[[ cat.should || '-' ]]</td>
+            <td>
+              <span v-if="cat.should > 0 && cat.done >= cat.should" class="done-full">[[ cat.done ]]</span>
+              <span v-else-if="cat.should > 0 && cat.done > 0" class="done-part">[[ cat.done ]]</span>
+              <span v-else-if="cat.should > 0" class="done-none">0</span>
+              <span v-else>-</span>
+            </td>
+            <td>
+              <span v-if="cat.lack > 0" class="done-none">[[ cat.lack ]]</span>
+              <span v-else-if="cat.should > 0" class="done-full">0</span>
+              <span v-else>-</span>
+            </td>
+          </template>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div v-else-if="unitId" style="text-align:center;color:#909399;padding-top:80px;">加载中...</div>
+  <div v-else style="text-align:center;color:#909399;padding-top:80px;">请选择单位</div>
+
+  <div class="footer-bar" v-if="stats.length">
+    <span>共 [[ stats.length ]] 人</span>
+    <span>应扫合计：[[ totalAllShould ]] &emsp; 已扫合计：[[ totalAllDone ]] &emsp; 未扫合计：[[ totalAllLack ]] &emsp; 完成率：[[ totalRate ]]%</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  const { createApp, ref, reactive, computed, onMounted } = Vue;
+  const { ElMessage } = ElementPlus;
+  const app = createApp({
+    setup(){
+      var unitId = ref('');
+      var units = ref([]);
+      var stats = ref([]);
+      var cats = ref([]);
+      var lastUpdate = ref('');
+
+      var totalAllShould = computed(function(){
+        return stats.value.reduce(function(s, r){ return s + r.total_should; }, 0);
+      });
+      var totalAllDone = computed(function(){
+        return stats.value.reduce(function(s, r){ return s + r.total_done; }, 0);
+      });
+      var totalAllLack = computed(function(){
+        return stats.value.reduce(function(s, r){ return s + r.total_lack; }, 0);
+      });
+      var totalRate = computed(function(){
+        if (totalAllShould.value === 0) return '0.0';
+        return (totalAllDone.value / totalAllShould.value * 100).toFixed(1);
+      });
+
+      var loadUnits = async function(){
+        try {
+          var r = await axios.get('/archives/image/api/scan-stats-unit-list/');
+          var data = r.data.data || [];
+          units.value = data;
+          if (data.length === 1) {
+            unitId.value = String(data[0]['序号']);
+            loadStats();
+          }
+        } catch(e) { ElMessage.error('加载单位失败'); }
+      };
+
+      var loadStats = async function(){
+        if (!unitId.value) return;
+        stats.value = [];
+        try {
+          var r = await axios.get('/archives/image/api/scan-stats-data/', { params: { unit_id: unitId.value } });
+          stats.value = r.data.data || [];
+          cats.value = r.data.cats || [];
+          lastUpdate.value = new Date().toLocaleTimeString();
+        } catch(e) {
+          if (e.response && e.response.status === 403) { ElMessage.error('无权访问其他单位'); }
+          else { ElMessage.error('加载统计失败'); }
+        }
+      };
+
+      var exportExcel = function(){
+        if (!stats.value.length) return;
+        var html = '<table><tr><th>姓名</th><th>完成率</th><th>应扫合计</th><th>已扫合计</th><th>未扫合计</th>';
+        cats.value.forEach(function(c){ html += '<th>' + c.jbbh + '类应扫</th><th>' + c.jbbh + '类已扫</th><th>' + c.jbbh + '类未扫</th>'; });
+        html += '</tr>';
+        stats.value.forEach(function(row){
+          html += '<tr><td>' + row.name + '</td><td>' + (row.rate || 0) + '%</td><td>' + row.total_should + '</td><td>' + row.total_done + '</td><td>' + row.total_lack + '</td>';
+          row.categories.forEach(function(cat){ html += '<td>' + (cat.should || 0) + '</td><td>' + (cat.done || 0) + '</td><td>' + (cat.lack || 0) + '</td>'; });
+          html += '</tr>';
+        });
+        html += '</table>';
+        var blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = '扫描情况统计.xls';
+        a.click();
+      };
+
+      onMounted(function(){ loadUnits(); });
+      return { unitId, units, stats, cats, totalAllShould, totalAllDone, totalAllLack, totalRate, lastUpdate, loadStats, exportExcel };
+    }
+  });
+  app.config.compilerOptions.delimiters = ['[[', ']]'];
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

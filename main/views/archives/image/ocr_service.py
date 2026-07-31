@@ -1,13 +1,14 @@
 """
 OCR 批量识别服务
-只写 RS_DESCRIPT_{rsid} + 加密存盘 + AutoScan重命名 + 训练数据
-不写 RS_ARCHINFO / RS_INFO / CATETREE
+写 RS_DESCRIPT_{rsid} + RS_ARCHINFO + 加密存盘 + 删除源文件 + 训练数据
 """
 
 import os
 import io
 import re
 import hashlib
+import time
+import threading
 import logging
 import easyocr
 from PIL import Image
@@ -17,6 +18,7 @@ from django.core.cache import cache
 
 from main.utils import _get_conn, query_dict
 from main.views.archives.image.scan_service import encrypt_image
+from .ocr_preprocess import preprocess
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -24,12 +26,18 @@ os.environ["MKL_NUM_THREADS"] = "1"
 logger = logging.getLogger(__name__)
 
 _reader = None
+_gpu_lock = threading.Lock()
 
 
 def get_reader():
     global _reader
     if _reader is None:
-        _reader = easyocr.Reader(["ch_sim", "en"], gpu=False, verbose=False)
+        try:
+            _reader = easyocr.Reader(["ch_sim", "en"], gpu=True, verbose=False)
+            logger.info("easyocr 已启用 GPU 加速")
+        except Exception as e:
+            logger.warning(f"GPU 初始化失败，降级为 CPU: {e}")
+            _reader = easyocr.Reader(["ch_sim", "en"], gpu=False, verbose=False)
     return _reader
 
 
@@ -101,15 +109,76 @@ def extract_info(text):
 
     info = {"name": None, "csny": None, "worktime": None, "idcard": None}
 
-    # 姓名
-    m = re.search(r"姓名[：:]\s*([\u4e00-\u9fa5]{2,4})", text)
-    if not m:
-        m = re.search(r"姓\s*\^?\s*名\s*([\u4e00-\u9fa5]{2,4})", text)
-    if not m:
-        m = re.search(r"([\u4e00-\u9fa5]{2,4})同志", text)
+    # ====== 姓名 ======
+    name = None
+    field_chars = {
+        "性",
+        "别",
+        "出",
+        "政",
+        "职",
+        "文",
+        "岗",
+        "身",
+        "民",
+        "年",
+        "学",
+        "专",
+        "技",
+        "务",
+        "位",
+        "类",
+        "度",
+        "号",
+        "科",
+        "级",
+    }
+    field_words = {
+        "政治",
+        "出生",
+        "身份",
+        "民族",
+        "文化",
+        "职务",
+        "岗位",
+        "专业",
+        "年度",
+        "学历",
+        "面貌",
+        "类别",
+        "等级",
+    }
+
+    # 1. 标准格式：姓名：张三
+    m = re.search(r"姓名\s*[：:]\s*([\u4e00-\u9fa5]{2,4})", text)
     if m:
-        info["name"] = m.group(1)
-    else:
+        name = m.group(1)
+
+    # 2. "姓 名" 拆开，跳过所有非汉字字符：姓 ^名 | 王萍
+    if not name:
+        m = re.search(
+            r"姓[^\u4e00-\u9fa5]*名[^\u4e00-\u9fa5]*([\u4e00-\u9fa5]{2,4})", text
+        )
+        if m:
+            candidate = m.group(1)
+            if len(candidate) == 3:
+                if candidate[-1] in field_chars:
+                    candidate = candidate[:2]
+            elif len(candidate) == 4:
+                if candidate[-2:] in field_words:
+                    candidate = candidate[:2]
+                elif candidate[-1] in field_chars:
+                    candidate = candidate[:3]
+            name = candidate
+
+    # 3. "同志" 后缀：张三同志
+    if not name:
+        m = re.search(r"([\u4e00-\u9fa5]{2,4})同志", text)
+        if m:
+            name = m.group(1)
+
+    # 4. 兜底：抓 2-4 个连续汉字，排除常见非姓名词
+    if not name:
         exclude = {
             "关于",
             "根据",
@@ -144,27 +213,75 @@ def extract_info(text):
             "报告",
             "通知",
             "团结",
+            "政治",
+            "党员",
+            "团员",
+            "群众",
+            "中共",
+            "民族",
+            "汉族",
+            "文化",
+            "程度",
+            "大学",
+            "本科",
+            "大专",
+            "中专",
+            "高中",
+            "初中",
+            "小学",
+            "出生",
+            "年月",
+            "参加",
+            "身份",
+            "号码",
+            "性别",
+            "男女",
+            "贵州",
+            "贵州省",
+            "贵州省事",
+            "盘州",
+            "柏果",
+            "洒基",
+            "事业单位",
+            "工作人员",
+            "特岗教师",
+            "二级教师",
+            "教师",
+            "班主任",
+            "数学",
+            "语文",
+            "英语",
+            "教育教学",
         }
         words = re.findall(r"[\u4e00-\u9fa5]{2,4}", text)
         for w in words:
             if w not in exclude:
-                info["name"] = w
+                name = w
                 break
 
-    # 出生年月
-    m = re.search(r"出生年月[：:]\s*(\d{4})\s*[.]\s*(\d{1,2})", text)
+    info["name"] = name
+
+    # ====== 出生年月 ======
+    m = re.search(
+        r"(?:出生年月|出生日期|出生时间)\s*[：:，,\s]*\s*(\d{4})\s*[.年、,\s]*\s*(\d{1,2})",
+        text,
+    )
     if m:
         info["csny"] = m.group(1) + m.group(2).zfill(2)
 
-    # 参工时间
+    # ====== 参工时间 ======
     m = re.search(
-        r"(?:参加[工工]作时间|参工时间)[：:]\s*(\d{4})\s*[.]\s*(\d{1,2})", text
+        r"(?:参加工作|参工时间|参加工作时间|参加革命工作|入伍时间|工龄起算)\s*[：:，,\s]*\s*(\d{4})\s*[.年、,\s]*\s*(\d{1,2})",
+        text,
     )
     if m:
         info["worktime"] = m.group(1) + m.group(2).zfill(2)
 
-    # 身份证号
-    m = re.search(r"(?:身份证号|身份证号码|身份证)[：:]\s*(\d{17}[\dXx])", text)
+    # ====== 身份证号 ======
+    m = re.search(
+        r"(?:身份证号|身份证号码|身份证编号|公民身份号码|证件号码)\s*[：:，,\s]*\s*(\d{17}[\dXx])",
+        text,
+    )
     if not m:
         m = re.search(r"(\d{17}[\dXx])", text)
     if m:
@@ -173,51 +290,103 @@ def extract_info(text):
     return info
 
 
+# ==================== OCR 单张图片 ====================
+
+
 def ocr_first_page(image_path):
-    """OCR 单张图片"""
-    reader = get_reader()
+    """
+    OCR 单张图片（带预处理 + 缓存 + GPU锁）
+    缓存只存 OCR 原文，用文件 md5 做 key
+    """
+    # ---- 用文件 md5 做缓存 key ----
     try:
-        result = reader.readtext(image_path)
-        full_text = " ".join([item[1] for item in result])
-        info = extract_info(full_text)
-        return full_text, info
-    except Exception as e:
-        logger.error(f"OCR failed: {image_path}, {e}")
+        with open(image_path, "rb") as f:
+            file_md5 = hashlib.md5(f.read()).hexdigest()
+        cache_key = f"ocr:text:{file_md5}"
+    except OSError:
+        cache_key = None
+
+    if cache_key:
+        cached_text = cache.get(cache_key)
+        if cached_text:
+            logger.debug(f"OCR 缓存命中: {image_path}")
+            info = extract_info(cached_text)
+            return cached_text, info
+
+    # ---- 预处理（CPU，不加锁，可并发） ----
+    start_time = time.time()
+    processed = preprocess(image_path)
+
+    if processed is None:
         return "", {"name": None, "csny": None, "worktime": None, "idcard": None}
+
+    preprocess_time = time.time() - start_time
+
+    # ---- OCR（GPU，加锁，串行） ----
+    full_text = ""
+    with _gpu_lock:
+        reader = get_reader()
+        try:
+            result = reader.readtext(processed)
+            full_text = " ".join([item[1] for item in result])
+            ocr_time = time.time() - start_time - preprocess_time
+            logger.debug(
+                f"OCR 完成: {image_path} "
+                f"(预处理 {preprocess_time:.2f}s, OCR {ocr_time:.2f}s)"
+            )
+        except Exception as e:
+            logger.error(f"OCR failed: {image_path}, {e}")
+            return "", {"name": None, "csny": None, "worktime": None, "idcard": None}
+
+    # ---- 提取信息（每次都跑，不缓存） ----
+    info = extract_info(full_text)
+
+    # ---- 只缓存 OCR 原文 ----
+    if cache_key:
+        cache.set(cache_key, full_text, 1800)
+
+    return full_text, info
 
 
 # ==================== 匹配 ====================
 
 
-def _filter_by_field(candidates, ocr_val, field_name):
-    """用 OCR 提取的字段过滤候选人"""
-    if not ocr_val or len(candidates) <= 1:
-        return candidates
-    filtered = [
-        p
-        for p in candidates
-        if p.get(field_name) and str(p[field_name]).startswith(ocr_val[:4])
-    ]
-    return filtered if filtered else candidates
-
-
 def match_person(ocr_info, person_list, matched_rsids):
     """
-    分层匹配：精确 → 模糊 → 单字
-    已匹配的不再参与
+    分层匹配：
+    第一轮：身份证精确匹配（最高优先级）
+    第二轮：姓名精确匹配 + 辅助字段过滤
+    第三轮：姓名模糊匹配 + 辅助字段过滤
     """
     ocr_name = ocr_info.get("name")
     ocr_csny = ocr_info.get("csny")
     ocr_worktime = ocr_info.get("worktime")
     ocr_idcard = ocr_info.get("idcard")
 
+    available = [p for p in person_list if p["RSID"] not in matched_rsids]
+
+    # ====== 第一轮：身份证精确匹配 ======
+    if ocr_idcard and len(ocr_idcard) == 18:
+        idcard_match = [p for p in available if p.get("IDCARD") == ocr_idcard]
+        if len(idcard_match) == 1:
+            return {
+                "status": "matched",
+                "person": idcard_match[0],
+                "candidates": [],
+                "match_by": "身份证精确匹配",
+            }
+        elif len(idcard_match) > 1:
+            return {
+                "status": "conflict",
+                "person": None,
+                "candidates": idcard_match,
+                "match_by": "身份证重号(数据异常)",
+            }
+
     if not ocr_name:
         return {"status": "not_found", "person": None, "candidates": [], "match_by": ""}
 
-    # 可用名单（排除已匹配的）
-    available = [p for p in person_list if p["RSID"] not in matched_rsids]
-
-    # ====== 第一轮：姓名精确匹配 ======
+    # ====== 第二轮：姓名精确匹配 ======
     exact = [p for p in available if p["name"] == ocr_name]
 
     if len(exact) == 1:
@@ -229,40 +398,22 @@ def match_person(ocr_info, person_list, matched_rsids):
         }
 
     if len(exact) > 1:
-        # 逐级过滤
-        candidates = exact
-        candidates = _filter_by_field(candidates, ocr_csny, "CSNY")
-        if len(candidates) == 1:
+        filtered = _filter_by_fields(exact, ocr_csny, ocr_worktime)
+        if len(filtered) == 1:
             return {
                 "status": "matched",
-                "person": candidates[0],
+                "person": filtered[0],
                 "candidates": exact,
-                "match_by": "姓名+出生年月",
-            }
-        candidates = _filter_by_field(candidates, ocr_worktime, "WORKTIME")
-        if len(candidates) == 1:
-            return {
-                "status": "matched",
-                "person": candidates[0],
-                "candidates": exact,
-                "match_by": "姓名+参工时间",
-            }
-        candidates = _filter_by_field(candidates, ocr_idcard, "IDCARD")
-        if len(candidates) == 1:
-            return {
-                "status": "matched",
-                "person": candidates[0],
-                "candidates": exact,
-                "match_by": "姓名+身份证号",
+                "match_by": _build_match_by("姓名精确", ocr_csny, ocr_worktime),
             }
         return {
             "status": "conflict",
             "person": None,
-            "candidates": candidates,
+            "candidates": filtered if filtered else exact,
             "match_by": "姓名重名(无法区分)",
         }
 
-    # ====== 第二轮：姓名模糊匹配 ======
+    # ====== 第三轮：姓名模糊匹配 ======
     fuzzy = [
         p
         for p in available
@@ -271,84 +422,70 @@ def match_person(ocr_info, person_list, matched_rsids):
 
     if len(fuzzy) == 1:
         return {
-            "status": "matched",
+            "status": "fuzzy",
             "person": fuzzy[0],
             "candidates": [],
             "match_by": "姓名模糊匹配",
         }
 
     if len(fuzzy) > 1:
-        candidates = fuzzy
-        candidates = _filter_by_field(candidates, ocr_csny, "CSNY")
-        if len(candidates) == 1:
+        filtered = _filter_by_fields(fuzzy, ocr_csny, ocr_worktime)
+        if len(filtered) == 1:
             return {
-                "status": "matched",
-                "person": candidates[0],
+                "status": "fuzzy",
+                "person": filtered[0],
                 "candidates": fuzzy,
-                "match_by": "模糊+出生年月",
-            }
-        candidates = _filter_by_field(candidates, ocr_worktime, "WORKTIME")
-        if len(candidates) == 1:
-            return {
-                "status": "matched",
-                "person": candidates[0],
-                "candidates": fuzzy,
-                "match_by": "模糊+参工时间",
-            }
-        candidates = _filter_by_field(candidates, ocr_idcard, "IDCARD")
-        if len(candidates) == 1:
-            return {
-                "status": "matched",
-                "person": candidates[0],
-                "candidates": fuzzy,
-                "match_by": "模糊+身份证号",
+                "match_by": _build_match_by("模糊", ocr_csny, ocr_worktime),
             }
         return {
             "status": "conflict",
             "person": None,
-            "candidates": candidates,
+            "candidates": filtered if filtered else fuzzy,
             "match_by": "姓名模糊重名",
         }
 
-    # ====== 第三轮：单字匹配 ======
-    if len(ocr_name) >= 2:
-        for char in ocr_name:
-            single = [p for p in available if char in (p["name"] or "")]
-            if len(single) == 1:
-                return {
-                    "status": "matched",
-                    "person": single[0],
-                    "candidates": [],
-                    "match_by": f'单字匹配("{char}")',
-                }
-            if len(single) > 1:
-                candidates = single
-                candidates = _filter_by_field(candidates, ocr_csny, "CSNY")
-                if len(candidates) == 1:
-                    return {
-                        "status": "matched",
-                        "person": candidates[0],
-                        "candidates": single,
-                        "match_by": f"单字+出生年月",
-                    }
-                candidates = _filter_by_field(candidates, ocr_worktime, "WORKTIME")
-                if len(candidates) == 1:
-                    return {
-                        "status": "matched",
-                        "person": candidates[0],
-                        "candidates": single,
-                        "match_by": f"单字+参工时间",
-                    }
-                candidates = _filter_by_field(candidates, ocr_idcard, "IDCARD")
-                if len(candidates) == 1:
-                    return {
-                        "status": "matched",
-                        "person": candidates[0],
-                        "candidates": single,
-                        "match_by": f"单字+身份证号",
-                    }
-
+    # ====== 未匹配 ======
     return {"status": "not_found", "person": None, "candidates": [], "match_by": ""}
+
+
+def _filter_by_fields(candidates, ocr_csny, ocr_worktime):
+    """用 OCR 提取的出生年月和参工时间过滤候选人列表。"""
+    if not candidates or len(candidates) <= 1:
+        return candidates
+
+    result = candidates
+
+    if ocr_csny and len(ocr_csny) >= 4:
+        year = ocr_csny[:4]
+        filtered = [
+            p for p in result if p.get("CSNY") and str(p["CSNY"]).startswith(year)
+        ]
+        if len(filtered) == 1:
+            return filtered
+        if len(filtered) > 1:
+            result = filtered
+
+    if ocr_worktime and len(ocr_worktime) >= 4:
+        year = ocr_worktime[:4]
+        filtered = [
+            p
+            for p in result
+            if p.get("WORKTIME") and str(p["WORKTIME"]).startswith(year)
+        ]
+        if len(filtered) >= 1:
+            result = filtered
+
+    return result
+
+
+def _build_match_by(prefix, ocr_csny, ocr_worktime):
+    """生成匹配依据描述"""
+    parts = [prefix]
+    if ocr_csny:
+        parts.append("出生年月")
+    if ocr_worktime:
+        parts.append("参工时间")
+    return "+".join(parts)
 
 
 # ==================== 文件处理 ====================
@@ -371,52 +508,29 @@ def split_files(auto_scan_dir, pages_per_person):
     return groups
 
 
-# ==================== OCR 校验 ====================
+def process_one(idx, group, scan_dir, person_list, matched_rsids):
+    """处理单个分组：OCR + 匹配"""
+    first_file = group[0]
+    filepath = os.path.join(scan_dir, first_file)
+    full_text, ocr_info = ocr_first_page(filepath)
 
+    match_result = match_person(ocr_info, person_list, matched_rsids)
 
-def ocr_verify(auto_scan_dir, pages_per_person, person_list):
-    """批量 OCR 校验，32线程并行，已匹配的移除"""
-    groups = split_files(auto_scan_dir, pages_per_person)
-    results = [None] * len(groups)
-    matched_rsids = set()
-
-    def process_one(idx, group):
-        first_file = group[0]
-        filepath = os.path.join(auto_scan_dir, first_file)
-        full_text, ocr_info = ocr_first_page(filepath)
-        # 用当前已匹配名单
-        match_result = match_person(ocr_info, person_list, matched_rsids)
-        if match_result["person"]:
-            matched_rsids.add(match_result["person"]["RSID"])
-        return idx, {
-            "index": idx + 1,
-            "files": group,
-            "first_file": first_file,
-            "last_file": group[-1],
-            "ocr_text": full_text[:500],
-            "ocr_name": ocr_info.get("name") or "",
-            "ocr_csny": ocr_info.get("csny") or "",
-            "ocr_worktime": ocr_info.get("worktime") or "",
-            "ocr_idcard": ocr_info.get("idcard") or "",
-            "match_status": match_result["status"],
-            "matched_person": match_result["person"],
-            "candidates": match_result["candidates"],
-            "match_by": match_result["match_by"],
-        }
-
-    with ThreadPoolExecutor(max_workers=32) as executor:
-        futures = {executor.submit(process_one, i, g): i for i, g in enumerate(groups)}
-        for future in as_completed(futures):
-            idx, data = future.result()
-            results[idx] = data
-
-    # 线程间 matched_rsids 可能不全，再串行兜底一次
-    all_matched = set()
-    for r in results:
-        if r and r["matched_person"]:
-            all_matched.add(r["matched_person"]["RSID"])
-
-    return results
+    return idx, {
+        "index": idx + 1,
+        "files": group,
+        "first_file": first_file,
+        "last_file": group[-1],
+        "ocr_text": full_text[:500],
+        "ocr_name": ocr_info.get("name") or "",
+        "ocr_csny": ocr_info.get("csny") or "",
+        "ocr_worktime": ocr_info.get("worktime") or "",
+        "ocr_idcard": ocr_info.get("idcard") or "",
+        "match_status": match_result["status"],
+        "matched_person": match_result["person"],
+        "candidates": match_result["candidates"],
+        "match_by": match_result["match_by"],
+    }
 
 
 # ==================== PDF ====================
@@ -502,21 +616,45 @@ def generate_existing_pdf(rsid, fl, archid, image_type="YS"):
 
 # ==================== 写入 ====================
 
+ALLOWED_MATCH_BY = [
+    "身份证精确匹配",
+    "姓名精确匹配",
+    "姓名精确+出生年月",
+    "姓名精确+参工时间",
+    "姓名精确+出生年月+参工时间",
+    "人工修正",
+]
 
-def batch_write(verified_items, fl, cltm, fyear, fmonth, fday, ys, image_type="YS"):
+
+def batch_write(
+    verified_items, fl, cltm, fyear, fmonth, fday, ys, bz="", image_type="YS"
+):
     """
-    批量写入 RS_DESCRIPT + 加密存盘 + AutoScan重命名 + 训练数据
-    前端直接传 ARCHID，不再查表
+    批量写入 RS_ARCHINFO + RS_DESCRIPT + 加密存盘 + 删除源文件 + 训练数据
+    RS_ARCHINFO 按材料形成日期排序定 XH，已有则更新，无则插入
+    校验 match_by，不在白名单内的拒绝写入
+    全部成功后删除源文件，失败则保留
     """
     results = []
     for item in verified_items:
         rsid = item["rsid"]
-        archid = item["archid"]
         files = item["files"]
         ocr_name = item.get("ocr_name", "")
         ocr_csny = item.get("ocr_csny", "")
         ocr_text = item.get("ocr_text", "")
+        match_by = item.get("match_by", "")
         auto_scan_dir = item["auto_scan_dir"]
+
+        # 校验匹配方式
+        if match_by not in ALLOWED_MATCH_BY:
+            results.append(
+                {
+                    "rsid": rsid,
+                    "status": "error",
+                    "msg": f"匹配方式 '{match_by}' 不在白名单，请确认后再写入",
+                }
+            )
+            continue
 
         # 查姓名
         person_info = query_dict("SELECT XM FROM RS_INFO WHERE RSID=?", (rsid,))
@@ -524,6 +662,90 @@ def batch_write(verified_items, fl, cltm, fyear, fmonth, fday, ys, image_type="Y
 
         try:
             rsid_padded = str(rsid).zfill(8)
+
+            # ========== 写入 RS_ARCHINFO ==========
+            conn = _get_conn()
+            cursor = conn.cursor()
+
+            # 查是否已存在（同年月日 + 同材料名 + 同页数）
+            cursor.execute(
+                "SELECT ARCHID, XH FROM RS_ARCHINFO WHERE RSID=? AND FL=? AND FYEAR=? AND ISNULL(FMONTH,0)=? AND ISNULL(FDAY,0)=? AND CLTM=? AND YS=?",
+                (
+                    int(rsid),
+                    int(fl),
+                    int(fyear),
+                    int(fmonth or 0),
+                    int(fday or 0),
+                    cltm,
+                    int(ys),
+                ),
+            )
+            existing = cursor.fetchone()
+
+            if existing:
+                # 已存在：更新 BZ
+                archid, xh = existing
+                cursor.execute(
+                    "UPDATE RS_ARCHINFO SET BZ=? WHERE ARCHID=?",
+                    (bz or "", archid),
+                )
+            else:
+                # 不存在：按日期找插入位置
+                cursor.execute(
+                    """SELECT ISNULL(MIN(XH), 0) FROM RS_ARCHINFO 
+                       WHERE RSID=? AND FL=? 
+                         AND (FYEAR > ? OR (FYEAR = ? AND ISNULL(FMONTH,0) > ?) OR (FYEAR = ? AND ISNULL(FMONTH,0) = ? AND ISNULL(FDAY,0) >= ?))""",
+                    (
+                        int(rsid),
+                        int(fl),
+                        int(fyear),
+                        int(fyear),
+                        int(fmonth or 0),
+                        int(fyear),
+                        int(fmonth or 0),
+                        int(fday or 0),
+                    ),
+                )
+                row = cursor.fetchone()
+
+                if row and row[0] > 0:
+                    # 插入到该位置，后面的 XH 都 +1
+                    xh = row[0]
+                    cursor.execute(
+                        "UPDATE RS_ARCHINFO SET XH = XH + 1 WHERE RSID=? AND FL=? AND XH >= ?",
+                        (int(rsid), int(fl), xh),
+                    )
+                else:
+                    # 追加到末尾
+                    cursor.execute(
+                        "SELECT ISNULL(MAX(XH), 0) + 1 FROM RS_ARCHINFO WHERE RSID=? AND FL=?",
+                        (int(rsid), int(fl)),
+                    )
+                    xh = cursor.fetchone()[0]
+
+                # 插入新记录
+                cursor.execute(
+                    "INSERT INTO RS_ARCHINFO (RSID, XH, FL, CLTM, FYEAR, FMONTH, FDAY, YS, BZ, ADDTIME) VALUES (?,?,?,?,?,?,?,?,?,GETDATE())",
+                    (
+                        int(rsid),
+                        xh,
+                        int(fl),
+                        cltm,
+                        int(fyear),
+                        int(fmonth or 0),
+                        int(fday or 0),
+                        int(ys),
+                        bz or "",
+                    ),
+                )
+                cursor.execute("SELECT @@IDENTITY AS ARCHID")
+                archid = cursor.fetchone()[0]
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            # ========== 加密存盘 + 写 RS_DESCRIPT ==========
             image_dir = os.path.join(
                 settings.SCAN_IMAGE_BASE_DIR,
                 image_type,
@@ -573,7 +795,7 @@ def batch_write(verified_items, fl, cltm, fyear, fmonth, fday, ys, image_type="Y
                     )
                 else:
                     cursor.execute(
-                        f"INSERT INTO {table_name} (Archid, Sxh, Oldfilename, Newfilename, Length, Pdfkey, Path, uptime) VALUES (?,?,?,?,?,?,GETDATE())",
+                        f"INSERT INTO {table_name} (Archid, Sxh, Oldfilename, Newfilename, Length, Pdfkey, Path, uptime) VALUES (?,?,?,?,?,?,?,GETDATE())",
                         (
                             archid,
                             sxh,
@@ -585,12 +807,17 @@ def batch_write(verified_items, fl, cltm, fyear, fmonth, fday, ys, image_type="Y
                         ),
                     )
 
-                new_name = f"{rsid}_{archid}_{sxh:03d}（{pname}）.JPG"
-                os.rename(src_path, os.path.join(auto_scan_dir, new_name))
-
             conn.commit()
             cursor.close()
             conn.close()
+
+            # ---- 全部成功，删除源文件 ----
+            for src_filename in files:
+                src_path = os.path.join(auto_scan_dir, src_filename)
+                try:
+                    os.remove(src_path)
+                except OSError as e:
+                    logger.warning(f"删除源文件失败: {src_path}, {e}")
 
             # 训练数据
             try:

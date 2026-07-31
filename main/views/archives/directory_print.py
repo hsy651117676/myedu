@@ -323,5 +323,8 @@ def print_export_api(request):
         buf,
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    response["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(filename)}"
+    encoded_fn = quote(filename.encode("utf-8"))
+    response["Content-Disposition"] = (
+        f"attachment; filename=\"{encoded_fn}\"; filename*=UTF-8''{encoded_fn}"
+    )
     return response

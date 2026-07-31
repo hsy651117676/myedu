@@ -1,4 +1,5 @@
 # mediaplayer.py
+
 import os
 import json
 import hashlib
@@ -12,6 +13,7 @@ from django.http import HttpResponse
 import re
 import mimetypes
 from django.http import HttpResponse, StreamingHttpResponse
+from urllib.parse import quote
 
 MEDIA_BASE_DIR = settings.MEDIA_BASE_DIR
 ALLOWED_AUDIO = {"mp3", "wav", "flac", "ogg", "aac", "wma"}
@@ -121,7 +123,6 @@ def play_api(request):
         if not os.path.exists(full_path):
             raise Http404
 
-        # 播放次数+1
         cursor.execute(
             f"UPDATE {table} SET PlayCount = PlayCount + 1 WHERE ID = %s",
             (int(file_id),),
@@ -129,7 +130,6 @@ def play_api(request):
 
     ext = row[2] or os.path.splitext(row[0])[1].lstrip(".").lower()
 
-    # 根据扩展名设置 Content-Type
     if ext in ALLOWED_AUDIO:
         content_type = f"audio/{ext}"
     elif ext in ALLOWED_VIDEO:
@@ -137,16 +137,22 @@ def play_api(request):
     else:
         content_type = "application/octet-stream"
 
-    # 更准确的 MIME 类型
     mime_type, _ = mimetypes.guess_type(full_path)
     if mime_type:
         content_type = mime_type
+
+    is_download = request.GET.get("download") == "1"
+    filename = row[1]
+    encoded_filename = quote(filename.encode("utf-8"))
+    if is_download:
+        disposition = f'attachment; filename="{encoded_filename}"'
+    else:
+        disposition = f'inline; filename="{encoded_filename}"'
 
     file_size = os.path.getsize(full_path)
     range_header = request.META.get("HTTP_RANGE", "").strip()
 
     if range_header:
-        # 解析 Range: bytes=0-1024
         range_match = re.search(r"bytes\s*=\s*(\d+)\s*-\s*(\d*)", range_header)
         if range_match:
             start = int(range_match.group(1))
@@ -154,7 +160,7 @@ def play_api(request):
             end = int(end) if end else file_size - 1
 
             if start >= file_size:
-                return HttpResponse(status=416)  # Range Not Satisfiable
+                return HttpResponse(status=416)
 
             end = min(end, file_size - 1)
             content_length = end - start + 1
@@ -167,14 +173,13 @@ def play_api(request):
             resp["Content-Range"] = f"bytes {start}-{end}/{file_size}"
             resp["Content-Length"] = str(content_length)
             resp["Accept-Ranges"] = "bytes"
-            resp["Content-Disposition"] = f'inline; filename="{row[1]}"'
+            resp["Content-Disposition"] = disposition
             return resp
 
-    # 没 Range 头就返回完整文件（小文件或首次请求）
     resp = FileResponse(open(full_path, "rb"), content_type=content_type)
     resp["Content-Length"] = str(file_size)
     resp["Accept-Ranges"] = "bytes"
-    resp["Content-Disposition"] = f'inline; filename="{row[1]}"'
+    resp["Content-Disposition"] = disposition
     return resp
 
 

@@ -111,7 +111,7 @@ def archive_tree_all_api(request):
         try:
             table_name = f"RS_DESCRIPT_{rsid}"
             cursor.execute(
-                f"SELECT Archid, Sxh, Length, uptime, Oldfilename, Pdfkey FROM {table_name} ORDER BY Archid, Sxh"
+                f"SELECT Archid, Sxh, Length, uptime, Newfilename, Pdfkey FROM {table_name} ORDER BY Archid, Sxh"
             )
             scans = {}
             for r in cursor.fetchall():
