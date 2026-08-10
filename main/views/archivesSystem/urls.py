@@ -52,13 +52,26 @@ urlpatterns = [
     path("api/transfer/same-xs-list/", archive_transfer.same_xs_list_api),
     path("api/transfer/save/", archive_transfer.save_api),
     # 机构维护
-    path("organization/", organization.page),
-    path("api/organization/tree/", organization.tree_api),
-    path("api/organization/tree-children/", organization.tree_children_api),
-    path("api/organization/detail/", organization.detail_api),
-    path("api/organization/save/", organization.save_api),
-    path("api/organization/delete/", organization.delete_api),
-    path("api/organization/sort/", organization.sort_api),
+    path("organization/", organization.page, name="organization_page"),
+    path("api/organization/tree/", organization.tree_api, name="org_tree_api"),
+    path(
+        "api/organization/tree-children/",
+        organization.tree_children_api,
+        name="org_tree_children_api",
+    ),
+    path("api/organization/save/", organization.save_api, name="org_save_api"),
+    path("api/organization/delete/", organization.delete_api, name="org_delete_api"),
+    # 人员维护
+    path(
+        "api/organization/person-list/",
+        organization.person_list_api,
+        name="org_person_list_api",
+    ),
+    path(
+        "api/organization/person-create/",
+        organization.person_create_api,
+        name="org_person_create_api",
+    ),
     # 党组会管理
     path("meeting-admin/", meeting_admin.page),
     path("api/meeting-admin-list/", meeting_admin.list_api),

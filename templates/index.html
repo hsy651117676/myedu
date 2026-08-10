@@ -1,12 +1,12 @@
 {% extends 'layout/base.html' %}
-{% block title %}人事档案信息管理平台{% endblock %}
+{% block title %}干部人事档案信息管理平台{% endblock %}
 
 {% block content %}
 <div id="app" style="display:flex;flex-direction:column;height:100vh;">
   <header style="height:40px;background:#1f2d3d;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:100;">
     <div style="display:flex;align-items:center;gap:10px;">
       <span @click="isCollapse=!isCollapse" style="cursor:pointer;font-size:16px;width:60px;">☰</span>
-      <span style="font-size:18px;font-weight:bold;">盘州市教育局人事档案信息管理平台</span>
+      <span style="font-size:18px;font-weight:bold;">干部人事档案信息管理平台</span>
     </div>
     <div class="user-info">
       <el-dropdown trigger="click" @command="handleCommand">

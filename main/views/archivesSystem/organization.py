@@ -1,6 +1,7 @@
 """
-机构维护 - 树形展示、拖拽排序、右键菜单、弹窗编辑
+机构与人员维护
 """
+
 import json
 import logging
 from django.shortcuts import render
@@ -19,23 +20,32 @@ def page(request):
     return render(request, "archivesSystem/organization.html")
 
 
+# ==================== 机构树 ====================
+
+
 @login_required
 @admin_required
 def tree_api(request):
-    """第一层分组 PID=-1"""
+    """第一层：PID = -1，带子节点数和人员数"""
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT BM, BMMC, BMDM, PID, SXH FROM DEPART WHERE PID=-1 ORDER BY SXH, BM"
-        )
+        cursor.execute("""
+            SELECT d.BM, d.BMMC, d.BMDM, d.SXH, d.PID,
+                   (SELECT COUNT(*) FROM DEPART WHERE PID = d.BM) AS childCount,
+                   (SELECT COUNT(*) FROM USERS_DEPARTMENT WHERE DEPARTMENTID = d.BM) AS personCount
+            FROM DEPART d
+            WHERE d.PID = -1
+            ORDER BY d.SXH, d.BM
+        """)
         cols = [c[0] for c in cursor.description]
         rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
         cursor.close()
         return JsonResponse({"code": 0, "data": rows})
     except Exception as e:
-        return JsonResponse({"code": 500, "msg": str(e)})
+        logger.error(f"获取机构树失败: {e}")
+        return JsonResponse({"code": 500, "msg": "获取机构树失败"})
     finally:
         if conn:
             conn.close()
@@ -44,71 +54,46 @@ def tree_api(request):
 @login_required
 @admin_required
 def tree_children_api(request):
-    """子节点"""
-    pid = request.GET.get("pid", "")
-    if not pid:
-        return JsonResponse({"code": 400})
+    """子节点，带子节点数和人员数"""
+    pid = request.GET.get("pid")
+    if pid is None:
+        return JsonResponse({"code": 400, "msg": "缺少pid"})
+
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT BM, BMMC, BMDM, PID, SXH FROM DEPART WHERE PID=? ORDER BY SXH, BM",
-            (pid,)
+            """
+            SELECT d.BM, d.BMMC, d.BMDM, d.SXH, d.PID,
+                   (SELECT COUNT(*) FROM DEPART WHERE PID = d.BM) AS childCount,
+                   (SELECT COUNT(*) FROM USERS_DEPARTMENT WHERE DEPARTMENTID = d.BM) AS personCount
+            FROM DEPART d
+            WHERE d.PID = ?
+            ORDER BY d.SXH, d.BM
+        """,
+            (int(pid),),
         )
         cols = [c[0] for c in cursor.description]
         rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
         cursor.close()
         return JsonResponse({"code": 0, "data": rows})
     except Exception as e:
-        return JsonResponse({"code": 500, "msg": str(e)})
+        logger.error(f"获取子节点失败: {e}")
+        return JsonResponse({"code": 500, "msg": "获取子节点失败"})
     finally:
         if conn:
             conn.close()
 
 
-@login_required
-@admin_required
-def detail_api(request):
-    """机构详情"""
-    bm = request.GET.get("bm", "")
-    if not bm:
-        return JsonResponse({"code": 400})
-    conn = None
-    try:
-        conn = _get_conn()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT BM, BMMC, BMDM, PID, SXH FROM DEPART WHERE BM=?", (bm,)
-        )
-        cols = [c[0] for c in cursor.description]
-        row = cursor.fetchone()
-        cursor.close()
-        if row:
-            data = dict(zip(cols, row))
-            # 查上级名称
-            if data.get("PID") and data["PID"] != -1:
-                cursor = conn.cursor()
-                cursor.execute("SELECT BMMC FROM DEPART WHERE BM=?", (str(data["PID"]),))
-                pr = cursor.fetchone()
-                data["parent_name"] = pr[0] if pr else ""
-                cursor.close()
-            else:
-                data["parent_name"] = ""
-            return JsonResponse({"code": 0, "data": data})
-        return JsonResponse({"code": 404, "msg": "机构不存在"})
-    except Exception as e:
-        return JsonResponse({"code": 500, "msg": str(e)})
-    finally:
-        if conn:
-            conn.close()
+# ==================== 机构操作 ====================
 
 
 @login_required
 @admin_required
 @csrf_exempt
 def save_api(request):
-    """新增或更新"""
+    """新增机构"""
     if request.method != "POST":
         return JsonResponse({"code": 405})
     try:
@@ -116,11 +101,9 @@ def save_api(request):
     except:
         return JsonResponse({"code": 400, "msg": "参数格式错误"})
 
-    action = data.get("action", "update")
-    bm = str(data.get("bm", "")).strip()
     bmmc = str(data.get("bmmc", "")).strip()
     bmdm = str(data.get("bmdm", "")).strip()
-    pid = str(data.get("pid", "")).strip()
+    pid = data.get("pid")
     sxh = data.get("sxh", 0)
 
     if not bmmc:
@@ -130,31 +113,18 @@ def save_api(request):
     try:
         conn = _get_conn()
         cursor = conn.cursor()
-
-        if action == "create":
-            cursor.execute("SELECT ISNULL(MAX(BM),0)+1 FROM DEPART")
-            new_bm = str(cursor.fetchone()[0])
-            cursor.execute(
-                "INSERT INTO DEPART (BM, BMMC, BMDM, PID, SXH) VALUES (?,?,?,?,?)",
-                (new_bm, bmmc, bmdm, pid, int(sxh) if sxh else 0)
-            )
-            conn.commit()
-            cursor.close()
-            return JsonResponse({"code": 0, "msg": "新增成功", "bm": new_bm})
-        else:
-            if not bm:
-                return JsonResponse({"code": 400, "msg": "缺少机构ID"})
-            cursor.execute(
-                "UPDATE DEPART SET BMMC=?, BMDM=?, SXH=? WHERE BM=?",
-                (bmmc, bmdm, int(sxh) if sxh else 0, bm)
-            )
-            conn.commit()
-            cursor.close()
-            return JsonResponse({"code": 0, "msg": "保存成功"})
+        cursor.execute(
+            "INSERT INTO DEPART (BMMC, BMDM, SXH, PID) VALUES (?, ?, ?, ?)",
+            (bmmc, bmdm if bmdm else None, int(sxh) if sxh else 0, pid),
+        )
+        conn.commit()
+        cursor.close()
+        return JsonResponse({"code": 0, "msg": "新增成功"})
     except Exception as e:
         if conn:
             conn.rollback()
-        return JsonResponse({"code": 500, "msg": str(e)})
+        logger.error(f"新增机构失败: {e}")
+        return JsonResponse({"code": 500, "msg": "新增机构失败"})
     finally:
         if conn:
             conn.close()
@@ -170,32 +140,105 @@ def delete_api(request):
     try:
         data = json.loads(request.body)
     except:
-        return JsonResponse({"code": 400})
+        return JsonResponse({"code": 400, "msg": "参数格式错误"})
 
-    bm = str(data.get("bm", "")).strip()
-    if not bm:
+    bm = data.get("bm")
+    if bm is None:
         return JsonResponse({"code": 400, "msg": "缺少机构ID"})
 
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM DEPART WHERE PID=?", (bm,))
+
+        # 检查是否有子机构
+        cursor.execute("SELECT COUNT(*) FROM DEPART WHERE PID = ?", (bm,))
         if cursor.fetchone()[0] > 0:
             cursor.close()
-            return JsonResponse({"code": 400, "msg": "该机构下有子机构，无法删除"})
-        cursor.execute("SELECT COUNT(*) FROM USERS_DEPARTMENT WHERE DEPARTMENTID=?", (bm,))
-        if cursor.fetchone()[0] > 0:
-            cursor.close()
-            return JsonResponse({"code": 400, "msg": "该机构下有人员，无法删除"})
-        cursor.execute("DELETE FROM DEPART WHERE BM=?", (bm,))
+            return JsonResponse(
+                {"code": 400, "msg": "该机构下有子机构，请先删除子机构"}
+            )
+
+        # 检查子树内是否有人
+        all_dept_ids = set()
+        _collect_sub_depts(conn, bm, all_dept_ids)
+        if all_dept_ids:
+            placeholders = ",".join("?" * len(all_dept_ids))
+            cursor.execute(
+                f"SELECT COUNT(*) FROM USERS_DEPARTMENT WHERE DEPARTMENTID IN ({placeholders})",
+                tuple(all_dept_ids),
+            )
+            if cursor.fetchone()[0] > 0:
+                cursor.close()
+                return JsonResponse(
+                    {"code": 400, "msg": "该机构或其子机构下有人员，无法删除"}
+                )
+
+        cursor.execute("DELETE FROM DEPART WHERE BM = ?", (bm,))
         conn.commit()
         cursor.close()
         return JsonResponse({"code": 0, "msg": "删除成功"})
     except Exception as e:
         if conn:
             conn.rollback()
-        return JsonResponse({"code": 500, "msg": str(e)})
+        logger.error(f"删除机构失败: {e}")
+        return JsonResponse({"code": 500, "msg": "删除机构失败"})
+    finally:
+        if conn:
+            conn.close()
+
+
+def _collect_sub_depts(conn, bm, result_set):
+    """递归收集所有子孙机构 BM"""
+    result_set.add(bm)
+    cursor = conn.cursor()
+    cursor.execute("SELECT BM FROM DEPART WHERE PID = ?", (bm,))
+    children = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    for child_bm in children:
+        _collect_sub_depts(conn, child_bm, result_set)
+
+
+# ==================== 人员操作 ====================
+
+
+@login_required
+@admin_required
+def person_list_api(request):
+    """获取机构下的人员列表"""
+    bm = request.GET.get("bm")
+    keyword = request.GET.get("keyword", "").strip()
+
+    if bm is None:
+        return JsonResponse({"code": 400, "msg": "缺少机构ID"})
+
+    conn = None
+    try:
+        conn = _get_conn()
+        cursor = conn.cursor()
+
+        sql = """
+            SELECT r.RSID, r.XM, r.IDCARD, r.XB, r.CSNY
+            FROM RS_INFO r
+            INNER JOIN USERS_DEPARTMENT ud ON r.RSID = ud.RSID
+            WHERE ud.DEPARTMENTID = ?
+        """
+        params = [int(bm)]
+
+        if keyword:
+            sql += " AND (r.XM LIKE ? OR r.IDCARD LIKE ?)"
+            params.extend([f"%{keyword}%", f"%{keyword}%"])
+
+        sql += " ORDER BY ud.DEPARTMENTORDER, r.RSID"
+
+        cursor.execute(sql, params)
+        cols = [c[0] for c in cursor.description]
+        rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
+        cursor.close()
+        return JsonResponse({"code": 0, "data": rows})
+    except Exception as e:
+        logger.error(f"获取人员列表失败: {e}")
+        return JsonResponse({"code": 500, "msg": "获取人员列表失败"})
     finally:
         if conn:
             conn.close()
@@ -204,35 +247,88 @@ def delete_api(request):
 @login_required
 @admin_required
 @csrf_exempt
-def sort_api(request):
-    """拖拽排序：批量更新SXH"""
+def person_create_api(request):
+    """新增人员"""
     if request.method != "POST":
         return JsonResponse({"code": 405})
     try:
         data = json.loads(request.body)
     except:
-        return JsonResponse({"code": 400})
+        return JsonResponse({"code": 400, "msg": "参数格式错误"})
 
-    items = data.get("items", [])
-    if not items:
-        return JsonResponse({"code": 400, "msg": "参数为空"})
+    xm = str(data.get("xm", "")).strip()
+    idcard = str(data.get("idcard", "")).strip()
+    bm = data.get("bm")
+
+    if not xm:
+        return JsonResponse({"code": 400, "msg": "姓名不能为空"})
+    if not idcard:
+        return JsonResponse({"code": 400, "msg": "身份证号不能为空"})
+    if len(idcard) != 18:
+        return JsonResponse({"code": 400, "msg": "身份证号必须为18位"})
+    if bm is None:
+        return JsonResponse({"code": 400, "msg": "缺少所属机构"})
+
+    # 解析性别和出生年月
+    try:
+        birth = idcard[6:14]
+        csny = f"{birth[0:4]}-{birth[4:6]}-{birth[6:8]}"
+        gender_code = int(idcard[16])
+        xb = "男" if gender_code % 2 == 1 else "女"
+    except:
+        return JsonResponse({"code": 400, "msg": "身份证号格式不正确"})
 
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
-        for item in items:
-            cursor.execute(
-                "UPDATE DEPART SET SXH=? WHERE BM=?",
-                (int(item.get("sxh", 0)), str(item.get("bm", "")))
+
+        # 检查身份证号是否已存在
+        cursor.execute("SELECT COUNT(*) FROM RS_INFO WHERE IDCARD = ?", (idcard,))
+        if cursor.fetchone()[0] > 0:
+            cursor.close()
+            return JsonResponse({"code": 400, "msg": "该身份证号已存在"})
+
+        # 插入人员
+        cursor.execute(
+            "INSERT INTO RS_INFO (XM, IDCARD, XB, CSNY) VALUES (?, ?, ?, ?)",
+            (xm, idcard, xb, csny),
+        )
+
+        # 获取自增 RSID
+        cursor.execute("SELECT @@IDENTITY")
+        rsid = cursor.fetchone()[0]
+
+        # 插入部门关联
+        cursor.execute(
+            "INSERT INTO USERS_DEPARTMENT (RSID, DEPARTMENTID, DEPARTMENTORDER) VALUES (?, ?, ?)",
+            (rsid, bm, 0),
+        )
+
+        # 创建档案文件表
+        cursor.execute(f"""
+            CREATE TABLE RS_DESCRIPT_{rsid} (
+                Archid int NULL,
+                Length int NULL,
+                Path varchar(50) NULL,
+                Pdfkey varchar(64) NULL,
+                Sxh int NULL,
+                Oldfilename varchar(60) NULL,
+                Newfilename varchar(60) NULL,
+                uptime datetime NULL,
+                GaoQingLength int NULL,
+                GAOQINGPDFKEY varchar(100) NULL
             )
+        """)
+
         conn.commit()
         cursor.close()
-        return JsonResponse({"code": 0, "msg": "排序保存成功"})
+        return JsonResponse({"code": 0, "msg": "新增成功", "rsid": rsid})
     except Exception as e:
         if conn:
             conn.rollback()
-        return JsonResponse({"code": 500, "msg": str(e)})
+        logger.error(f"新增人员失败: {e}")
+        return JsonResponse({"code": 500, "msg": "新增人员失败"})
     finally:
         if conn:
             conn.close()
