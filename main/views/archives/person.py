@@ -1,4 +1,5 @@
-'''人员基本信息'''
+"""人员基本信息"""
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -7,12 +8,13 @@ from django.core.cache import cache
 from django.conf import settings
 import json
 import logging
+import os
 import pyodbc
 from contextlib import contextmanager
 from main.utils.field_maps import RS_INFO_MAP, to_frontend, to_backend
 from main.utils import _get_conn
 from main.utils.decorators import archive_perm_required
-#@archive_perm_required
+# @archive_perm_required
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +42,11 @@ def db():
 
 # ==================== 权限 ====================
 
+
 def _get_yhbh(request):
-    archive_user = request.session.get('archive_user', {})
-    if archive_user.get('yhbh'):
-        return archive_user['yhbh']
+    archive_user = request.session.get("archive_user", {})
+    if archive_user.get("yhbh"):
+        return archive_user["yhbh"]
     try:
         return request.user.profile.yhbh
     except:
@@ -268,6 +271,7 @@ def person_basic_view(request):
 def person_salary_view(request):
     return render(request, "archives/person_salary.html")
 
+
 @login_required
 @csrf_exempt
 def person_photo_api(request):
@@ -279,13 +283,31 @@ def person_photo_api(request):
     if not rsid or not photo:
         return JsonResponse({"code": 400, "msg": "缺少参数"})
 
-    if photo.size > 300 * 1024:
-        return JsonResponse({"code": 400, "msg": "照片不能超过300KB"})
-
     try:
         img_bytes = photo.read()
+
+        # 原图落盘：{SCAN_IMAGE_BASE_DIR}/PERSON/{rsid}/IMG/001.jpg
+        base_dir = os.path.join(
+            settings.SCAN_IMAGE_BASE_DIR, "PERSON", str(rsid).zfill(8), "IMG"
+        )
+        os.makedirs(base_dir, exist_ok=True)
+        with open(os.path.join(base_dir, "001.jpg"), "wb") as f:
+            f.write(img_bytes)
+
+        # 缩略图入库
+        from PIL import Image
+        import io
+
+        img = Image.open(io.BytesIO(img_bytes))
+        img.thumbnail((200, 260))
+        buf = io.BytesIO()
+        img.convert("RGB").save(buf, format="JPEG", quality=80)
+
         with db() as c:
-            c.execute("UPDATE RS_INFO SET DQZP=? WHERE RSID=?", (img_bytes, int(rsid)))
+            c.execute(
+                "UPDATE RS_INFO SET DQZP=? WHERE RSID=?",
+                (buf.getvalue(), int(rsid)),
+            )
         return JsonResponse({"code": 0, "msg": "照片已保存"})
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})

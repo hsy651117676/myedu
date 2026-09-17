@@ -15,6 +15,7 @@ from . import log_query
 from . import streamer
 from . import directory_print
 from . import meeting
+from . import data_export
 
 urlpatterns = [
     # ==================== 人员维护 ====================
@@ -155,4 +156,10 @@ urlpatterns = [
     path("api/meeting-delete/", meeting.meeting_delete_api, name="meeting-delete"),
     path("api/meeting-extract/", meeting.meeting_extract_api, name="meeting-extract"),
     path("api/meeting-batches/", meeting.batch_list_api, name="meeting-batches"),
+    # 数据导出
+    path("data-export/", data_export.page, name="data_export_page"),
+    path("api/data-export/types/", data_export.types_api, name="data_export_types"),
+    path("api/data-export/tree/", data_export.tree_api, name="data_export_tree"),
+    path("api/data-export/query/", data_export.query_api, name="data_export_query"),
+    path("api/data-export/export/", data_export.export_api, name="data_export_export"),
 ]

@@ -45,8 +45,18 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
                             <td><el-autocomplete v-model="form.jbr" :fetch-suggestions="(q,cb)=>fetchSuggest('JBR',q,cb)" placeholder="经办人" size="small" style="width:100%;" /></td>
                             <th>备注</th><td><input v-model="form.bz" /></td></tr>
                         <tr><th>摘抄范围</th><td><input v-model="form.zcfw" /></td><th>摘抄人</th><td><input v-model="form.zcr" /></td></tr>
-                        <tr><th>被查阅人数</th><td>[[ personList.length ]]</td><th>查阅时间</th><td><input v-model="form.lcrq" /></td></tr>
+                        <tr>
+                            <th>被查阅人数</th>
+                            <td><input v-model.number="form.xh" @input="onXhChange" style="width:80px;" /></td>
+                            <th>查阅时间</th>
+                            <td><input v-model="form.lcrq" /></td>
+                        </tr>
                     </table>
+                    <div style="font-size:12px;color:#909399;margin-top:6px;line-height:1.6;">
+    💡 被查阅人数默认等于列表实际人数，可手动修改。<br>
+    当查阅人数较多时，无需逐一录入，可只录入代表性人员（如张三等），在"被查阅人数"中填写实际人数即可。<br>
+    保存时若填写的数字与列表实际人数不一致，会弹窗确认，确认后按填写数字保存。
+</div>
                 </div>
             </div>
 
@@ -130,7 +140,7 @@ const { ElMessage, ElMessageBox } = ElementPlus;
 const app = createApp({
     delimiters: ['[[', ']]'],
     setup(){
-        const form = ref({});
+        const form = ref({ xh: 0, xhManual: false });
         const personList = ref([]);
         const historyList = ref([]);
         const historyTotal = ref(0);
@@ -158,8 +168,18 @@ const app = createApp({
         const allPersonsChecked = computed(() => personList.value.length>0 && personList.value.every(p=>p._checked));
         const toggleAllPersons = (e) => { personList.value.forEach(p=>p._checked=e.target.checked); };
 
+        // 用户手动修改人数
+        const onXhChange = () => {
+            form.value.xhManual = true;
+        };
+
+        // 新增记录
         const newRecord = () => {
-            form.value = { lcrq: new Date().toISOString().slice(0,10).replace(/-/g,'') };
+            form.value = {
+                lcrq: new Date().toISOString().slice(0,10).replace(/-/g,''),
+                xh: 0,
+                xhManual: false
+            };
             personList.value = [];
         };
 
@@ -168,6 +188,10 @@ const app = createApp({
                 const p = e.data.data;
                 if (!personList.value.find(x=>String(x.RSID)===String(p.rsid))) {
                     personList.value.push({ RSID: p.rsid, 姓名: p.displayName||p.tname, _checked: false });
+                    // 联动人数
+                    if (!form.value.xhManual) {
+                        form.value.xh = personList.value.length;
+                    }
                     loadPersons();
                 }
                 showPersonPanel.value = false;
@@ -175,7 +199,12 @@ const app = createApp({
         });
 
         const addPerson = () => { showPersonPanel.value = true; };
-        const removeCheckedPersons = () => { personList.value = personList.value.filter(p=>!p._checked); };
+        const removeCheckedPersons = () => {
+            personList.value = personList.value.filter(p=>!p._checked);
+            if (!form.value.xhManual) {
+                form.value.xh = personList.value.length;
+            }
+        };
 
         const loadPersons = async () => {
             const rsids = personList.value.map(p=>p.RSID).join(',');
@@ -187,6 +216,9 @@ const app = createApp({
                     const full = data.find(d=>String(d.RSID)===String(p.RSID));
                     return full ? { ...p, ...full, _checked: p._checked } : p;
                 });
+                if (!form.value.xhManual) {
+                    form.value.xh = personList.value.length;
+                }
             }
         };
 
@@ -197,10 +229,23 @@ const app = createApp({
             if (!form.value.cyly) { ElMessage.warning('查阅理由不能为空'); return; }
             if (!form.value.jbr) { ElMessage.warning('经办人不能为空'); return; }
 
+            // 人数不一致时弹窗确认
+            if (Number(form.value.xh) !== personList.value.length) {
+                try {
+                    await ElMessageBox.confirm(
+                        `被查阅人数填写为 ${form.value.xh}，实际被查阅人列表为 ${personList.value.length} 人，是否继续保存？`,
+                        '提示',
+                        { type: 'warning', confirmButtonText: '继续保存', cancelButtonText: '取消' }
+                    );
+                } catch(e) {
+                    return;
+                }
+            }
+
             const res = await axios.post('/business/api/look/save/', {
                 action: 'save',
                 id: form.value.id || '',
-                xh: personList.value.length,
+                xh: form.value.xh,
                 pzr: form.value.pzr||'',
                 cydw: form.value.cydw||'',
                 cyly: form.value.cyly||'',
@@ -255,6 +300,8 @@ const app = createApp({
             form.value.zcfw = r.zcfw || '';
             form.value.zcr = r.zcr || '';
             form.value.lcrq = r.lcrq || '';
+            form.value.xh = r.xh || 0;
+            form.value.xhManual = true;   // 数据库来的值，视为手动值
             if (r.bcyrrsid) {
                 const ids = r.bcyrrsid.split(',').filter(function(x){return x.trim()!==''});
                 const names = (r.bcyrxm || '').split(',');
@@ -349,7 +396,7 @@ const app = createApp({
             form, personList, checkedPersons, allPersonsChecked, toggleAllPersons,
             historyList, historyTotal, currentPage, pageSize, q,
             showPersonPanel,
-            fetchSuggest,
+            fetchSuggest, onXhChange,
             newRecord, addPerson, removeCheckedPersons, saveRecord, deleteRecord, printRecord,
             selectHistory, loadHistory, onPageChange, onSizeChange
         };

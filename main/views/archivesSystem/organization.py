@@ -332,3 +332,142 @@ def person_create_api(request):
     finally:
         if conn:
             conn.close()
+
+
+@login_required
+@admin_required
+@csrf_exempt
+def person_batch_create_api(request):
+    """批量新增人员"""
+    if request.method != "POST":
+        return JsonResponse({"code": 405})
+    try:
+        data = json.loads(request.body)
+    except:
+        return JsonResponse({"code": 400, "msg": "参数格式错误"})
+
+    bm = data.get("bm")
+    rows = data.get("rows", [])  # [{xm, idcard}, ...]
+
+    if bm is None:
+        return JsonResponse({"code": 400, "msg": "缺少所属机构"})
+    if not rows:
+        return JsonResponse({"code": 400, "msg": "没有人员数据"})
+
+    # 解析并校验
+    persons = []
+    seen_ids = set()
+    errors = []
+
+    for i, row in enumerate(rows):
+        xm = str(row.get("xm", "")).strip()
+        idcard = str(row.get("idcard", "")).strip()
+
+        if not xm and not idcard:
+            continue  # 空行跳过
+
+        if not xm:
+            errors.append(f"第{i + 1}行：姓名不能为空")
+            continue
+        if not idcard:
+            errors.append(f"第{i + 1}行（{xm}）：身份证号不能为空")
+            continue
+        if len(idcard) != 18:
+            errors.append(f"第{i + 1}行（{xm}）：身份证号必须为18位")
+            continue
+        if idcard in seen_ids:
+            errors.append(f"第{i + 1}行（{xm}）：身份证号在本次批量数据中重复")
+            continue
+
+        # 解析性别和出生年月
+        try:
+            birth = idcard[6:14]
+            csny = f"{birth[0:4]}-{birth[4:6]}-{birth[6:8]}"
+            gender_code = int(idcard[16])
+            xb = "男" if gender_code % 2 == 1 else "女"
+        except:
+            errors.append(f"第{i + 1}行（{xm}）：身份证号格式不正确")
+            continue
+
+        seen_ids.add(idcard)
+        persons.append({"xm": xm, "idcard": idcard, "xb": xb, "csny": csny})
+
+    if not persons:
+        return JsonResponse({"code": 400, "msg": "没有有效的人员数据"})
+
+    conn = None
+    try:
+        conn = _get_conn()
+        cursor = conn.cursor()
+
+        # 检查所有身份证号是否在数据库已存在
+        duplicate_ids = []
+        for p in persons:
+            cursor.execute(
+                "SELECT COUNT(*) FROM RS_INFO WHERE IDCARD = ?", (p["idcard"],)
+            )
+            if cursor.fetchone()[0] > 0:
+                duplicate_ids.append(f"{p['xm']}({p['idcard']})")
+
+        if duplicate_ids:
+            cursor.close()
+            return JsonResponse(
+                {
+                    "code": 400,
+                    "msg": f"以下人员身份证号已存在：{', '.join(duplicate_ids)}",
+                }
+            )
+
+        # 获取机构名称
+        cursor.execute("SELECT BMMC FROM DEPART WHERE BM = ?", (bm,))
+        dept_row = cursor.fetchone()
+        bmmc = dept_row[0] if dept_row else ""
+
+        success_count = 0
+        for p in persons:
+            cursor.execute(
+                "INSERT INTO RS_INFO (XM, IDCARD, XB, CSNY) VALUES (?, ?, ?, ?)",
+                (p["xm"], p["idcard"], p["xb"], p["csny"]),
+            )
+            cursor.execute("SELECT @@IDENTITY")
+            rsid = cursor.fetchone()[0]
+
+            cursor.execute(
+                "INSERT INTO USERS_DEPARTMENT (RSID, DEPARTMENTID, DEPARTMENTORDER) VALUES (?, ?, ?)",
+                (rsid, bm, 0),
+            )
+
+            cursor.execute(f"""
+                CREATE TABLE RS_DESCRIPT_{rsid} (
+                    Archid int NULL,
+                    Length int NULL,
+                    Path varchar(50) NULL,
+                    Pdfkey varchar(64) NULL,
+                    Sxh int NULL,
+                    Oldfilename varchar(60) NULL,
+                    Newfilename varchar(60) NULL,
+                    uptime datetime NULL,
+                    GaoQingLength int NULL,
+                    GAOQINGPDFKEY varchar(100) NULL
+                )
+            """)
+            success_count += 1
+
+        conn.commit()
+        cursor.close()
+        return JsonResponse(
+            {
+                "code": 0,
+                "msg": f"成功添加 {success_count} 人",
+                "count": success_count,
+                "errors": errors,
+            }
+        )
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.error(f"批量新增人员失败: {e}")
+        return JsonResponse({"code": 500, "msg": "批量新增人员失败"})
+    finally:
+        if conn:
+            conn.close()

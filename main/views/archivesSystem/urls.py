@@ -72,6 +72,11 @@ urlpatterns = [
         organization.person_create_api,
         name="org_person_create_api",
     ),
+    path(
+        "api/organization/person-batch-create/",
+        organization.person_batch_create_api,
+        name="org_person_batch_create_api",
+    ),
     # 党组会管理
     path("meeting-admin/", meeting_admin.page),
     path("api/meeting-admin-list/", meeting_admin.list_api),

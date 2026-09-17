@@ -24,13 +24,14 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
   <div style="padding:8px 12px;border-bottom:1px solid #e4e7ed;background:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0;">
     <span style="font-weight:600;">📋 机构与人员维护</span>
     <el-button size="small" type="primary" @click="openAddPersonDialog" :disabled="!isLeafNode">新增人员</el-button>
+    <el-button size="small" type="success" @click="openBatchAddPersonDialog" :disabled="!isLeafNode">批量添加</el-button>
     <div style="flex:1;"></div>
     <el-input v-model="keyword" placeholder="搜索姓名或身份证号" size="small" style="width:220px;" clearable @input="searchPerson" @clear="searchPerson"></el-input>
   </div>
 
   <div style="flex:1;display:flex;overflow:hidden;">
 
-    <!-- 左：机构树（保持你原来的两层结构） -->
+    <!-- 左：机构树 -->
     <div id="leftPanel" class="resize-panel" style="width:35%;min-width:220px;border-right:1px solid #e4e7ed;overflow-y:auto;padding:4px;">
       <template v-for="node in treeData" :key="node.BM">
         <div class="tree-node"
@@ -61,7 +62,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
             <span class="tree-arrow" @click.stop="toggleNode(child)" v-if="child.childCount > 0">[[ child._expanded ? '▼' : '▶' ]]</span>
             <span class="tree-arrow" v-else style="visibility:hidden;">▶</span>
             <span class="tree-label">[[ child.childCount > 0 ? '📁' : '🏫' ]] [[ child.BMMC ]]</span>
-            <span class="tree-badge" v-if="child.childCount > 0">([[ child.childCount ]]子)</span>
+            <span class="tree-badge" v-if="child.childCount > 0">([[ child.childCount ]]个)</span>
             <span class="tree-badge" v-if="child.personCount > 0">[[ child.personCount ]]人</span>
           </div>
         </template>
@@ -100,7 +101,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
   <div class="context-menu" v-show="menuVisible" :style="{left:menuX+'px',top:menuY+'px'}" @click.stop>
     <div @click="openAddDeptDialog">➕ 新增子机构</div>
     <div @click="deleteDept" style="color:#F56C6C;">🗑 删除机构</div>
-     <div style="border-top:1px solid #e4e7ed;" @click="hideMenu">取消</div>
+    <div style="border-top:1px solid #e4e7ed;" @click="hideMenu">取消</div>
   </div>
 
   <!-- 新增机构弹窗 -->
@@ -127,6 +128,38 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     <template #footer>
       <el-button size="small" @click="personDialogVisible=false">取消</el-button>
       <el-button size="small" type="primary" @click="savePerson" :loading="personSaving">保存</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 批量添加人员弹窗 -->
+  <el-dialog v-model="batchDialogVisible" title="批量添加人员" width="550px" @closed="resetBatchForm">
+    <div style="margin-bottom:8px;font-size:13px;color:#606266;">
+      所属机构：<strong>[[ currentNode ? currentNode.BMMC : '' ]]</strong>
+    </div>
+    <div style="margin-bottom:8px;font-size:13px;color:#909399;">
+      每行一个人员，格式：姓名 身份证号（中间用制表符或多个空格分隔）
+    </div>
+    <el-input v-model="batchText" type="textarea" :rows="10" 
+              placeholder="张三  522301198001011234&#10;李四  522301198502022345"
+              @input="onBatchTextInput"></el-input>
+    <div v-if="batchPreview.length > 0" style="margin-top:10px;">
+      <div style="font-size:13px;margin-bottom:4px;">解析结果（[[ batchPreview.length ]]行，有效 [[ validBatchCount ]]人）：</div>
+      <el-table :data="batchPreview" size="small" max-height="200" border>
+        <el-table-column prop="xm" label="姓名" width="120"></el-table-column>
+        <el-table-column prop="idcard" label="身份证号" width="200"></el-table-column>
+        <el-table-column label="状态" width="140">
+          <template #default="scope">
+            <span v-if="scope.row.valid" style="color:#67C23A;">✅ 有效</span>
+            <span v-else style="color:#F56C6C;">❌ [[ scope.row.error ]]</span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <template #footer>
+      <el-button size="small" @click="batchDialogVisible=false">取消</el-button>
+      <el-button size="small" type="primary" @click="saveBatchPerson" :loading="batchSaving" :disabled="validBatchCount === 0">
+        批量添加（[[ validBatchCount ]]人）
+      </el-button>
     </template>
   </el-dialog>
 </div>
@@ -269,6 +302,75 @@ const app = createApp({
       finally { personSaving.value = false; }
     };
 
+    // ==================== 批量添加人员 ====================
+    const batchDialogVisible = ref(false);
+    const batchText = ref('');
+    const batchSaving = ref(false);
+    const batchPreview = ref([]);
+
+    const validBatchCount = computed(() => {
+      return batchPreview.value.filter(p => p.valid).length;
+    });
+
+    const resetBatchForm = () => {
+      batchText.value = '';
+      batchPreview.value = [];
+    };
+
+    const openBatchAddPersonDialog = () => {
+      if (!isLeafNode.value) return;
+      resetBatchForm();
+      batchDialogVisible.value = true;
+    };
+
+    const onBatchTextInput = () => {
+      const text = batchText.value.trim();
+      if (!text) {
+        batchPreview.value = [];
+        return;
+      }
+      const lines = text.split('\n').filter(line => line.trim());
+      batchPreview.value = lines.map((line, idx) => {
+        const parts = line.split(/\t+|\s{2,}/).filter(p => p.trim());
+        const xm = parts[0] || '';
+        const idcard = parts[1] || '';
+        let valid = true;
+        let error = '';
+
+        if (!xm) { valid = false; error = '姓名不能为空'; }
+        else if (!idcard) { valid = false; error = '身份证号不能为空'; }
+        else if (idcard.length !== 18) { valid = false; error = '身份证号必须为18位'; }
+
+        return { xm, idcard, valid, error };
+      });
+    };
+
+    const saveBatchPerson = async () => {
+      if (validBatchCount.value === 0) return;
+      batchSaving.value = true;
+      try {
+        const rows = batchPreview.value
+          .filter(p => p.valid)
+          .map(p => ({ xm: p.xm, idcard: p.idcard }));
+        const r = await axios.post('/archivesSystem/api/organization/person-batch-create/', {
+          bm: currentNode.value.BM,
+          rows: rows
+        });
+        if (r.data.code === 0) {
+          ElementPlus.ElMessage.success(r.data.msg);
+          batchDialogVisible.value = false;
+          loadPersonList();
+          await loadTree();
+        } else {
+          ElementPlus.ElMessage.error(r.data.msg);
+        }
+      } catch (e) {
+        ElementPlus.ElMessage.error('请求失败');
+      } finally {
+        batchSaving.value = false;
+      }
+    };
+
     // ==================== 分栏拖拽 ====================
     const initDrag = () => {
       document.querySelectorAll('.drag-bar').forEach(bar => {
@@ -295,10 +397,12 @@ const app = createApp({
 
     return {
       treeData, currentNode, menuNode, menuVisible, menuX, menuY, isLeafNode,
-      toggleNode, selectNode, showMenu,
+      toggleNode, selectNode, showMenu, hideMenu,
       deptDialogVisible, deptForm, deptSaving, openAddDeptDialog, saveDept, deleteDept, resetDeptForm,
       personList, keyword, searchPerson,
-      personDialogVisible, personForm, personSaving, openAddPersonDialog, savePerson, resetPersonForm
+      personDialogVisible, personForm, personSaving, openAddPersonDialog, savePerson, resetPersonForm,
+      batchDialogVisible, batchText, batchSaving, batchPreview, validBatchCount,
+      openBatchAddPersonDialog, saveBatchPerson, resetBatchForm, onBatchTextInput
     };
   }
 });

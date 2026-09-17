@@ -6,16 +6,13 @@
 
 import os
 import io
-import glob
 import logging
 from reportlab.lib.pagesizes import A4, A5, A3, B5
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import unpad
 from django.conf import settings
-from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -33,48 +30,6 @@ PAGE_SIZE_MAP = {
 }
 
 
-# ==================== 业务SQL查询 ====================
-
-
-def get_latest_uptime(rsid, archid, image_type="YS"):
-    """获取指定档案材料的最新扫描时间"""
-    from main.utils import _get_conn
-
-    table_name = f"RS_DESCRIPT_{rsid}"
-
-    if image_type == "YS":
-        sql = f"""SELECT MAX(uptime) AS max_uptime, COUNT(*) AS img_count
-                  FROM {table_name}
-                  WHERE Archid='{archid}'"""
-    else:
-        sql = f"""SELECT MAX(uptime) AS max_uptime, COUNT(*) AS img_count
-                  FROM {table_name}
-                  WHERE Archid='{archid}' AND GaoQingLength IS NOT NULL"""
-
-    conn = None
-    try:
-        conn = _get_conn()
-        cursor = conn.cursor()
-        cursor.execute(sql)
-        row = cursor.fetchone()
-        cursor.close()
-        if row and row[0]:
-            raw = str(row[0])
-            uptime = raw.replace("-", "").replace(":", "").replace(" ", "")
-            count = row[1]
-            return uptime, count
-        return None, 0
-    except Exception as e:
-        logger.error(f"get_latest_uptime error: {e}")
-        return None, 0
-    finally:
-        if conn:
-            try:
-                conn.close()
-            except:
-                pass
-
-
 # ==================== PDF辅助 ====================
 
 
@@ -87,6 +42,8 @@ def get_pdf_page_size(size_name, vertical=True):
 
 
 # ==================== 图片解密 ====================
+
+
 def decrypt_image(encrypted_path):
     """
     解密FTS加密的图片文件
@@ -103,7 +60,6 @@ def decrypt_image(encrypted_path):
     original_size = struct.unpack("<I", data[:4])[0]
     enc = data[8:]
 
-    # 计算加密数据的实际大小（对齐到16字节）
     encrypted_size = ((original_size + 15) // 16) * 16
     if len(enc) > encrypted_size:
         enc = enc[:encrypted_size]
@@ -111,7 +67,6 @@ def decrypt_image(encrypted_path):
     cipher = AES.new(_AES_KEY, AES.MODE_ECB)
     decrypted = cipher.decrypt(enc)
 
-    # 截取原始长度
     plain = decrypted[:original_size]
 
     if plain[:2] != b"\xff\xd8" and plain[:4] != b"\x89PNG":
@@ -120,55 +75,38 @@ def decrypt_image(encrypted_path):
     return Image.open(io.BytesIO(plain))
 
 
+def encrypt_image(raw_data):
+    """将原始图片数据加密为FTS格式"""
+    import struct
+    from Crypto.Cipher import AES
+
+    original_size = len(raw_data)
+    pad_size = (16 - (original_size % 16)) % 16
+    padded = raw_data + b"\x00" * pad_size
+
+    cipher = AES.new(_AES_KEY, AES.MODE_ECB)
+    encrypted = cipher.encrypt(padded)
+
+    header = struct.pack("<I", original_size) + b"\x00" * 4
+    return header + encrypted
+
+
 # ==================== 路径构建 ====================
 
 
 def build_image_dir(image_type, rsid, fl, archid):
-    """构建图片源目录路径"""
+    """构建图片源目录路径（保持不变）"""
     rsid_padded = str(rsid).zfill(8)
     return os.path.join(
         settings.SCAN_IMAGE_BASE_DIR, image_type, rsid_padded, str(fl), str(archid)
     )
 
 
-def build_pdf_dir(image_type, rsid, fl, archid):
-    """构建PDF存放目录路径"""
+def build_pdf_path(rsid, archid):
+    """构建PDF完整路径：{SCAN_PDF_OUTPUT_DIR}/{rsid8}/PDF/{archid}.PDF"""
     rsid_padded = str(rsid).zfill(8)
-    return os.path.join(
-        settings.SCAN_PDF_OUTPUT_DIR, image_type, rsid_padded, str(fl), str(archid)
-    )
-
-
-def build_pdf_path(image_type, rsid, fl, archid, uptime):
-    """构建PDF完整路径"""
-    pdf_dir = build_pdf_dir(image_type, rsid, fl, archid)
-    pdf_filename = f"{fl}_{uptime}.pdf"
-    return os.path.join(pdf_dir, pdf_filename)
-
-
-def find_existing_pdf(image_type, rsid, fl, archid):
-    """查找已有PDF"""
-    pdf_dir = build_pdf_dir(image_type, rsid, fl, archid)
-    if not os.path.exists(pdf_dir):
-        return None
-    pattern = os.path.join(pdf_dir, f"{fl}_*.pdf")
-    matches = sorted(glob.glob(pattern), reverse=True)
-    return matches[0] if matches else None
-
-
-def clean_old_pdfs(image_type, rsid, fl, archid, keep_uptime):
-    """删除旧PDF"""
-    pdf_dir = build_pdf_dir(image_type, rsid, fl, archid)
-    if not os.path.exists(pdf_dir):
-        return
-    keep_name = f"{fl}_{keep_uptime}.pdf"
-    pattern = os.path.join(pdf_dir, f"{fl}_*.pdf")
-    for old_pdf in glob.glob(pattern):
-        if os.path.basename(old_pdf) != keep_name:
-            try:
-                os.remove(old_pdf)
-            except Exception as e:
-                logger.warning(f"删除旧PDF失败: {old_pdf}, {e}")
+    pdf_dir = os.path.join(settings.SCAN_PDF_OUTPUT_DIR, rsid_padded, "PDF")
+    return os.path.join(pdf_dir, f"{archid}.PDF")
 
 
 # ==================== PDF生成 ====================
@@ -186,9 +124,7 @@ def images_to_pdf(
     dpi=None,
     jpeg_quality=None,
 ):
-    """
-    将目录下所有解密后的图片合成为一个多页PDF
-    """
+    """将目录下所有解密后的图片合成为一个多页PDF"""
     if page_size is None:
         page_size = settings.SCAN_PDF_PAGE_SIZE
     if vertical is None:
@@ -277,34 +213,23 @@ def get_or_generate_pdf(
     force_regenerate=False,
 ):
     """获取或生成PDF文件"""
-
     if page_size is None:
         page_size = settings.SCAN_PDF_PAGE_SIZE
     if vertical is None:
         vertical = settings.SCAN_PDF_VERTICAL
 
-    cache_key = f"scan_pdf:{image_type}:{rsid}:{fl}:{archid}"
+    pdf_path = build_pdf_path(rsid, archid)
 
-    if not force_regenerate:
-        cached = cache.get(cache_key)
-        if cached and os.path.exists(cached):
-            return True, cached
-
-    latest_uptime, image_count = get_latest_uptime(rsid, archid, image_type)
-
-    if latest_uptime is None:
-        return False, "未扫描或扫描未上传"
-
-    pdf_path = build_pdf_path(image_type, rsid, fl, archid, latest_uptime)
-
+    # 已有PDF且不强制重新生成 → 直接返回
     if os.path.exists(pdf_path) and not force_regenerate:
-        cache.set(cache_key, pdf_path, 1800)
         return True, pdf_path
 
-    clean_old_pdfs(image_type, rsid, fl, archid, latest_uptime)
-
+    # 检查图片目录
     image_dir = build_image_dir(image_type, rsid, fl, archid)
+    if not os.path.exists(image_dir):
+        return False, "未扫描或扫描未上传"
 
+    # 生成
     success, result = images_to_pdf(
         image_dir=image_dir,
         output_pdf_path=pdf_path,
@@ -315,9 +240,6 @@ def get_or_generate_pdf(
         margin_left=margin_left,
         margin_right=margin_right,
     )
-
-    if success:
-        cache.set(cache_key, result, 1800)
 
     return success, result
 
@@ -333,21 +255,3 @@ def check_scan_exists(image_type, rsid, fl, archid):
         if f.lower().endswith((".jpg", ".jpeg", ".png"))
     ]
     return len(image_files) > 0, len(image_files)
-
-
-def encrypt_image(raw_data):
-    """将原始图片数据加密为FTS格式"""
-    import struct
-    from Crypto.Cipher import AES
-
-    original_size = len(raw_data)
-    # 对齐到16字节
-    pad_size = (16 - (original_size % 16)) % 16
-    padded = raw_data + b"\x00" * pad_size
-
-    cipher = AES.new(_AES_KEY, AES.MODE_ECB)
-    encrypted = cipher.encrypt(padded)
-
-    # FTS格式头：4字节原始长度(小端) + 4字节保留
-    header = struct.pack("<I", original_size) + b"\x00" * 4
-    return header + encrypted

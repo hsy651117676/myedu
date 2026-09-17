@@ -14,11 +14,17 @@ urlpatterns = [
     path(
         "api/scan-generate-pdf/", scan_viewer.api_generate_pdf, name="scan_generate_pdf"
     ),
+    path(
+        "api/batch-generate-pdf/",
+        scan_viewer.api_batch_generate_pdf,
+        name="batch_generate_pdf",
+    ),
     path("api/scan-pdf/", scan_viewer.serve_pdf, name="scan_pdf"),
     path("editor/", image_editor.page, name="image-editor"),
     path("api/upload-scan/", scan_upload.upload_scan_api, name="scan-upload-scan"),
     path("clean-orphans/", scan_upload.clean_orphans_api, name="clean-orphans"),
     path("api/delete-scan/", scan_upload.delete_scan_api, name="scan-delete-scan"),
+    path("api/download-zip/", scan_viewer.api_download_zip, name="download_zip"),
     path(
         "api/update-page-count/",
         scan_upload.update_page_count_api,

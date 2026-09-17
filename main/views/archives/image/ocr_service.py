@@ -784,7 +784,7 @@ def batch_write(
                     cursor.execute(
                         f"UPDATE {table_name} SET Oldfilename=?, Newfilename=?, Length=?, Pdfkey=?, Path=?, uptime=GETDATE() WHERE Archid=? AND Sxh=?",
                         (
-                            src_filename,
+                            dst_filename,
                             dst_filename,
                             file_size,
                             pdfkey,
@@ -799,7 +799,7 @@ def batch_write(
                         (
                             archid,
                             sxh,
-                            src_filename,
+                            dst_filename,
                             dst_filename,
                             file_size,
                             pdfkey,

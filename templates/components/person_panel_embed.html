@@ -13,8 +13,10 @@
     .tree-node { padding: 3px 6px; cursor: pointer; white-space: nowrap; }
     .tree-node:hover { background: #e8f0fe; }
     .tree-unit { font-weight: bold; }
-    .tree-person { color: #606266; }
+    .tree-person { color: #606266; display: flex; align-items: center; }
     .tree-person.active { background: #d0e4fc; }
+    .tree-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 4px; flex-shrink: 0; }
+    .tree-avatar-emoji { margin-right: 4px; flex-shrink: 0; }
     .search-item { padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
     .search-item:hover { background: #e8f0fe; }
     .search-item.active { background: #d0e4fc; }
@@ -46,14 +48,18 @@
                    class="tree-node tree-person" style="padding-left:32px;"
                    :class="{ active: currentRsid===gc.rsid }"
                    @click.stop="selectPerson(gc)">
-                {{ gc.sex === '男' ? '💁‍♂️' : gc.sex === '女' ? '🙋‍♀️' : '👤' }} {{ gc.tname }}
+                <img v-if="gc.photo" :src="gc.photo" class="tree-avatar" />
+                <span v-else class="tree-avatar-emoji">{{ gc.sex === '男' ? '💁‍♂️' : gc.sex === '女' ? '🙋‍♀️' : '👤' }}</span>
+                {{ gc.tname }}
               </div>
             </template>
             <div v-if="child.isPerson"
                  class="tree-node tree-person" style="padding-left:18px;"
                  :class="{ active: currentRsid===child.rsid }"
                  @click.stop="selectPerson(child)">
-              {{ child.sex === '男' ? '💁‍♂️' : child.sex === '女' ? '🙋‍♀️' : '👤' }} {{ child.tname }}
+              <img v-if="child.photo" :src="child.photo" class="tree-avatar" />
+              <span v-else class="tree-avatar-emoji">{{ child.sex === '男' ? '💁‍♂️' : child.sex === '女' ? '🙋‍♀️' : '👤' }}</span>
+              {{ child.tname }}
             </div>
           </div>
         </template>
@@ -61,7 +67,9 @@
              class="tree-node tree-person"
              :class="{ active: currentRsid===node.rsid }"
              @click.stop="selectPerson(node)">
-          {{ node.sex === '男' ? '💁‍♂️' : node.sex === '女' ? '🙋‍♀️' : '👤' }} {{ node.tname }}
+          <img v-if="node.photo" :src="node.photo" class="tree-avatar" />
+          <span v-else class="tree-avatar-emoji">{{ node.sex === '男' ? '💁‍♂️' : node.sex === '女' ? '🙋‍♀️' : '👤' }}</span>
+          {{ node.tname }}
         </div>
       </template>
     </div>
@@ -112,6 +120,7 @@
               treeData.value = res.data.data.map(n => ({
                 tid: n.TID, tname: n.TNAME, pid: n.PID,
                 rsid: String(n.RSID), sex: n.SEX || '',
+                photo: n.PHOTO || '',
                 expanded: false, children: [],
                 isPerson: n.RSID !== 0 && n.RSID !== '0' && n.RSID !== ''
               }));
@@ -128,6 +137,7 @@
               node.children = res.data.data.map(c => ({
                 tid: c.TID, tname: c.TNAME, pid: c.PID,
                 rsid: String(c.RSID), sex: c.SEX || '',
+                photo: c.PHOTO || '',
                 expanded: false, children: [],
                 isPerson: c.RSID !== 0 && c.RSID !== '0' && c.RSID !== ''
               }));

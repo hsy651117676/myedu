@@ -30,6 +30,26 @@ def _get_yhbh(request):
         return 0
 
 
+def _find_cadre_photo(rsid, cadre_id):
+    """
+    三层查找任免表照片：
+      1. PERSON/{rsid}/IMG/{cadre_id}.jpg   （本表自己的照片）
+      2. PERSON/{rsid}/IMG/001.jpg          （人员照片兜底）
+    返回文件路径或 None
+    """
+    base_dir = os.path.join(
+        settings.SCAN_IMAGE_BASE_DIR,
+        "PERSON",
+        str(rsid).zfill(8),
+        "IMG",
+    )
+    for fname in (f"{cadre_id}.jpg", "001.jpg"):
+        p = os.path.join(base_dir, fname)
+        if os.path.exists(p):
+            return p
+    return None
+
+
 @login_required
 @archive_perm_required
 def person_cadre_view(request):
@@ -74,13 +94,15 @@ def cadre_detail_api(request):
         cols = [col[0] for col in cursor.description]
         row = cursor.fetchone()
         data = dict(zip(cols, row)) if row else {}
-        if data.get("DQZP"):
-            data["DQZP"] = (
-                base64.b64encode(data["DQZP"]).decode()
-                if isinstance(data["DQZP"], bytes)
-                else ""
-            )
         cursor.close()
+
+        # 照片：从文件系统三层查找，返回 base64
+        data["DQZP"] = ""
+        photo_path = _find_cadre_photo(rsid, cadre_id)
+        if photo_path:
+            with open(photo_path, "rb") as f:
+                data["DQZP"] = base64.b64encode(f.read()).decode()
+
         return JsonResponse({"code": 0, "data": data})
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
@@ -138,30 +160,32 @@ def cadre_save_api(request):
         if field in data and isinstance(data[field], str) and len(data[field]) > limit:
             data[field] = data[field][:limit]
 
-    import base64
-
+    # 照片写文件（仅当有有效 id，不碰 DQZP 字段）
     dqzp = data.get("DQZP", "")
-    if dqzp and isinstance(dqzp, str):
+    if dqzp and isinstance(dqzp, str) and cadre_id and int(cadre_id) > 0:
         if "," in dqzp:
             dqzp = dqzp.split(",", 1)[1]
         try:
-            dqzp = base64.b64decode(dqzp)
-        except:
-            dqzp = b""
-    else:
-        dqzp = b""
+            dqzp_bytes = base64.b64decode(dqzp)
+            base_dir = os.path.join(
+                settings.SCAN_IMAGE_BASE_DIR,
+                "PERSON",
+                str(rsid).zfill(8),
+                "IMG",
+            )
+            os.makedirs(base_dir, exist_ok=True)
+            with open(os.path.join(base_dir, f"{cadre_id}.jpg"), "wb") as f:
+                f.write(dqzp_bytes)
+        except Exception as e:
+            logger.error(f"照片保存失败: {e}")
 
-    if dqzp:
-        dqzp = bytes(dqzp)
-    else:
-        dqzp = None
     conn = None
     try:
         conn = _get_conn()
         cursor = conn.cursor()
         if int(cadre_id) > 0:
             cursor.execute(
-                "UPDATE CADREAPPROVE SET CSNY=?, JG=?, JRSJ=?, JL=?, MZ=?, XB=?, XM=?, ZZMM=?, BMMC=?, HEALTH=?, ZHUANYEJISHUZHIWU=?, XIANRENZHIWU=?, NIRENZHIWU=?, NIMIANZHIWU=?, JIANGCHENGQINGKUANG=?, YEARCHECK=?, RENMIANREASON=?, CHENGBAODANWEI=?, SHENPIJIGUANYIJIAN=?, CHENGWEI1=?, XINGMING1=?, NIANLING1=?, ZHENGZHIMIANMAO1=?, UNITANDZHIWU1=?, CHENGWEI2=?, XINGMING2=?, NIANLING2=?, ZHENGZHIMIANMAO2=?, UNITANDZHIWU2=?, CHENGWEI3=?, XINGMING3=?, NIANLING3=?, ZHENGZHIMIANMAO3=?, UNITANDZHIWU3=?, CHENGWEI4=?, XINGMING4=?, NIANLING4=?, ZHENGZHIMIANMAO4=?, UNITANDZHIWU4=?, CHENGWEI5=?, XINGMING5=?, NIANLING5=?, ZHENGZHIMIANMAO5=?, UNITANDZHIWU5=?, CHENGWEI6=?, XINGMING6=?, NIANLING6=?, ZHENGZHIMIANMAO6=?, UNITANDZHIWU6=?, CHENGWEI7=?, XINGMING7=?, NIANLING7=?, ZHENGZHIMIANMAO7=?, UNITANDZHIWU7=?, ZHUANCHANG=?, XZJGYJ=?, CHUSHENGDI=?, WORKTIME=?, QUANRIZIJIAOYU=?, QUANRIZIYXZY=?, ZAIZHIJIAOYU=?, ZAIZHIYXZY=?, NL=?, CSNY1=?, CSNY2=?, CSNY3=?, CSNY4=?, CSNY5=?, CSNY6=?, CSNY7=?, DQZP=? WHERE ID=?",
+                "UPDATE CADREAPPROVE SET CSNY=?, JG=?, JRSJ=?, JL=?, MZ=?, XB=?, XM=?, ZZMM=?, BMMC=?, HEALTH=?, ZHUANYEJISHUZHIWU=?, XIANRENZHIWU=?, NIRENZHIWU=?, NIMIANZHIWU=?, JIANGCHENGQINGKUANG=?, YEARCHECK=?, RENMIANREASON=?, CHENGBAODANWEI=?, SHENPIJIGUANYIJIAN=?, CHENGWEI1=?, XINGMING1=?, NIANLING1=?, ZHENGZHIMIANMAO1=?, UNITANDZHIWU1=?, CHENGWEI2=?, XINGMING2=?, NIANLING2=?, ZHENGZHIMIANMAO2=?, UNITANDZHIWU2=?, CHENGWEI3=?, XINGMING3=?, NIANLING3=?, ZHENGZHIMIANMAO3=?, UNITANDZHIWU3=?, CHENGWEI4=?, XINGMING4=?, NIANLING4=?, ZHENGZHIMIANMAO4=?, UNITANDZHIWU4=?, CHENGWEI5=?, XINGMING5=?, NIANLING5=?, ZHENGZHIMIANMAO5=?, UNITANDZHIWU5=?, CHENGWEI6=?, XINGMING6=?, NIANLING6=?, ZHENGZHIMIANMAO6=?, UNITANDZHIWU6=?, CHENGWEI7=?, XINGMING7=?, NIANLING7=?, ZHENGZHIMIANMAO7=?, UNITANDZHIWU7=?, ZHUANCHANG=?, XZJGYJ=?, CHUSHENGDI=?, WORKTIME=?, QUANRIZIJIAOYU=?, QUANRIZIYXZY=?, ZAIZHIJIAOYU=?, ZAIZHIYXZY=?, NL=?, CSNY1=?, CSNY2=?, CSNY3=?, CSNY4=?, CSNY5=?, CSNY6=?, CSNY7=? WHERE ID=?",
                 (
                     data.get("CSNY", ""),
                     data.get("JG", ""),
@@ -233,13 +257,12 @@ def cadre_save_api(request):
                     data.get("csny5", ""),
                     data.get("csny6", ""),
                     data.get("csny7", ""),
-                    dqzp,
                     int(cadre_id),
                 ),
             )
         else:
             cursor.execute(
-                "INSERT INTO CADREAPPROVE (RSID, CSNY, JG, JRSJ, JL, MZ, XB, XM, ZZMM, BMMC, HEALTH, ZHUANYEJISHUZHIWU, XIANRENZHIWU, NIRENZHIWU, NIMIANZHIWU, JIANGCHENGQINGKUANG, YEARCHECK, RENMIANREASON, CHENGBAODANWEI, SHENPIJIGUANYIJIAN, CHENGWEI1, XINGMING1, NIANLING1, ZHENGZHIMIANMAO1, UNITANDZHIWU1, CHENGWEI2, XINGMING2, NIANLING2, ZHENGZHIMIANMAO2, UNITANDZHIWU2, CHENGWEI3, XINGMING3, NIANLING3, ZHENGZHIMIANMAO3, UNITANDZHIWU3, CHENGWEI4, XINGMING4, NIANLING4, ZHENGZHIMIANMAO4, UNITANDZHIWU4, CHENGWEI5, XINGMING5, NIANLING5, ZHENGZHIMIANMAO5, UNITANDZHIWU5, CHENGWEI6, XINGMING6, NIANLING6, ZHENGZHIMIANMAO6, UNITANDZHIWU6, CHENGWEI7, XINGMING7, NIANLING7, ZHENGZHIMIANMAO7, UNITANDZHIWU7, ZHUANCHANG, XZJGYJ, CHUSHENGDI, WORKTIME, QUANRIZIJIAOYU, QUANRIZIYXZY, ZAIZHIJIAOYU, ZAIZHIYXZY, NL, CSNY1, CSNY2, CSNY3, CSNY4, CSNY5, CSNY6, CSNY7, DQZP) "
+                "INSERT INTO CADREAPPROVE (RSID, CSNY, JG, JRSJ, JL, MZ, XB, XM, ZZMM, BMMC, HEALTH, ZHUANYEJISHUZHIWU, XIANRENZHIWU, NIRENZHIWU, NIMIANZHIWU, JIANGCHENGQINGKUANG, YEARCHECK, RENMIANREASON, CHENGBAODANWEI, SHENPIJIGUANYIJIAN, CHENGWEI1, XINGMING1, NIANLING1, ZHENGZHIMIANMAO1, UNITANDZHIWU1, CHENGWEI2, XINGMING2, NIANLING2, ZHENGZHIMIANMAO2, UNITANDZHIWU2, CHENGWEI3, XINGMING3, NIANLING3, ZHENGZHIMIANMAO3, UNITANDZHIWU3, CHENGWEI4, XINGMING4, NIANLING4, ZHENGZHIMIANMAO4, UNITANDZHIWU4, CHENGWEI5, XINGMING5, NIANLING5, ZHENGZHIMIANMAO5, UNITANDZHIWU5, CHENGWEI6, XINGMING6, NIANLING6, ZHENGZHIMIANMAO6, UNITANDZHIWU6, CHENGWEI7, XINGMING7, NIANLING7, ZHENGZHIMIANMAO7, UNITANDZHIWU7, ZHUANCHANG, XZJGYJ, CHUSHENGDI, WORKTIME, QUANRIZIJIAOYU, QUANRIZIYXZY, ZAIZHIJIAOYU, ZAIZHIYXZY, NL, CSNY1, CSNY2, CSNY3, CSNY4, CSNY5, CSNY6, CSNY7) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     int(rsid),
@@ -313,7 +336,6 @@ def cadre_save_api(request):
                     data.get("csny5", ""),
                     data.get("csny6", ""),
                     data.get("csny7", ""),
-                    dqzp,
                 ),
             )
         conn.commit()
@@ -352,7 +374,7 @@ def cadre_add_api(request):
             for r in cursor.fetchall()
         ]
         cursor.close()
-        return JsonResponse({"code": 0, "data": rows})
+        return JsonResponse({"code": 0, "data": rows, "new_id": new_id})
     except Exception as e:
         return JsonResponse({"code": 500, "msg": str(e)})
     finally:
@@ -406,7 +428,7 @@ def cadre_extract_api(request):
                    QUANRIZIYUANXIAO + CHAR(13)+CHAR(10) + ISNULL(QUANRIZIZHUANYE,'') AS QUANRIZIYXZY,
                    ZAIZHIXUELI + CHAR(13)+CHAR(10) + ISNULL(ZAIZHIXUEWEI,'') AS ZAIZHIJIAOYU,
                    ZAIZHIYUANXIAO + CHAR(13)+CHAR(10) + ISNULL(ZAIZHIZHUANYE,'') AS ZAIZHIYXZY,
-                   ZYZC AS ZHUANYEJISHUZHIWU,DQZP, '' AS NL, '' AS JRSJ, '' AS HEALTH,
+                   ZYZC AS ZHUANYEJISHUZHIWU, '' AS NL, '' AS JRSJ, '' AS HEALTH,
                    '' AS NIRENZHIWU, '' AS NIMIANZHIWU, '' AS ZHUANCHANG, '' AS XZJGYJ
             FROM RS_INFO WHERE RSID=?
         """,
@@ -443,13 +465,9 @@ def cadre_extract_api(request):
             data["JIANGCHENGQINGKUANG"] = supp_data.get("reward", "")
             data["YEARCHECK"] = supp_data.get("assessmentResults", "")
 
-        # 照片
-        if data.get("DQZP"):
-            data["DQZP"] = (
-                base64.b64encode(data["DQZP"]).decode()
-                if isinstance(data["DQZP"], bytes)
-                else ""
-            )
+        # 照片不从数据库返回，前端自动 fallback 到 001.jpg
+        data["DQZP"] = ""
+
         cursor.close()
         return JsonResponse({"code": 0, "data": data})
     except Exception as e:
@@ -530,21 +548,15 @@ def cadre_export_api(request):
     ws["B25"] = gv("CHENGBAODANWEI")
     ws["B26"] = gv("SHENPIJIGUANYIJIAN")
     ws["H26"] = gv("XZJGYJ")
+
     # 插入照片到 I4（合并单元格 I4:I7）
-    zp = data.get("DQZP")
-    if zp and isinstance(zp, bytes):
+    zp_path = _find_cadre_photo(rsid, cadre_id)
+    if zp_path:
         try:
             from openpyxl.drawing.image import Image
             from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, TwoCellAnchor
-            from PIL import Image as PILImage
-            import io
 
-            img_stream = io.BytesIO(zp)
-            pil_img = PILImage.open(img_stream)
-            img_bytes = io.BytesIO()
-            pil_img.save(img_bytes, format="JPEG")
-            img_bytes.seek(0)
-            img = Image(img_bytes)
+            img = Image(zp_path)
             img.anchor = TwoCellAnchor(
                 _from=AnchorMarker(col=8, colOff=0, row=3, rowOff=0),
                 to=AnchorMarker(col=9, colOff=0, row=7, rowOff=0),
@@ -553,6 +565,7 @@ def cadre_export_api(request):
             ws.add_image(img)
         except Exception as e:
             print(f"插入照片失败: {e}")
+
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)

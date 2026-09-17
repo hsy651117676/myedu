@@ -1,0 +1,292 @@
+{% extends "layout/base.html" %}
+{% block title %}数据导出{% endblock %}
+{% block content %}
+<style>
+html, body { height:100%; margin:0; padding:0; overflow:hidden; }
+#app { height:100%; display:flex; flex-direction:column; }
+.toolbar { display:flex;align-items:center;padding:6px 10px;background:#fff;border-bottom:1px solid #e0e0e0;gap:6px;flex-shrink:0; }
+.toolbar button { padding:5px 12px;border:1px solid #dcdfe6;border-radius:4px;background:#fff;cursor:pointer;font-size:12px; }
+.toolbar button:hover { border-color:#409EFF;color:#409EFF; }
+.toolbar button.primary { background:#409EFF;color:#fff;border:none; }
+.body-area { flex:1;display:flex;overflow:hidden; }
+.tree-panel { width:230px;border-right:1px solid #ddd;overflow-y:auto;padding:8px;flex-shrink:0; }
+.tree-node { padding:4px 8px;font-size:12px;white-space:nowrap;display:flex;align-items:center;gap:4px;cursor:pointer; }
+.tree-node:hover { background:#e8f0fe; }
+.tree-node.selected { background:#d0e4fc; font-weight:bold; }
+.tree-node .arrow { font-size:10px;width:12px;cursor:pointer; }
+.right-area { flex:1;display:flex;flex-direction:column;overflow:hidden;padding:10px;gap:8px; }
+.drag-bar { width:4px;background:#e4e7ed;cursor:col-resize;flex-shrink:0; }
+.table-area { flex:1;overflow:auto;min-height:0; }
+.pager { flex-shrink:0;display:flex;justify-content:flex-end;align-items:center;gap:8px;padding-top:4px; }
+</style>
+
+<div id="app">
+  <div class="toolbar">
+    <span style="font-weight:600;font-size:14px;">📋 数据导出</span>
+    <span v-if="!isAdmin" style="font-size:12px;color:#E6A23C;">（仅限本单位）</span>
+    <el-select v-model="queryType" size="small" style="width:220px;" @change="onTypeChange">
+      <el-option v-for="t in queryTypes" :key="t.value" :label="t.label" :value="t.value"></el-option>
+    </el-select>
+    <button class="primary" @click="doQuery" :disabled="loading">[[ loading ? '查询中...' : '查询' ]]</button>
+    <button @click="doExport" :disabled="tableData.length === 0">导出Excel</button>
+    <span style="flex:1;"></span>
+    <span style="font-size:12px;color:#606266;">[[ selectionText ]] / 共 [[ total ]] 条</span>
+  </div>
+
+  <div class="body-area">
+    <div v-if="isAdmin" class="tree-panel" id="treePanel">
+      <div class="tree-node" :class="{selected: selection.type === 'all'}" @click="selectAll">
+        <span class="arrow" style="visibility:hidden;">▶</span>
+        <span style="flex:1;">📊 全部（[[ totalCount ]]人）</span>
+      </div>
+      <template v-for="g in groups" :key="g.tid">
+        <div class="tree-node" :class="{selected: selection.type === 'group' && selection.tid === g.tid}">
+          <span class="arrow" @click.stop="g.expanded=!g.expanded">[[ g.expanded ? '▼' : '▶' ]]</span>
+          <span @click.stop="selectGroup(g)" style="flex:1;">[[ g.tname ]]（[[ g.count ]]人）</span>
+        </div>
+        <template v-if="g.expanded">
+          <div v-for="c in g.children" :key="c.tid" 
+               class="tree-node" 
+               :class="{selected: selection.type === 'unit' && selection.tid === c.tid}"
+               style="padding-left:28px;"
+               @click="selectUnit(c)">
+            <span style="flex:1;">[[ c.tname ]]（[[ c.count ]]人）</span>
+          </div>
+        </template>
+      </template>
+    </div>
+
+    <div v-if="isAdmin" class="drag-bar" data-target="treePanel"></div>
+
+    <div class="right-area">
+      <div class="table-area">
+        <el-table :data="tableData" border stripe size="small" style="width:100%;" 
+                  empty-text="暂无数据" v-loading="loading" height="100%">
+          <el-table-column type="index" label="序号" width="60" fixed></el-table-column>
+          <el-table-column v-for="col in columns" :key="col.prop"
+                           :prop="col.prop" :label="col.label" 
+                           :width="col.width || ''" :min-width="col.minWidth || 120"
+                           show-overflow-tooltip>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div class="pager" v-if="showPager">
+        <span style="font-size:12px;color:#606266;">共 [[ total ]] 条</span>
+        <el-pagination
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          :page-sizes="[30, 50, 100, 500]"
+          :total="total"
+          layout="sizes, prev, pager, next, jumper"
+          @current-change="onPageChange"
+          @size-change="onSizeChange"
+          background
+          small>
+        </el-pagination>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const { createApp, ref, computed, onMounted } = Vue;
+
+  const app = createApp({
+    delimiters: ['[[', ']]'],
+    setup(){
+      const queryTypes = ref([]);
+      const queryType = ref("");
+      const groups = ref([]);
+      const totalCount = ref(0);
+      const columns = ref([]);
+      const tableData = ref([]);
+      const total = ref(0);
+      const page = ref(1);
+      const pageSize = ref(50);
+      const isAdmin = ref(false);
+      const loading = ref(false);
+
+      const selection = ref({ type: 'all', tid: '' });
+
+      const showPager = computed(() => {
+        return queryType.value !== '单位汇总' && total.value > 0;
+      });
+
+      const selectedTids = computed(() => {
+        if (selection.value.type === 'all') {
+          return groups.value.map(g => g.tid);
+        } else if (selection.value.type === 'group') {
+          return [selection.value.tid];
+        } else if (selection.value.type === 'unit') {
+          return [selection.value.tid];
+        }
+        return [];
+      });
+
+      const selectionText = computed(() => {
+        if (selection.value.type === 'all') return '全部单位';
+        if (selection.value.type === 'group') {
+          const g = groups.value.find(x => x.tid === selection.value.tid);
+          return g ? g.tname : '';
+        }
+        if (selection.value.type === 'unit') {
+          for (const g of groups.value) {
+            const c = (g.children||[]).find(x => x.tid === selection.value.tid);
+            if (c) return c.tname;
+          }
+        }
+        return '未选择';
+      });
+
+      const selectAll = () => {
+        if (selection.value.type === 'all') {
+          selection.value = { type: 'none', tid: '' };
+        } else {
+          selection.value = { type: 'all', tid: '' };
+        }
+        page.value = 1;
+        doQuery();
+      };
+
+      const selectGroup = (g) => {
+        if (selection.value.type === 'group' && selection.value.tid === g.tid) {
+          selection.value = { type: 'none', tid: '' };
+        } else {
+          selection.value = { type: 'group', tid: g.tid };
+        }
+        page.value = 1;
+        doQuery();
+      };
+
+      const selectUnit = (c) => {
+        if (selection.value.type === 'unit' && selection.value.tid === c.tid) {
+          selection.value = { type: 'none', tid: '' };
+        } else {
+          selection.value = { type: 'unit', tid: c.tid };
+        }
+        page.value = 1;
+        doQuery();
+      };
+
+      const loadTypes = async () => {
+        try {
+          const r = await axios.get('/archives/api/data-export/types/');
+          if (r.data.code === 0) {
+            queryTypes.value = r.data.data || [];
+            if (queryTypes.value.length > 0) {
+              queryType.value = queryTypes.value[0].value;
+            }
+          }
+        } catch (e) { console.error(e); }
+      };
+
+      const loadTree = async () => {
+        try {
+          const r = await axios.get('/archives/api/data-export/tree/');
+          if (r.data.code === 0) {
+            groups.value = (r.data.groups||[]).map(g => ({...g, expanded:false, children:[]}));
+            totalCount.value = r.data.total||0;
+            await loadAllChildren();
+          }
+        } catch (e) { console.error(e); }
+      };
+
+      const loadAllChildren = async () => {
+        for (const g of groups.value) {
+          const r = await axios.get('/archives/api/data-export/tree/', { params: { tid: g.tid } });
+          if (r.data.code === 0) g.children = (r.data.children||[]);
+        }
+      };
+
+      const doQuery = async () => {
+        if (!queryType.value) return;
+        loading.value = true;
+        try {
+          const r = await axios.get('/archives/api/data-export/query/', {
+            params: {
+              type: queryType.value,
+              tids: selectedTids.value.join(','),
+              page: page.value,
+              pageSize: pageSize.value
+            }
+          });
+          if (r.data.code === 0) {
+            columns.value = r.data.columns || [];
+            tableData.value = r.data.data || [];
+            total.value = r.data.total || 0;
+            isAdmin.value = r.data.isAdmin;
+
+            if (isAdmin.value && groups.value.length === 0) {
+              await loadTree();
+            }
+          } else {
+            ElementPlus.ElMessage.error(r.data.msg || '查询失败');
+          }
+        } catch (e) {
+          ElementPlus.ElMessage.error('查询失败');
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      const onTypeChange = () => {
+        page.value = 1;
+        doQuery();
+      };
+
+      const onPageChange = (p) => {
+        page.value = p;
+        doQuery();
+      };
+
+      const onSizeChange = (s) => {
+        pageSize.value = s;
+        page.value = 1;
+        doQuery();
+      };
+
+      const doExport = () => {
+        const params = new URLSearchParams({
+          type: queryType.value,
+          tids: selectedTids.value.join(',')
+        });
+        window.location.href = '/archives/api/data-export/export/?' + params.toString();
+      };
+
+      const initDrag = () => {
+        document.querySelectorAll('.drag-bar').forEach(bar => {
+          bar.addEventListener('mousedown', (e) => {
+            const panel = document.getElementById(bar.dataset.target);
+            if (!panel) return;
+            const startX = e.clientX, startW = panel.offsetWidth;
+            const onMove = (ev) => { let w = startW+ev.clientX-startX; if(w<80)w=80; panel.style.width=w+'px'; };
+            const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+          });
+        });
+      };
+
+      onMounted(async () => {
+        await loadTypes();
+        await doQuery();
+        initDrag();
+      });
+
+      return {
+        queryTypes, queryType,
+        groups, totalCount, columns, tableData, total, page, pageSize, isAdmin, loading,
+        selection, selectedTids, selectionText, showPager,
+        selectAll, selectGroup, selectUnit, onTypeChange,
+        onPageChange, onSizeChange,
+        doQuery, doExport
+      };
+    }
+  });
+
+  app.use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+})();
+</script>
+{% endblock %}

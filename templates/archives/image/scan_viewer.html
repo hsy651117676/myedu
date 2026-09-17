@@ -27,14 +27,23 @@
             <el-option v-for="v in pageVerticalOptions" :key="v.value" :label="v.label" :value="v.value" />
         </el-select>
 
+        <el-button size="small" type="danger" plain @click="batchGeneratePdf"
+           :loading="batchGenerating" :disabled="!rsid">
+            批量生成该人员档案PDF文件
+        </el-button>
+
         <el-button size="small" type="warning" plain @click="regeneratePdf"
            :loading="pdfStatus==='generating'" :disabled="currentArch === null">
-    重新生成
-</el-button>
+            重新生成当前材料PDF
+        </el-button>
 
         <el-button size="small" type="primary" plain @click="downloadPdf" :disabled="pdfStatus!=='ready'">
-            下载
+            下载当前材料PDF
         </el-button>
+        <el-button size="small" type="primary" plain @click="downloadZip"
+   :disabled="!rsid">
+    下载PDF档案包
+</el-button>
 
         <el-button size="small" type="success" plain @click="printPdf" :disabled="pdfStatus!=='ready'">
             打印
@@ -90,15 +99,62 @@
             <div style="padding:6px 12px;border-top:1px solid #e4e7ed;background:#fafafa;
                         display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:12px;">
                 <span :style="{color: statusColor}">[[ statusText ]]</span>
-                <span v-if="rsid" style="color:#606266;">
-                    总目录 <b>[[ statsTotal ]]</b> |
-                    已扫描 <b style="color:#67c23a;">[[ statsScanned ]]</b> |
-                    未扫描 <b style="color:#f56c6c;">[[ statsUnscanned ]]</b> |
-                    扫描率 <b style="color:#409eff;">[[ statsRate ]]%</b>
-                </span>
+                <span v-if="rsid" style="color:#606266;display:flex;gap:16px;">
+    <span>
+        总目录 <b>[[ statsTotal ]]</b> |
+        已扫描 <b style="color:#67c23a;">[[ statsScanned ]]</b> |
+        未扫描 <b style="color:#f56c6c;">[[ statsUnscanned ]]</b> |
+        扫描率 <b style="color:#409eff;">[[ statsRate ]]%</b>
+    </span>
+    <span>
+        总页数 <b>[[ statsTotalPages ]]</b> |
+        已扫描页 <b style="color:#67c23a;">[[ statsScannedPages ]]</b> |
+        未扫描页 <b style="color:#f56c6c;">[[ statsUnscannedPages ]]</b> |
+        页扫描率 <b style="color:#409eff;">[[ statsPageRate ]]%</b>
+    </span>
+</span>
             </div>
         </div>
     </div>
+
+    <!-- 批量生成进度弹窗 -->
+    <el-dialog v-model="batchDialogVisible" title="批量生成档案PDF" width="520px"
+               :close-on-click-modal="false" :close-on-press-escape="false"
+               :show-close="batchFinished">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:13px;color:#606266;">
+                正在生成 <b>[[ batchPersonName ]]</b> 的档案PDF...
+            </div>
+
+            <el-progress 
+                :percentage="batchPercent" 
+                :status="batchStatus"
+                :stroke-width="18"
+                :text-inside="true">
+            </el-progress>
+
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#909399;">
+                <span>进度：[[ batchCurrent ]] / [[ batchTotal ]]</span>
+                <span>
+                    ✅ 成功 [[ batchSuccess ]] &nbsp;
+                    ⏭ 跳过 [[ batchSkipped ]] &nbsp;
+                    ❌ 失败 [[ batchFailed ]]
+                </span>
+            </div>
+
+            <div v-if="batchCurrentMsg" style="font-size:12px;color:#909399;font-family:monospace;max-height:100px;overflow:auto;">
+                [[ batchCurrentMsg ]]
+            </div>
+
+            <div v-if="batchFinished && batchSummary" 
+                 style="padding:8px 12px;background:#f0f9eb;border-radius:4px;font-size:13px;color:#67c23a;">
+                ✅ [[ batchSummary ]]
+            </div>
+        </div>
+        <template #footer>
+            <el-button v-if="batchFinished" size="small" type="primary" @click="batchDialogVisible=false">关闭</el-button>
+        </template>
+    </el-dialog>
 
 </div>
 {% endblock %}
@@ -107,10 +163,15 @@
 <script>
 (function() {
     const { createApp, ref, onMounted } = Vue;
+    const { ElMessage, ElMessageBox } = ElementPlus;
 
     const app = createApp({
         delimiters: ['[[', ']]'],
         setup() {
+          const statsTotalPages = ref(0);
+const statsScannedPages = ref(0);
+const statsUnscannedPages = ref(0);
+const statsPageRate = ref(0);
             const currentArch = ref(null);
             const currentFl = ref(null);
             const currentArchiveName = ref('');
@@ -134,15 +195,36 @@
             const statsUnscanned = ref(0);
             const statsRate = ref(0);
 
+            // 批量生成状态
+            const batchDialogVisible = ref(false);
+            const batchGenerating = ref(false);
+            const batchFinished = ref(false);
+            const batchPercent = ref(0);
+            const batchCurrent = ref(0);
+            const batchTotal = ref(0);
+            const batchSuccess = ref(0);
+            const batchSkipped = ref(0);
+            const batchFailed = ref(0);
+            const batchSummary = ref('');
+            const batchCurrentMsg = ref('');
+            const batchPersonName = ref('');
+            const batchStatus = ref('');
+
             const pdfBlobCache = {};
 
             function cacheKey() {
                 return [rsid.value, currentFl.value, currentArch.value].join('_');
             }
 
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return '';
+            }
+
             window.addEventListener('message', (e) => {
                 if (e.data.type === 'person-select') {
-                  console.log('archive-select data:', e.data.data);
                     const d = e.data.data;
                     if (d.rsid === rsid.value) return;
                     rsid.value = d.rsid;
@@ -151,10 +233,8 @@
                     loadStats();
                 }
                 if (e.data.type === 'archive-select') {
-                   console.log('archive-select data:', e.data.data);
                     const d = e.data.data;
                     currentArch.value = d.archid;
-                  console.log('currentArch set to:', currentArch.value);
                     currentFl.value = d.fl;
                     currentArchiveName.value = d.xh + '、' + d.cltm;
                     currentTitle.value = [personName.value, d.jbbh + '-' + d.xh + '_' + d.cltm].filter(Boolean).join('_');
@@ -173,19 +253,23 @@
                 }
             });
 
-            const loadStats = async () => {
-                if (!rsid.value) return;
-                try {
-                    const res = await axios.get('/components/scan-stats/', { params: { rsid: rsid.value } });
-                    if (res.data.code === 0) {
-                        statsTotal.value = res.data.total || 0;
-                        statsScanned.value = res.data.scanned || 0;
-                        statsUnscanned.value = res.data.unscanned || 0;
-                        statsRate.value = res.data.rate || 0;
-                    }
-                } catch (e) { console.error(e); }
-            };
-
+const loadStats = async () => {
+    if (!rsid.value) return;
+    try {
+        const res = await axios.get('/components/scan-stats/', { params: { rsid: rsid.value } });
+        if (res.data.code === 0) {
+            statsTotal.value = res.data.total || 0;
+            statsScanned.value = res.data.scanned || 0;
+            statsUnscanned.value = res.data.unscanned || 0;
+            statsRate.value = res.data.rate || 0;
+            // 新增
+            statsTotalPages.value = res.data.total_pages || 0;
+            statsScannedPages.value = res.data.scanned_pages || 0;
+            statsUnscannedPages.value = res.data.unscanned_pages || 0;
+            statsPageRate.value = res.data.page_rate || 0;
+        }
+    } catch (e) { console.error(e); }
+};
             const loadPdf = async () => {
                 if (!currentArch.value) return;
                 if (pdfUrl.value) URL.revokeObjectURL(pdfUrl.value);
@@ -245,35 +329,164 @@
                 generatePdf(true);
             };
 
+            // ========== 批量生成 ==========
+            const batchGeneratePdf = async () => {
+                if (!rsid.value) return;
 
-          const downloadPdf = async () => {
-    const fileName = (currentTitle.value || currentArchiveName.value || '档案') + '.pdf';
-    
-    // 如果已有缓存的 blob，直接用
-    const key = cacheKey();
-    let blob = pdfBlobCache[key];
-    
-    if (!blob) {
-        // 没有缓存，重新 fetch
-        try {
-            const apiUrl = `/archives/image/api/scan-pdf/?image_type=YS&rsid=${rsid.value}&fl=${currentFl.value}&archid=${currentArch.value}`;
-            const res = await fetch(apiUrl);
-            blob = await res.blob();
-        } catch (e) {
-            console.error('下载失败', e);
+                try {
+                    await ElMessageBox.confirm(
+                        '确定要批量生成该人员所有已扫描材料的PDF吗？（已生成的将自动跳过）',
+                        '批量生成',
+                        { type: 'warning', confirmButtonText: '开始生成', cancelButtonText: '取消' }
+                    );
+                } catch (e) {
+                    return;
+                }
+
+                // 重置状态
+                batchDialogVisible.value = true;
+                batchGenerating.value = true;
+                batchFinished.value = false;
+                batchPercent.value = 0;
+                batchCurrent.value = 0;
+                batchTotal.value = 0;
+                batchSuccess.value = 0;
+                batchSkipped.value = 0;
+                batchFailed.value = 0;
+                batchSummary.value = '';
+                batchCurrentMsg.value = '';
+                batchPersonName.value = personName.value || rsid.value;
+                batchStatus.value = '';
+
+                try {
+                    const response = await fetch('/archives/image/api/batch-generate-pdf/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: JSON.stringify({ rsid: rsid.value })
+                    });
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n\n');
+                        buffer = lines.pop();
+
+                        for (const line of lines) {
+                            if (!line.startsWith('data: ')) continue;
+                            try {
+                                const data = JSON.parse(line.slice(6));
+
+                                if (data.start) {
+                                    batchTotal.value = data.total;
+                                }
+                                if (data.current !== undefined) {
+                                    batchCurrent.value = data.current;
+                                    batchPercent.value = Math.round((data.current / data.total) * 100);
+                                    if (data.status === 'success') batchSuccess.value++;
+                                    else if (data.status === 'skipped') batchSkipped.value++;
+                                    else if (data.status === 'failed') batchFailed.value++;
+                                    batchCurrentMsg.value = `[${data.current}/${data.total}] 材料 ${data.archid} - ${data.status}`;
+                                }
+                                if (data.done) {
+                                    batchFinished.value = true;
+                                    batchGenerating.value = false;
+                                    if (data.error) {
+                                        batchSummary.value = '生成出错：' + data.error;
+                                        batchStatus.value = 'exception';
+                                    } else if (data.total === 0) {
+                                        batchSummary.value = data.msg || '无已扫描材料';
+                                        batchStatus.value = 'warning';
+                                    } else {
+                                        batchSummary.value = `完成：共 ${data.total} 份，成功 ${data.success}，跳过 ${data.skipped}，失败 ${data.failed}`;
+                                        batchStatus.value = data.failed > 0 ? 'warning' : 'success';
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('解析SSE失败:', err, line);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    batchFinished.value = true;
+                    batchGenerating.value = false;
+                    batchSummary.value = '生成失败：' + e.message;
+                    batchStatus.value = 'exception';
+                }
+            };
+const downloadZip = async () => {
+    if (!rsid.value) return;
+    try {
+        const res = await fetch(`/archives/image/api/download-zip/?rsid=${rsid.value}`);
+        const contentType = res.headers.get('Content-Type') || '';
+
+        if (contentType.includes('application/json')) {
+            // 后端返回错误
+            const data = await res.json();
+            ElMessage.warning(data.msg || '该人员无已生成的PDF');
             return;
         }
+
+        // 正常下载
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // 从 Content-Disposition 提取文件名
+        const disposition = res.headers.get('Content-Disposition') || '';
+        let filename = '档案包.zip';
+        const match = disposition.match(/filename\*=UTF-8''(.+)/);
+        if (match) {
+            filename = decodeURIComponent(match[1]);
+        }
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    } catch (e) {
+        console.error(e);
+        ElMessage.error('下载失败');
     }
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;  // 这个才是你指定的文件名
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 100);
 };
+
+            const downloadPdf = async () => {
+                const fileName = (currentTitle.value || currentArchiveName.value || '档案') + '.pdf';
+                const key = cacheKey();
+                let blob = pdfBlobCache[key];
+
+                if (!blob) {
+                    try {
+                        const apiUrl = `/archives/image/api/scan-pdf/?image_type=YS&rsid=${rsid.value}&fl=${currentFl.value}&archid=${currentArch.value}`;
+                        const res = await fetch(apiUrl);
+                        blob = await res.blob();
+                    } catch (e) {
+                        console.error('下载失败', e);
+                        return;
+                    }
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            };
+
             const printPdf = () => {
                 if (!pdfUrl.value) return;
                 const win = window.open(pdfUrl.value, '_blank');
@@ -286,51 +499,51 @@
                 statusText.value = '就绪'; statusColor.value = '#909399';
                 currentArch.value = null; currentArchiveName.value = ''; currentTitle.value = '';
             };
-      const initDragBars = () => {
-          const bars = document.querySelectorAll('.drag-bar');
-          const panels = document.querySelectorAll('.resize-panel');
-          
-          bars.forEach((bar, index) => {
-              bar.addEventListener('mousedown', (e) => {
-                  const panel = panels[index];
-                  if (!panel) return;
-                  
-                  const startX = e.clientX;
-                  const startW = panel.offsetWidth;
-                  
-                  const onMove = (ev) => {
-                      let w = startW + ev.clientX - startX;
-                      if (w < 80) w = 80;
-                      if (w > 600) w = 600;
-                      panel.style.width = w + 'px';
-                      panel.style.minWidth = w + 'px';
-                      panel.style.flexShrink = '0';
-                      panel.style.flexGrow = '0';
-                      // 拖动时禁用 iframe 鼠标事件
-                      panels.forEach(p => {
-                          const iframe = p.querySelector('iframe');
-                          if (iframe) iframe.style.pointerEvents = 'none';
-                      });
-                  };
-                  const onUp = () => {
-                      document.removeEventListener('mousemove', onMove);
-                      document.removeEventListener('mouseup', onUp);
-                      document.body.style.cursor = '';
-                      document.body.style.userSelect = '';
-                      // 恢复 iframe
-                      panels.forEach(p => {
-                          const iframe = p.querySelector('iframe');
-                          if (iframe) iframe.style.pointerEvents = '';
-                      });
-                  };
-                  document.body.style.cursor = 'col-resize';
-                  document.body.style.userSelect = 'none';
-                  document.addEventListener('mousemove', onMove);
-                  document.addEventListener('mouseup', onUp);
-                  e.preventDefault();
-              });
-          });
-      };
+
+            const initDragBars = () => {
+                const bars = document.querySelectorAll('.drag-bar');
+                const panels = document.querySelectorAll('.resize-panel');
+
+                bars.forEach((bar, index) => {
+                    bar.addEventListener('mousedown', (e) => {
+                        const panel = panels[index];
+                        if (!panel) return;
+
+                        const startX = e.clientX;
+                        const startW = panel.offsetWidth;
+
+                        const onMove = (ev) => {
+                            let w = startW + ev.clientX - startX;
+                            if (w < 80) w = 80;
+                            if (w > 600) w = 600;
+                            panel.style.width = w + 'px';
+                            panel.style.minWidth = w + 'px';
+                            panel.style.flexShrink = '0';
+                            panel.style.flexGrow = '0';
+                            panels.forEach(p => {
+                                const iframe = p.querySelector('iframe');
+                                if (iframe) iframe.style.pointerEvents = 'none';
+                            });
+                        };
+                        const onUp = () => {
+                            document.removeEventListener('mousemove', onMove);
+                            document.removeEventListener('mouseup', onUp);
+                            document.body.style.cursor = '';
+                            document.body.style.userSelect = '';
+                            panels.forEach(p => {
+                                const iframe = p.querySelector('iframe');
+                                if (iframe) iframe.style.pointerEvents = '';
+                            });
+                        };
+                        document.body.style.cursor = 'col-resize';
+                        document.body.style.userSelect = 'none';
+                        document.addEventListener('mousemove', onMove);
+                        document.addEventListener('mouseup', onUp);
+                        e.preventDefault();
+                    });
+                });
+            };
+
             onMounted(initDragBars);
 
             return {
@@ -339,7 +552,14 @@
                 pdfUrl, pdfStatus, pdfError, statusText, statusColor, rsid,
                 statsTotal, statsScanned, statsUnscanned, statsRate,
                 regeneratePdf, downloadPdf, printPdf,
-                onPdfIframeLoaded, retryLoadPdf
+                onPdfIframeLoaded, retryLoadPdf,
+                // 批量生成
+                batchDialogVisible, batchGenerating, batchFinished, batchPercent,
+                batchCurrent, batchTotal, batchSuccess, batchSkipped, batchFailed,
+                batchSummary, batchCurrentMsg, batchPersonName, batchStatus,
+                batchGeneratePdf,downloadZip,
+              statsTotal, statsScanned, statsUnscanned, statsRate,
+    statsTotalPages, statsScannedPages, statsUnscannedPages, statsPageRate
             };
         }
     });

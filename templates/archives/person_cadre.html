@@ -140,11 +140,16 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       };
 
       const addCadre = () => {
-        if (!rsid.value) { ElMessage.warning('未选择人员'); return; }
-        axios.get('/archives/api/cadre-add/', { params: { rsid: rsid.value } }).then(res => {
-          if (res.data.code === 0) cadreList.value = res.data.data || [];
-        });
-      };
+  if (!rsid.value) { ElMessage.warning('未选择人员'); return; }
+  axios.get('/archives/api/cadre-add/', { params: { rsid: rsid.value } }).then(res => {
+    if (res.data.code === 0) {
+      cadreList.value = res.data.data || [];
+      const newId = res.data.new_id;
+      const row = cadreList.value.find(r => r.ID === newId);
+      if (row) selectCadre(row);
+    }
+  });
+};
 
       const deleteCadre = () => {
         if (!currentID.value) { ElMessage.warning('请先选中一条'); return; }
@@ -185,7 +190,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       const handlePhotoChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 300 * 1024) { ElMessage.error('照片不能超过300KB'); return; }
+        if (file.size > 5 * 1024 * 1024) { ElMessage.error('照片不能超过5MB'); return; }
         const reader = new FileReader();
         reader.onload = (ev) => {
           form.DQZP = ev.target.result;

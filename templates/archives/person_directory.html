@@ -173,22 +173,41 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     const changed = (i) => { const r=archList.value[i],s=snapshots[i]; return r?.ARCHID && (!s||s.CLTM!==(r.CLTM||'')||s.FYEAR!==(r.FYEAR||'')||s.FMONTH!==(r.FMONTH||'')||s.FDAY!==(r.FDAY||'')||s.YS!==(r.YS||'')||s.BZ!==(r.BZ||'')); };
     const payload = (r) => ({ARCHID:r.ARCHID,CLTM:r.CLTM||'',FYEAR:r.FYEAR||'',FMONTH:r.FMONTH||'',FDAY:r.FDAY||'',YS:r.YS||'',BZ:r.BZ||''});
 
-    // ========== 防重入 ==========
-    const committing = new Set();
+    // ========== 新增行防重入 ==========
     let committingNew = false;
 
-    // ========== 提交编辑行 ==========
+    // ========== 提交单行（用发出时的值更新快照） ==========
     const commitRow = (i) => {
-      if (sortMode.value || i<0 || i>=archList.value.length || !archList.value[i]?.ARCHID || !changed(i) || committing.has(i)) return Promise.resolve();
-      committing.add(i);
-      return enqueue({rsid:rsid.value,action:'UPDATE',row:payload(archList.value[i])}).then(()=>{snap(i);committing.delete(i);}).catch(()=>committing.delete(i));
+      if (sortMode.value || i<0 || i>=archList.value.length || !archList.value[i]?.ARCHID || !changed(i)) return Promise.resolve();
+      const sent = payload(archList.value[i]);
+      return enqueue({rsid:rsid.value,action:'UPDATE',row:sent})
+        .then(()=>{ 
+          snapshots[i] = {CLTM:sent.CLTM, FYEAR:sent.FYEAR, FMONTH:sent.FMONTH, FDAY:sent.FDAY, YS:sent.YS, BZ:sent.BZ};
+        });
     };
 
-    // ========== 切换编辑行（async/await 确保保存完成再切换） ==========
+    // ========== 提交所有有变化的行（统一入口） ==========
+    const commitAllChanged = async () => {
+      for (let i = 0; i < archList.value.length; i++) {
+        await commitRow(i);
+      }
+    };
+
+    // ========== 全量提交（不看快照，强制所有行） ==========
+    const saveAllForce = async () => {
+      const rows = archList.value
+        .filter(r => r.ARCHID)
+        .map(r => ({ action: 'UPDATE', row: payload(r) }));
+      if (rows.length) {
+        await enqueue({ rsid: rsid.value, batch: rows });
+        archList.value.forEach((_, i) => snap(i));
+      }
+    };
+
+    // ========== 切换编辑行 ==========
     const switchRow = async (newIdx, col) => {
-      const old = editCell.row;
-      if (old === newIdx) { if(col) editCell.col=col; return; }
-      await commitRow(old);
+      if (editCell.row === newIdx) { if(col) editCell.col=col; return; }
+      await commitAllChanged();  // 保存所有变化的行，而不是只看 editCell.row
       editCell.row=newIdx; editCell.col=col||'';
       if(newIdx>=0){ snap(newIdx); archList.value.forEach((r,idx)=>r._selected=idx===newIdx); }
     };
@@ -200,7 +219,8 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
 
     const selectFL = async (fl, name) => {
       if(sortMode.value) return;
-      await commitRow(editCell.row);
+      if (newRowHasContent()) await commitNewRow();   // 先提交新增行
+      await commitAllChanged();                        // 再提交所有变化行
       await waitDrain();
       currentFL.value=fl; currentName.value=name;
       Object.assign(newRow,{CLTM:'',FYEAR:'',FMONTH:'',FDAY:'',YS:'',BZ:''});
@@ -248,10 +268,10 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     };
 
     // ========== 新增行 ==========
-    const newRowEmpty = () => !newRow.CLTM.trim()&&!newRow.FYEAR.trim()&&!newRow.FMONTH.trim()&&!newRow.FDAY.trim()&&!newRow.YS.trim()&&!newRow.BZ.trim();
+    const newRowHasContent = () => !!(newRow.CLTM.trim()||newRow.FYEAR.trim()||newRow.FMONTH.trim()||newRow.FDAY.trim()||newRow.YS.trim()||newRow.BZ.trim());
 
     const commitNewRow = async (andFocus=true) => {
-      if (newRowEmpty() || committingNew) return;
+      if (!newRowHasContent() || committingNew) return;
       committingNew = true;
       newRowShowSuggest.value = false;
       try {
@@ -276,7 +296,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     const commitNewRowAndFocus = () => commitNewRow(true);
     const focusNewRow = async () => {
       if(sortMode.value) return ElMessage.warning('调整编号模式下不可新增');
-      await commitRow(editCell.row);
+      await commitAllChanged();
       nextTick(()=>{ document.querySelector('.new-row td:nth-child(3) input')?.focus(); });
     };
 
@@ -286,7 +306,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       const idx = ctxMenu.show ? ctxMenu.rowIndex : (editCell.row>=0 ? editCell.row : 0);
       const row = archList.value[idx];
       if(!row) return ElMessage.warning('请先选中一行');
-      await commitRow(editCell.row);
+      await commitAllChanged();
       await waitDrain();
       try { await enqueue({rsid:rsid.value,action,row:{XH:row.XH,FL:currentFL.value}}); loadList(); ElMessage.success('操作成功'); }
       catch { ElMessage.error('操作失败'); }
@@ -309,7 +329,7 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
           confirmButtonClass: 'el-button--danger',
         }
       ).then(async ()=>{
-        await commitRow(editCell.row);
+        await commitAllChanged();
         await waitDrain();
         try {
           if(row.ARCHID) await enqueue({rsid:rsid.value,action:'DELETE',row:{ARCHID:row.ARCHID}});
@@ -323,11 +343,20 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     const onContextMenu = (e,i) => { ctxMenu.show=true; ctxMenu.x=e.clientX; ctxMenu.y=e.clientY; ctxMenu.rowIndex=i; };
 
     // ========== 保存 / 刷新 ==========
-    const saveAll = async () => { await commitRow(editCell.row); await waitDrain(); ElMessage.success('保存成功'); };
+    const saveAll = async () => {
+      // 全量提交：所有行都提交，不看快照，绝对不漏
+      await saveAllForce();
+      await waitDrain();
+      ElMessage.success('保存成功');
+    };
     const refreshData = () => loadList();
 
     // ========== 排序 ==========
-    const enterSortMode = () => { sortMode.value=true; ElMessage.info('可拖动调整编号顺序'); };
+    const enterSortMode = async () => {
+      await commitAllChanged();
+      await waitDrain();
+      sortMode.value=true; ElMessage.info('可拖动调整编号顺序');
+    };
     const saveSort = async () => {
       try {
         await enqueue({rsid:rsid.value,batch:archList.value.map((r,i)=>({action:'CHANGENUM',row:{ARCHID:r.ARCHID,XH:i+1}}))});
@@ -341,11 +370,11 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
     const onDrop=(i)=>{archList.value.forEach(r=>r._dragOver=false);if(dragIndex.value!==-1&&dragIndex.value!==i)archList.value.splice(i,0,archList.value.splice(dragIndex.value,1)[0]);dragIndex.value=-1;};
     const onDragEnd=()=>{dragIndex.value=-1;archList.value.forEach(r=>r._dragOver=false);};
 
-    // ========== 行点击 / 单元格焦点（async/await） ==========
+    // ========== 行点击 / 单元格焦点 ==========
     const onRowClick = async (i) => { if(sortMode.value) return; await switchRow(i,''); };
     const onCellFocus = async (i,col) => { if(sortMode.value) return; editCell.row===i ? editCell.col=col : await switchRow(i,col); };
 
-    // ========== 键盘导航（上下/行尾Enter先保存再移动） ==========
+    // ========== 键盘导航 ==========
     const moveFocus = async (inp, direction) => {
       const td=inp.closest('td'), tr=inp.closest('tr');
       if(!td||!tr) return;
@@ -356,11 +385,11 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       const focusNew = () => { const t=document.querySelector('.new-row td:nth-child(3) input'); if(t&&!t.disabled)t.focus(); };
 
       if(direction==='up') {
-        await commitRow(idx);
+        await commitAllChanged();
         focusAt(allTrs[idx-1],colIdx);
       }
       else if(direction==='down') {
-        await commitRow(idx);
+        await commitAllChanged();
         focusAt(allTrs[idx+1],colIdx);
       }
       else if(direction==='left'){ const t=td.previousElementSibling?.querySelector('input'); if(t&&!t.disabled){t.focus();t.selectionStart=t.value.length;} }
@@ -368,13 +397,13 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       else if(direction==='enter'){
         if(td.nextElementSibling) focusAt(tr,colIdx+1);
         else {
-          await commitRow(idx);
+          await commitAllChanged();
           focusAt(allTrs[idx+1],3) || focusNew();
         }
       }
     };
 
-    // ========== 快捷键查表（async handler） ==========
+    // ========== 快捷键查表 ==========
     const keyHandlers = {
       ArrowUp:    async (e,i,inp)=>{e.preventDefault();await moveFocus(inp,'up');},
       ArrowDown:  async (e,i,inp)=>{e.preventDefault();await moveFocus(inp,'down');},
@@ -425,11 +454,15 @@ html, body { height:100%; margin:0; padding:0; overflow:hidden; }
       '<p>8. <b>扫描页数</b>显示该份材料已扫描的图片页数。</p>'+
       '</div>','操作说明',{dangerouslyUseHTMLString:true,confirmButtonText:'知道了'});
 
-    // ========== 页面关闭保存 ==========
+    // ========== 页面关闭保存（全量提交） ==========
     const beforeUnloadSave = () => {
-      const i=editCell.row;
-      if(i>=0&&i<archList.value.length&&archList.value[i]?.ARCHID&&changed(i))
-        navigator.sendBeacon('/archives/api/directory-save/',JSON.stringify({rsid:rsid.value,action:'UPDATE',row:payload(archList.value[i])}));
+      const rows = archList.value
+        .filter(r => r.ARCHID)
+        .map(r => ({ action: 'UPDATE', row: payload(r) }));
+      if (rows.length) {
+        navigator.sendBeacon('/archives/api/directory-save/',
+          JSON.stringify({ rsid: rsid.value, batch: rows }));
+      }
     };
 
     onMounted(()=>{loadTree();window.addEventListener('beforeunload',beforeUnloadSave);});

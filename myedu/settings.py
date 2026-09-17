@@ -50,7 +50,7 @@ LOGOUT_REDIRECT_URL = "login"
 # ==================== 档案扫描图像配置 ====================
 
 SCAN_IMAGE_BASE_DIR = "/mnt/raid10/das_images"
-SCAN_PDF_OUTPUT_DIR = "/mnt/raid10/das_pdf"
+SCAN_PDF_OUTPUT_DIR = "/mnt/raid10/das_images/PERSON"
 MEDIA_BASE_DIR = "/mnt/media"
 
 SCAN_IMAGE_TYPES = {

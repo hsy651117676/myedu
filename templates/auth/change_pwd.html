@@ -16,7 +16,7 @@
 <div class="change-box" id="app">
   <h3 style="text-align:center; margin-bottom:30px">修改密码</h3>
 
-  <el-form @submit.prevent="submit">
+  <el-form>
     {% csrf_token %}
 
     <el-form-item label="旧密码">
@@ -32,52 +32,67 @@
     </el-form-item>
 
     <el-form-item>
-      <el-button type="primary" native-type="submit" style="width:100%">确认修改</el-button>
+      <el-button type="primary" @click="submit" style="width:100%">确认修改</el-button>
     </el-form-item>
   </el-form>
 </div>
 
 <script>
-const { createApp, reactive } = Vue
+const { createApp, ref } = Vue
 const { ElMessage } = ElementPlus
 
 createApp({
   setup() {
-    const form = reactive({
-      old_pwd: '',
-      new1: '',
-      new2: ''
-    })
+    const old_pwd = ref('')
+    const new1 = ref('')
+    const new2 = ref('')
 
     async function submit() {
-      // ✅ 关键：用 location.pathname 自动适配 HTTP/HTTPS，绝对不拒绝
-      const res = await fetch(window.location.pathname, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: new URLSearchParams({
-          old_pwd: form.old_pwd,
-          new_pwd1: form.new1,
-          new_pwd2: form.new2
-        })
-      })
+      // 简单校验
+      if (!old_pwd.value) {
+        ElMessage.warning('请输入旧密码')
+        return
+      }
+      if (!new1.value) {
+        ElMessage.warning('请输入新密码')
+        return
+      }
+      if (new1.value !== new2.value) {
+        ElMessage.warning('两次输入的新密码不一致')
+        return
+      }
 
-      const data = await res.json()
-      if (data.code === 200) {
-        ElMessage.success(data.msg)
-        setTimeout(() => {
-          location.href = '/'
-        }, 1000)
-      } else {
-        ElMessage.error(data.msg)
+      try {
+        const res = await fetch(window.location.pathname, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: new URLSearchParams({
+            old_pwd: old_pwd.value,
+            new_pwd1: new1.value,
+            new_pwd2: new2.value
+          })
+        })
+
+        const data = await res.json()
+        if (data.code === 200) {
+          ElMessage.success(data.msg)
+          setTimeout(() => {
+            location.href = '/'
+          }, 1000)
+        } else {
+          ElMessage.error(data.msg)
+        }
+      } catch (e) {
+        ElMessage.error('请求失败，请稍后重试')
       }
     }
 
     return {
-      old_pwd: '',
-      new1: '',
-      new2: '',
+      old_pwd,
+      new1,
+      new2,
       submit
     }
   }
